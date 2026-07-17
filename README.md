@@ -137,5 +137,22 @@ In short:
 ```bash
 uv run ruff check .
 uv run mypy src
-uv run pytest
+uv run pytest --cov=sme_bench --cov-report=term-missing
 ```
+
+CI runs ruff, mypy, and pytest with coverage (gate ≥76 %) on Python 3.11 and 3.12.
+
+### Test layout
+
+| Path | Scope |
+| --- | --- |
+| `tests/unit/test_models.py` | Pydantic models |
+| `tests/unit/test_utils.py` | Path safety, JSON extraction, redaction |
+| `tests/unit/test_scorers.py` | All deterministic scorers (parametrised) |
+| `tests/unit/test_scoring.py` | Thresholds, critical failures |
+| `tests/unit/test_statistics.py` | Aggregation, language parity, TPS |
+| `tests/unit/test_reporters.py` | Markdown/JSON reports, dashboard |
+| `tests/unit/test_task_loader.py` | Full benchmark load, resume keys |
+| `tests/unit/test_pricing.py` | Token cost estimation |
+| `tests/unit/test_client.py` | HTTP client, streaming, retries |
+| `tests/integration/test_e2e.py` | CLI end-to-end (run, compare, list, validate, determinism) |

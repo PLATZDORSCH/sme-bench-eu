@@ -12,6 +12,8 @@
   `failures.en.md`, `success.de.md` / `success.en.md`
 - Partial grade, fairness scorers (`forbidden_terms` fields/`exclude_fields`, citations normalisation,
   order `keys`), `catalog`, `report --rescore`
+- Test suite rework: split unit tests, parametrized scorers, coverage gate (≥76 %), E2E for
+  `compare`, `list`, invalid-suite validation, and seed determinism
 
 ## Earlier history
 

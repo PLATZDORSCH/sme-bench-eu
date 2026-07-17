@@ -137,10 +137,7 @@ async def start_mock_server(host: str = "127.0.0.1", port: int = 0) -> tuple[web
     await runner.setup()
     site = web.TCPSite(runner, host, port)
     await site.start()
-    sockets = site._server.sockets  # type: ignore[union-attr]
-    assert sockets
-    bound_port = sockets[0].getsockname()[1]
-    return runner, f"http://{host}:{bound_port}/v1"
+    return runner, f"{site.name}/v1"
 
 
 if __name__ == "__main__":
