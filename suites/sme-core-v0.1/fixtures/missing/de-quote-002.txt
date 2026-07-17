@@ -1,0 +1,6 @@
+Anfrage Wartungsvertrag:
+Firma: Elektro Pfeiffer
+Lieferadresse: Industriestr. 4, 30159 Hannover
+Menge: 12 Schaltschränke
+Farbe: grau
+Budget und Vertragslaufzeit fehlen noch.

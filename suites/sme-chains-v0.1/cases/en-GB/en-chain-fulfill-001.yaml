@@ -1,0 +1,51 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: en-chain-fulfill-001
+pair_id: chain-fulfill-001
+title: 'Fulfillment: Adresse korrigieren'
+language: en-GB
+category: process_ops
+task_type: process_next_step
+difficulty: hard
+risk: high
+tags:
+- process
+- chain
+messages:
+- role: system
+  content: Return JSON {next_step, ready, missing}. Choose next_step from the options
+    stated in the user text. ready=true only if process can proceed without blocking
+    gaps.
+- role: user
+  fixture: fixtures/en-chain-order-fulfill.txt
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  next_step: fix_address
+  ready: false
+  missing:
+  - address
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/process-step.schema.json
+    coerce_scalar_fields:
+    - missing
+- type: json_fields
+  weight: 0.5
+  params:
+    fields:
+    - next_step
+    - ready
+- type: set_equality
+  weight: 0.3
+  params:
+    field: missing
+    ignore_order: true
+    coerce_scalar: true
+    match: substring
+pass_threshold: 0.85

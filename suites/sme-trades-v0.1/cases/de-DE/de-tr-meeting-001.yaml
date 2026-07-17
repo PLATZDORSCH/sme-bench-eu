@@ -1,0 +1,55 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: de-tr-meeting-001
+pair_id: tr-meeting-001
+title: Baubesprechung Actions
+language: de-DE
+category: meeting_operations
+task_type: meeting_actions
+difficulty: normal
+risk: medium
+tags:
+- trades
+- meeting
+messages:
+- role: system
+  content: >-
+    Extract JSON {"actions":[{"owner","task","due"}]} with due as YYYY-MM-DD. Only stated decisions; do not invent owners or dates.
+- role: user
+  fixture: fixtures/de-baubesprechung.txt
+generation:
+  max_tokens: 300
+  temperature: 0
+  response_format: json
+expected:
+  actions:
+  - owner: Kramer
+    task: Stückliste Armaturen
+    due: '2026-06-20'
+  - owner: Berger
+    task: Zugangscode Keller
+    due: '2026-06-18'
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/meeting-actions.schema.json
+- type: json_fields
+  weight: 0.4
+  params:
+    fields:
+    - actions.0.owner
+    - actions.0.due
+    - actions.1.owner
+    - actions.1.due
+- type: contains
+  weight: 0.4
+  params:
+    terms:
+    - Kramer
+    - Berger
+    - '2026-06-20'
+    - '2026-06-18'
+    mode: all
+pass_threshold: 0.85

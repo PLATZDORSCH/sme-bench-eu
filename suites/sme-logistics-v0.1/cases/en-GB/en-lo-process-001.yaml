@@ -1,0 +1,55 @@
+schema_version: '1.0'
+id: en-lo-process-001
+pair_id: lo-process-001
+title: Check dispatch readiness
+language: en-GB
+category: process_ops
+task_type: process_readiness
+difficulty: hard
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- logistics
+- process
+messages:
+- role: system
+  content: |-
+    Decide shipment readiness. Return JSON {next_step, ready, missing} where ready is false if any required checklist item is missing. next_step should be a short action string.
+- role: user
+  fixture: fixtures/en-dispatch-check.txt
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  next_step: 'capture consignee phone'
+  ready: false
+  missing:
+    - phone
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/process-step.schema.json
+- type: json_fields
+  weight: 0.5
+  params:
+    fields:
+      - ready
+- type: contains
+  weight: 0.3
+  params:
+    terms:
+      - 'false'
+      - phone
+    mode: any
+    case_insensitive: true
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+      - '"ready": true'
+      - '"ready":true'
+pass_threshold: 0.85

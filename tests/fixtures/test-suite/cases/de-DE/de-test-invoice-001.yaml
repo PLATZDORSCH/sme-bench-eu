@@ -1,0 +1,42 @@
+schema_version: '1.0'
+id: de-test-invoice-001
+pair_id: test-invoice-001
+title: test invoice
+language: de-DE
+category: document_extraction
+task_type: invoice_extraction
+difficulty: easy
+risk: low
+review_status: draft
+data_classification: synthetic
+tags:
+- test
+messages:
+- role: system
+  content: Extract invoice JSON
+- role: user
+  fixture: fixtures/inv-de.txt
+generation:
+  max_tokens: 100
+  temperature: 0
+  response_format: json
+expected:
+  invoice_number: RE-2026-1048
+  net_amount: 1000.0
+scorers:
+- type: json_schema
+  weight: 0.3
+  params:
+    schema: schemas/invoice.json
+- type: json_fields
+  weight: 0.4
+  params:
+    fields:
+    - invoice_number
+- type: numeric
+  weight: 0.3
+  params:
+    fields:
+    - net_amount
+    absolute_tolerance: 0.01
+pass_threshold: 0.8

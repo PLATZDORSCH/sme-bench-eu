@@ -1,0 +1,4 @@
+Roh: brand=" ALPINE ", colour=anthrazit, size=extra large, material=Polyester/Cotton Mix
+Erlaubt Farbe: navy, black, white, anthracite
+Größe: S,M,L,XL
+Material: cotton|polyester|blend

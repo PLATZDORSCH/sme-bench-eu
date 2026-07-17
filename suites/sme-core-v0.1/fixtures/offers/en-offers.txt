@@ -1,0 +1,4 @@
+Rule: Choose lowest total price including shipping. Tie-break by lead time.
+
+Offer AlphaSupply: goods 820 EUR + shipping 40 EUR, lead time 5 days
+Offer BetaParts: goods 800 EUR + shipping 70 EUR, lead time 3 days

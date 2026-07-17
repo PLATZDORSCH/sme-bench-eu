@@ -1,0 +1,3 @@
+Customer asks about partial shipment order #B-778.
+Fact: line 1 shipped on 10 Jul, line 2 follows Monday 09:00.
+Do not promise discounts or credit notes.

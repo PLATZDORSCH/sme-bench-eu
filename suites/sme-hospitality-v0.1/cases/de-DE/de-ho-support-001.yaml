@@ -1,0 +1,59 @@
+schema_version: '1.0'
+id: de-ho-support-001
+pair_id: ho-support-001
+title: Gästeticket klassifizieren
+language: de-DE
+category: customer_service
+task_type: support_routing
+difficulty: easy
+risk: medium
+review_status: approved
+data_classification: synthetic
+tags:
+- hospitality
+- support
+messages:
+- role: system
+  content: |-
+    Classify the support ticket. Return JSON with category (one of [billing,shipping,technical,other]) and priority (one of [low,medium,high,urgent]). Priority rubric: urgent = business-critical outage, security incident or same-day/legal deadline; high = significant financial or blocked-process impact needing action within days; medium = limited impact, no tight deadline; low = minor, cosmetic or informational.
+- role: user
+  fixture: fixtures/de-guest-ticket.txt
+generation:
+  max_tokens: 120
+  temperature: 0
+  response_format: json
+expected:
+  category: technical
+  priority: urgent
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/support-routing.schema.json
+- type: classification
+  weight: 0.5
+  params:
+    field: category
+    expected: technical
+    allowed:
+      - billing
+      - shipping
+      - technical
+      - other
+- type: classification
+  weight: 0.3
+  params:
+    field: priority
+    expected: urgent
+    allowed:
+      - low
+      - medium
+      - high
+      - urgent
+    scale:
+      - low
+      - medium
+      - high
+      - urgent
+    adjacent_credit: 0.5
+pass_threshold: 0.85

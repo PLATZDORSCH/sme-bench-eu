@@ -1,0 +1,7 @@
+Facts for the reply to the creditor:
+
+- Open invoice: RE-2026-1048
+- Due: 2026-08-14
+- Amount: 1,190.00 EUR gross
+- Status: payment scheduled for Friday 16:00 via SEPA
+- Do not invent: early-payment discount, offset against credit note G-12, or “already paid”

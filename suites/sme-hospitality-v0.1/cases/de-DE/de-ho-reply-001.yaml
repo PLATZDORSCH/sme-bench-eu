@@ -1,0 +1,44 @@
+schema_version: '1.0'
+id: de-ho-reply-001
+pair_id: ho-reply-001
+title: Reservierungsbestätigung faktisch
+language: de-DE
+category: customer_service
+task_type: customer_reply
+difficulty: normal
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- hospitality
+- reply
+messages:
+- role: system
+  content: 'Write a short factual guest reply using only provided facts. Do not invent commitments.'
+- role: user
+  fixture: fixtures/de-booking-facts.txt
+generation:
+  max_tokens: 250
+  temperature: 0
+  response_format: text
+expected: null
+scorers:
+- type: contains
+  weight: 1.0
+  params:
+    terms:
+      - '#R-8821'
+      - '19:30'
+      - '4'
+      - Freitag
+    mode: all
+    case_insensitive: true
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+      - 'kostenlose Flasche'
+      - 'lebenslange Garantie'
+      - 'complimentary wine'
+pass_threshold: 0.85

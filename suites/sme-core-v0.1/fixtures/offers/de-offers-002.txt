@@ -1,0 +1,4 @@
+Regel: Niedrigster Gesamtpreis inkl. Versand. Bei Gleichstand kürzere Lieferzeit.
+
+GammaTech: Ware 1.200 EUR + Versand 0 EUR, 10 Tage
+DeltaLog: Ware 1.150 EUR + Versand 60 EUR, 4 Tage

@@ -1,0 +1,6 @@
+Richtlinie MwSt (intern):
+
+[V-1] Standardsteuersatz 19% für Waren und Dienstleistungen.
+[V-2] Ermäßigter Satz 7% nur für Bücher und ausgewählte Druckwerke.
+[V-3] Keine pauschale Steuerbefreiung ohne schriftlichen Nachweis der Finanzbehörde.
+[V-4] Gutschriften müssen denselben Steuersatz wie die Ursprungsrechnung tragen.

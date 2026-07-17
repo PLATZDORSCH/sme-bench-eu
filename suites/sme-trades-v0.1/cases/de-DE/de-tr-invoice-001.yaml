@@ -1,0 +1,74 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: de-tr-invoice-001
+pair_id: tr-invoice-001
+title: Handwerkerrechnung Restzahlung extrahieren
+language: de-DE
+category: document_extraction
+task_type: invoice_extraction
+difficulty: hard
+risk: high
+tags:
+- trades
+- invoice
+- long
+messages:
+- role: system
+  content: >-
+    Extrahiere die Rechnung als JSON mit genau diesen Schlüsseln: invoice_number, supplier, currency, net_amount, vat_rate, vat_amount, gross_amount, due_date. Gib vat_rate als Dezimalbruch an (z. B. 0.19 für 19%) und due_date als JJJJ-MM-TT. Verwende nur vorhandene Daten und antworte ausschließlich mit JSON, ohne Markdown.
+- role: user
+  fixture: fixtures/de-handwerker-rechnung.txt
+generation:
+  max_tokens: 350
+  temperature: 0
+  response_format: json
+expected:
+  invoice_number: SN-2026-441
+  supplier: Sanitär Nord GmbH
+  currency: EUR
+  net_amount: 1850.0
+  vat_rate: 0.19
+  vat_amount: 351.5
+  gross_amount: 2201.5
+  due_date: '2026-07-10'
+scorers:
+- type: json_schema
+  weight: 0.1
+  params:
+    schema: schemas/invoice-output.schema.json
+- type: json_fields
+  weight: 0.55
+  params:
+    fields:
+    - invoice_number
+    - supplier
+    - currency
+    - due_date
+- type: numeric
+  weight: 0.35
+  params:
+    fields:
+    - net_amount
+    - vat_rate
+    - vat_amount
+    - gross_amount
+    absolute_tolerance: 0.01
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    fields:
+    - invoice_number
+    - supplier
+    - currency
+    - net_amount
+    - vat_rate
+    - vat_amount
+    - gross_amount
+    - due_date
+    terms:
+    - bereits bezahlt
+    - already paid
+    - Zahlung bestätigt
+pass_threshold: 0.85

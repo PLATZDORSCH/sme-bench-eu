@@ -1,0 +1,17 @@
+Ticket #T-90821 (email thread, newest first)
+
+---- 16 Jul 2026 09:41 Customer ----
+I want to return order #W-55021. Shoes size 43, unopened.
+When do I get the refund?
+
+---- 15 Jul 2026 18:02 Support (draft, NOT sent) ----
+Internal note: customer annoyed. Do not promise instant refund.
+
+---- 15 Jul 2026 17:55 Customer ----
+Parcel arrived, fit unsure. Start return?
+
+Policy facts for reply:
+- Returns within 30 days with receipt allowed
+- Refund within 14 business days after goods receipt
+- Do not promise instant credit
+Return tracking if needed: not yet assigned.

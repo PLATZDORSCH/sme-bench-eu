@@ -1,0 +1,10 @@
+Kommissionierauftrag WH-77
+
+Kunde: Baumarkt Ost
+Währung: EUR
+
+- 12x PAL-100 Europalette Standard
+- 4x BOX-22 Karton mittel, Variante braun
+- 1x LABEL-9 Versandetiketten Rolle
+
+Ignoriere stornierte Zeile SKU-X (qty 0).

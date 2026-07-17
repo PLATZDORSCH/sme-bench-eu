@@ -1,0 +1,2 @@
+brand=litebag, Farbe=Weiss, Größe=s, Material=100% Polyester
+Erlaubt: white/black/navy; S/M/L/XL; cotton|polyester|blend

@@ -1,0 +1,56 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: de-chain-invoice-001
+pair_id: chain-invoice-001
+title: 'Rechnung→Buchung: Kostenstelle fehlt'
+language: de-DE
+category: process_ops
+task_type: process_next_step
+difficulty: hard
+risk: high
+tags:
+- process
+- chain
+messages:
+- role: system
+  content: |-
+    Return JSON {next_step, ready, missing}. Choose next_step from the options
+    stated in the user text. ready=true only if process can proceed without blocking
+    gaps. missing must be an array of short tokens (English snake_case preferred,
+    e.g. cost_center).
+- role: user
+  fixture: fixtures/de-chain-invoice.txt
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  next_step: request_cost_center
+  ready: false
+  missing:
+  - cost_center
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/process-step.schema.json
+    coerce_scalar_fields:
+    - missing
+- type: json_fields
+  weight: 0.5
+  params:
+    fields:
+    - next_step
+    - ready
+- type: set_equality
+  weight: 0.3
+  params:
+    field: missing
+    ignore_order: true
+    coerce_scalar: true
+    aliases:
+      cost_center:
+      - Kostenstelle
+      - cost centre
+pass_threshold: 0.85

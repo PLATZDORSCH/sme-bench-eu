@@ -1,0 +1,20 @@
+From: purchasing@holzring.example
+Subject: FW: Invoice HR-88421
+
+-------- Forwarded message --------
+From: billing@holzring.example
+Date: Mon 12 May 2026
+
+Hello,
+
+Invoice HR-88421 from Holzring AG.
+Net: 2450.50 EUR
+VAT 19% = 465.60 EUR
+Gross: 2916.10 EUR
+Due: 2026-06-28
+
+Internal note: old HR-77001 was already paid — NOT this one!
+Warehouse 3 address is FYI only, not invoice data.
+
+Thanks
+Holzring Billing

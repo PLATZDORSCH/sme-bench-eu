@@ -1,0 +1,44 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: de-ec-product-001
+pair_id: ec-product-001
+title: Shop-Feed normalisieren
+language: de-DE
+category: commerce
+task_type: product_normalization
+difficulty: normal
+risk: low
+tags:
+- ecommerce
+- catalog
+messages:
+- role: system
+  content: >-
+    Return JSON with exactly these keys: brand, color, size, material. Normalize to the allowed vocabulary stated in the user message / fixture.
+- role: user
+  fixture: fixtures/de-katalog-roh.txt
+generation:
+  max_tokens: 150
+  temperature: 0
+  response_format: json
+expected:
+  brand: levinwear
+  color: navy
+  size: M
+  material: cotton
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/product-normalization.schema.json
+- type: json_fields
+  weight: 0.8
+  params:
+    fields:
+    - brand
+    - color
+    - size
+    - material
+    case_insensitive: true
+pass_threshold: 0.85

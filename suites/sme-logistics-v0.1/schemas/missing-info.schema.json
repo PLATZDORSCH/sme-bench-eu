@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "required": [
+    "missing_fields"
+  ],
+  "properties": {
+    "missing_fields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

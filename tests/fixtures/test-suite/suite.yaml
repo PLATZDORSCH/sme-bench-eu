@@ -1,0 +1,17 @@
+schema_version: "1.0"
+id: test-suite
+name: Test Suite
+version: "0.0.1"
+description: Tiny suite for integration tests
+languages:
+  - de-DE
+  - en-GB
+default_repeats: 2
+default_pass_threshold: 0.8
+case_globs:
+  - cases/**/*.yaml
+category_weights:
+  document_extraction: 1.0
+  customer_service: 1.0
+provenance:
+  type: synthetic

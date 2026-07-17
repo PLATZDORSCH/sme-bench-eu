@@ -1,0 +1,42 @@
+schema_version: '1.0'
+id: de-product-normalization-002
+pair_id: product-normalization-002
+title: Attribute normalisieren
+language: de-DE
+category: commerce
+task_type: product_normalization
+difficulty: normal
+risk: low
+review_status: approved
+data_classification: synthetic
+tags:
+- catalog
+messages:
+- role: system
+  content: Return JSON brand,color,size,material using allowed vocabularies.
+- role: user
+  fixture: fixtures/product/de-product-002.txt
+generation:
+  max_tokens: 150
+  temperature: 0
+  response_format: json
+expected:
+  brand: alpine
+  color: anthracite
+  size: XL
+  material: blend
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/product-normalization.schema.json
+- type: json_fields
+  weight: 0.8
+  params:
+    fields:
+    - brand
+    - color
+    - size
+    - material
+    case_insensitive: true
+pass_threshold: 0.85

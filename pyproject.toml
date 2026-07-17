@@ -1,0 +1,93 @@
+[project]
+name = "sme-bench"
+version = "0.1.0"
+description = "Benchmark for language models on realistic SME business tasks (DE/EN)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Tim Dau", email = "dau@pd-we.de" }]
+keywords = [
+    "benchmark",
+    "llm",
+    "evaluation",
+    "german",
+    "sme",
+    "kmu",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Natural Language :: German",
+    "Natural Language :: English",
+]
+dependencies = [
+    "aiohttp>=3.9.0",
+    "jsonschema>=4.21.0",
+    "pydantic>=2.6.0",
+    "pyyaml>=6.0.1",
+    "rich>=13.7.0",
+    "typer>=0.12.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/timdau/sme-bench"
+Repository = "https://github.com/timdau/sme-bench"
+Issues = "https://github.com/timdau/sme-bench/issues"
+Changelog = "https://github.com/timdau/sme-bench/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.8.0",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.3.0",
+    "types-PyYAML>=6.0.12",
+    "types-jsonschema>=4.21.0",
+]
+
+[project.scripts]
+sme-bench = "sme_bench.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sme_bench"]
+
+[tool.uv]
+package = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["B008", "E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["sme_bench"]
+mypy_path = "src"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["aiohttp.*"]
+ignore_missing_imports = true

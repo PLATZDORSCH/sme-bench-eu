@@ -1,0 +1,14 @@
+AP inbox — supplier invoice
+
+From: Office Supplies Klar Ltd
+Invoice no. BK-77821
+Bill to: Sample Ltd, Accounts Payable
+
+Net 420.00 EUR
+VAT 19% = 79.80 EUR
+Gross 499.80 EUR
+Currency EUR
+Due 2026-08-20
+
+Footer note: “Do not mark the remaining balance as already paid —
+deposit ANZ-12 belongs to a different delivery.”

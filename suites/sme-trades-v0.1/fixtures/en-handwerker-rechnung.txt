@@ -1,0 +1,15 @@
+Plumbing North Ltd · Craftsman invoice
+
+Invoice no. SN-2026-441
+Customer: Sample Build Ltd
+Service period: 10–12 Jun 2026
+Summary: shower enclosure install, waterproofing, silicone.
+
+Net 1850.00 EUR
+VAT 19% 351.50 EUR
+Gross 2201.50 EUR
+Due 2026-07-10
+Currency EUR
+
+Note: deposit ANZ-100 was already paid — this invoice is the remainder; do not mark the whole invoice as already paid.
+Site address Linden Way 12 is delivery location only.

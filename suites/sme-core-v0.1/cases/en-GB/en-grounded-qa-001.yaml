@@ -1,0 +1,72 @@
+schema_version: '1.0'
+id: en-grounded-qa-001
+pair_id: grounded-qa-001
+title: Answer from policy only
+language: en-GB
+category: grounded_qa
+task_type: grounded_qa
+difficulty: normal
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- rag
+- citations
+messages:
+- role: system
+  content: Answer only using the policy. JSON with answer and citations. Never invent
+    warranties.
+- role: user
+  content: 'Policy:
+
+    [SEC-1] Returns within 30 days with receipt.
+
+    [SEC-2] Hygiene products are excluded from exchange.
+
+    [SEC-3] Refunds within 14 business days after goods receipt.
+
+
+
+    Question: How long do I have to return an item? Reply as JSON with answer and
+    citations (section IDs).'
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: 30 days
+  citations:
+  - SEC-1
+  allowed_citations:
+  - SEC-1
+  - SEC-2
+  - SEC-3
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: contains
+  weight: 0.45
+  params:
+    terms:
+    - '30'
+    mode: all
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed:
+    - SEC-1
+    - SEC-2
+    - SEC-3
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - lifetime warranty
+    - lebenslange Garantie
+    - 90 days
+    - 90 Tage
+pass_threshold: 0.85

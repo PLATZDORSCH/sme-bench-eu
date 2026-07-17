@@ -1,0 +1,7 @@
+Fakten für die Antwort an Kreditor:
+
+- Offene Rechnung: RE-2026-1048
+- Fällig: 2026-08-14
+- Betrag: 1.190,00 EUR brutto
+- Status: Zahlung ist terminiert für Freitag 16:00 per SEPA
+- Nicht zusagen: Skonto, Ausgleich mit Gutschrift G-12, oder „bereits bezahlt“

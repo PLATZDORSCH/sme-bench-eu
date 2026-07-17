@@ -1,0 +1,45 @@
+schema_version: '1.0'
+id: en-customer-reply-001
+pair_id: customer-reply-001
+title: Factual delay reply
+language: en-GB
+category: customer_service
+task_type: customer_reply
+difficulty: normal
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- reply
+- no-commitment
+messages:
+- role: system
+  content: Write a short factual customer reply using only provided facts. Do not
+    invent commitments.
+- role: user
+  fixture: fixtures/reply/en-delay.txt
+generation:
+  max_tokens: 250
+  temperature: 0
+  response_format: text
+expected: null
+scorers:
+- type: contains
+  weight: 1.0
+  params:
+    terms:
+    - '#A-441'
+    - Friday
+    - '16:00'
+    - carrier
+    mode: all
+    case_insensitive: true
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - compensation promised
+    - payment confirmed
+    - already paid
+pass_threshold: 0.85

@@ -1,0 +1,4 @@
+Raw: brand = "nordwear ", colour = Navy Blue, size = medium, material = 100% cotton
+Allowed colours: navy, black, white
+Allowed sizes: S, M, L, XL
+Normalise material to: cotton | polyester | blend

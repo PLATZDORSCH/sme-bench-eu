@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SME-Bench Attempt Result",
+  "type": "object",
+  "required": [
+    "task_id",
+    "repeat_index",
+    "passed",
+    "effective_score"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "repeat_index": {
+      "type": "integer"
+    },
+    "passed": {
+      "type": "boolean"
+    },
+    "effective_score": {
+      "type": "number"
+    }
+  }
+}

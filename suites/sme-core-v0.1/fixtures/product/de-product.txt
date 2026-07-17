@@ -1,0 +1,4 @@
+Rohdaten: Marke = "nordwear ", Farbe = Navy-Blau, Größe = medium, Material = 100% Baumwolle
+Erlaubte Farben: navy, black, white
+Erlaubte Größen: S, M, L, XL
+Material normalisieren zu: cotton | polyester | blend

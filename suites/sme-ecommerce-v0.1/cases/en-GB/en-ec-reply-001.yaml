@@ -1,0 +1,46 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: en-ec-reply-001
+pair_id: ec-reply-001
+title: Retoure-Antwort ohne Sofortzusage
+language: en-GB
+category: customer_service
+task_type: customer_reply
+difficulty: hard
+risk: high
+tags:
+- ecommerce
+- returns
+- long
+messages:
+- role: system
+  content: Write factual customer reply using only provided policy facts. No invented
+    commitments.
+- role: user
+  fixture: fixtures/en-retoure-thread.txt
+generation:
+  max_tokens: 300
+  temperature: 0
+  response_format: text
+expected: null
+scorers:
+- type: contains
+  weight: 1.0
+  params:
+    terms:
+    - '#W-55021'
+    - '30'
+    - '14'
+    mode: all
+    case_insensitive: true
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    ignore_negated: true
+    terms:
+    - instant refund
+    - instant credit
+    - already refunded
+pass_threshold: 0.85

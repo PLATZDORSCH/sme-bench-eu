@@ -1,0 +1,5 @@
+Context A – document:
+Invoice RE-700, supplier BetaParts, net 200, VAT 38, gross 238, EUR, due 2026-09-01.
+Cost centre K-140 maintained. No IBAN change.
+
+Task: JSON {next_step, ready, missing} with next_step=book_payment, ready=true, missing=[].

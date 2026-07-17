@@ -1,0 +1,5 @@
+Schritt A – Beleg:
+Rechnung RE-700, Lieferant BetaParts, Netto 200, MwSt 38, Brutto 238, EUR, Fällig 2026-09-01.
+Kostenstelle K-140 ist gepflegt. Keine IBAN-Änderung.
+
+Aufgabe: JSON {next_step, ready, missing} mit next_step=book_payment, ready=true, missing=[].

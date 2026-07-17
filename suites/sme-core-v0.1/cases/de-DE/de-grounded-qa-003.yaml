@@ -1,0 +1,67 @@
+schema_version: '1.0'
+id: de-grounded-qa-003
+pair_id: grounded-qa-003
+title: Nur aus Richtlinie antworten
+language: de-DE
+category: grounded_qa
+task_type: grounded_qa
+difficulty: normal
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- rag
+- citations
+messages:
+- role: system
+  content: Answer only using the policy. JSON answer + citations. Never invent terms.
+- role: user
+  content: 'Policy:
+
+    [W-1] Gewährleistung 24 Monate ab Kaufdatum.
+
+    [W-2] Verschleißteile ausgenommen.
+
+    [W-3] Keine lebenslange Garantie.
+
+
+
+    Question: Wie lange ist die Gewährleistung?'
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: '24'
+  citations:
+  - W-1
+  allowed_citations: &id001
+  - W-1
+  - W-2
+  - W-3
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: contains
+  weight: 0.45
+  params:
+    terms:
+    - '24'
+    mode: all
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed: *id001
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - lebenslange Garantie
+    - lifetime warranty
+    - 36 Monate
+    - 36 months
+pass_threshold: 0.85

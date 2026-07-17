@@ -1,0 +1,41 @@
+schema_version: '1.0'
+id: en-missing-information-003
+pair_id: missing-information-003
+title: Missing quote fields
+language: en-GB
+category: sales_operations
+task_type: missing_information
+difficulty: hard
+risk: low
+review_status: approved
+data_classification: synthetic
+tags:
+- missing-fields
+messages:
+- role: system
+  content: 'From this candidate list, return JSON {"missing_fields":[...]} listing every
+    field that is NOT explicitly stated in the message: delivery_address, budget, colour_preference,
+    quantity, company, contract_term.'
+- role: user
+  fixture: fixtures/missing/en-quote-003.txt
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  missing_fields:
+  - delivery_address
+  - budget
+  - colour_preference
+  - contract_term
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/missing-info.schema.json
+- type: set_equality
+  weight: 0.8
+  params:
+    field: missing_fields
+    ignore_order: true
+pass_threshold: 0.85

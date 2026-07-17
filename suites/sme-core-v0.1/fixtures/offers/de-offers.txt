@@ -1,0 +1,4 @@
+Regel: Wähle den günstigsten Gesamtpreis inkl. Versand. Bei Gleichstand Lieferzeit.
+
+Angebot AlphaSupply: Ware 820 EUR + Versand 40 EUR, Lieferung 5 Tage
+Angebot BetaParts: Ware 800 EUR + Versand 70 EUR, Lieferung 3 Tage

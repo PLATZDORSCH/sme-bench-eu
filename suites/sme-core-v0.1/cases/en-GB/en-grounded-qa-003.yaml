@@ -1,0 +1,67 @@
+schema_version: '1.0'
+id: en-grounded-qa-003
+pair_id: grounded-qa-003
+title: Answer from policy only
+language: en-GB
+category: grounded_qa
+task_type: grounded_qa
+difficulty: normal
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- rag
+- citations
+messages:
+- role: system
+  content: Answer only using the policy. JSON answer + citations. Never invent terms.
+- role: user
+  content: 'Policy:
+
+    [W-1] Warranty 24 months from purchase date.
+
+    [W-2] Wear parts excluded.
+
+    [W-3] No lifetime warranty.
+
+
+
+    Question: How long is the warranty?'
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: '24'
+  citations:
+  - W-1
+  allowed_citations: &id001
+  - W-1
+  - W-2
+  - W-3
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: contains
+  weight: 0.45
+  params:
+    terms:
+    - '24'
+    mode: all
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed: *id001
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - lebenslange Garantie
+    - lifetime warranty
+    - 36 Monate
+    - 36 months
+pass_threshold: 0.85

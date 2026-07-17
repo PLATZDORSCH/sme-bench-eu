@@ -1,0 +1,61 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: en-tr-process-quote-001
+pair_id: tr-process-quote-001
+title: Angebotsreife nach Aufmaß-Mail
+language: en-GB
+category: process_ops
+task_type: process_readiness
+difficulty: hard
+risk: medium
+tags:
+- trades
+- process
+- long
+messages:
+- role: system
+  content: >-
+    Decide if a binding quote can be sent. Return JSON with exactly these keys:
+    next_step (string: "send_quote" or "request_missing"), ready (boolean),
+    missing (array of strings).
+    Readiness rule: if the message already states site address, surveyed scope
+    items, material preference, and preferred timing, set next_step=send_quote,
+    ready=true, missing=[]. Do not invent missing fields that are already present,
+    and do not require extra details such as exact tile areas, brand catalogues,
+    or demolition scope when the readiness rule is already met.
+- role: user
+  fixture: fixtures/en-aufmass-mail.txt
+generation:
+  max_tokens: 250
+  temperature: 0
+  response_format: json
+expected:
+  next_step: send_quote
+  ready: true
+  missing: []
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/process-step.schema.json
+- type: json_fields
+  weight: 0.5
+  params:
+    fields:
+    - next_step
+    - ready
+- type: set_equality
+  weight: 0.3
+  params:
+    field: missing
+    ignore_order: true
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - Expresszuschlag
+    - express surcharge
+    - Whirlpool empfohlen
+pass_threshold: 0.85

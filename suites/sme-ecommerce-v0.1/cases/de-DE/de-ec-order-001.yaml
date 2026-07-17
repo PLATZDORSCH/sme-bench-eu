@@ -1,0 +1,65 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: de-ec-order-001
+pair_id: ec-order-001
+title: Checkout-Export Bestellung
+language: de-DE
+category: sales_operations
+task_type: order_extraction
+difficulty: hard
+risk: medium
+tags:
+- ecommerce
+- order
+messages:
+- role: system
+  content: >-
+    Extract the order as JSON: customer (string), currency "EUR", items as an array of {sku (string), qty (integer), variant (string; use "none" if the item has no variant)}. Ignore rejected coupons.
+- role: user
+  fixture: fixtures/de-shop-order.txt
+generation:
+  max_tokens: 350
+  temperature: 0
+  response_format: json
+expected:
+  customer: Modehaus Levin
+  currency: EUR
+  items:
+  - sku: SHIRT-221
+    qty: 2
+    variant: M/navy
+  - sku: BELT-09
+    qty: 1
+    variant: 95/black
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/order-output.schema.json
+- type: json_fields
+  weight: 0.35
+  params:
+    fields:
+    - customer
+    - currency
+- type: set_equality
+  weight: 0.5
+  params:
+    field: items
+    ignore_order: true
+    keys:
+    - sku
+    - qty
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    fields:
+    - customer
+    - currency
+    - items
+    terms:
+    - SUMMER angewendet
+    - coupon applied
+pass_threshold: 0.85

@@ -1,0 +1,3 @@
+[SEC-1] Returns within 30 days with receipt.
+[SEC-2] Hygiene products are excluded from exchange.
+[SEC-3] Refunds within 14 business days after goods receipt.

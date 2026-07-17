@@ -1,0 +1,46 @@
+schema_version: '1.0'
+id: de-meeting-actions-003
+pair_id: meeting-actions-003
+title: Meeting-Actions extrahieren
+language: de-DE
+category: meeting_operations
+task_type: meeting_actions
+difficulty: normal
+risk: medium
+review_status: approved
+data_classification: synthetic
+tags:
+- meeting
+messages:
+- role: system
+  content: Return JSON {actions:[{owner,task,due}]} for assigned actions only.
+- role: user
+  fixture: fixtures/meeting/de-meeting-003.txt
+generation:
+  max_tokens: 300
+  temperature: 0
+  response_format: json
+expected:
+  actions:
+  - owner: Nora
+    task: Zeichnung senden
+    due: '2026-07-22'
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/meeting-actions.schema.json
+- type: json_fields
+  weight: 0.4
+  params:
+    fields:
+    - actions.0.owner
+    - actions.0.due
+- type: contains
+  weight: 0.4
+  params:
+    terms:
+    - Nora
+    - '2026-07-22'
+    mode: all
+pass_threshold: 0.85

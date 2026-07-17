@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "required": [
+    "brand",
+    "color",
+    "size",
+    "material"
+  ],
+  "properties": {
+    "brand": {
+      "type": "string"
+    },
+    "color": {
+      "type": "string"
+    },
+    "size": {
+      "type": "string"
+    },
+    "material": {
+      "type": "string"
+    }
+  }
+}

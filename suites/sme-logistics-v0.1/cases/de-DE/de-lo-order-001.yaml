@@ -1,0 +1,58 @@
+schema_version: '1.0'
+id: de-lo-order-001
+pair_id: lo-order-001
+title: Kommissionierauftrag erfassen
+language: de-DE
+category: sales_operations
+task_type: order_extraction
+difficulty: normal
+risk: medium
+review_status: approved
+data_classification: synthetic
+tags:
+- logistics
+- order
+- warehouse
+messages:
+- role: system
+  content: |-
+    Extract the order as JSON: customer (string), currency "EUR", items as an array of {sku (string), qty (integer), variant (string; use "none" if the item has no variant)}. Ignore cancelled lines.
+- role: user
+  fixture: fixtures/de-pick-list.txt
+generation:
+  max_tokens: 350
+  temperature: 0
+  response_format: json
+expected:
+  customer: 'Baumarkt Ost'
+  currency: EUR
+  items:
+    - sku: PAL-100
+      qty: 12
+      variant: none
+    - sku: BOX-22
+      qty: 4
+      variant: braun
+    - sku: LABEL-9
+      qty: 1
+      variant: none
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/order-output.schema.json
+- type: json_fields
+  weight: 0.35
+  params:
+    fields:
+      - customer
+      - currency
+- type: set_equality
+  weight: 0.5
+  params:
+    field: items
+    ignore_order: true
+    keys:
+      - sku
+      - qty
+pass_threshold: 0.85

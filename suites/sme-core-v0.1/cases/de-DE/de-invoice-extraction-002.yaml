@@ -1,0 +1,76 @@
+schema_version: '1.0'
+id: de-invoice-extraction-002
+pair_id: invoice-extraction-002
+title: Rechnung aus weitergeleiteter Mail (EU-Format)
+language: de-DE
+category: document_extraction
+task_type: invoice_extraction
+difficulty: hard
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- invoice
+- forwarded
+- vat
+messages:
+- role: system
+  content: 'Extrahiere die Rechnung als JSON mit genau diesen Schlüsseln: invoice_number,
+    supplier, currency, net_amount, vat_rate, vat_amount, gross_amount, due_date. Gib
+    vat_rate als Dezimalbruch an (z. B. 0.19 für 19%) und due_date als JJJJ-MM-TT. Verwende
+    nur vorhandene Daten und antworte ausschließlich mit JSON, ohne Markdown.'
+- role: user
+  fixture: fixtures/invoice/de-invoice-002.txt
+generation:
+  max_tokens: 350
+  temperature: 0
+  response_format: json
+expected:
+  invoice_number: HR-88421
+  supplier: Holzring AG
+  currency: EUR
+  net_amount: 2450.5
+  vat_rate: 0.19
+  vat_amount: 465.6
+  gross_amount: 2916.1
+  due_date: '2026-06-28'
+scorers:
+- type: json_schema
+  weight: 0.1
+  params:
+    schema: schemas/invoice-output.schema.json
+- type: json_fields
+  weight: 0.55
+  params:
+    fields:
+    - invoice_number
+    - supplier
+    - currency
+    - due_date
+- type: numeric
+  weight: 0.35
+  params:
+    fields:
+    - net_amount
+    - vat_rate
+    - vat_amount
+    - gross_amount
+    absolute_tolerance: 0.01
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    fields:
+    - invoice_number
+    - supplier
+    - currency
+    - net_amount
+    - vat_rate
+    - vat_amount
+    - gross_amount
+    - due_date
+    terms:
+    - bereits bezahlt
+    - already paid
+    - HR-77001 bezahlt
+pass_threshold: 0.85

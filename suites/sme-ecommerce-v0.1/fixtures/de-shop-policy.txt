@@ -1,0 +1,3 @@
+[R-1] Retoure 30 Tage mit Beleg.
+[R-2] Erstattung 14 Werktage nach Wareneingang.
+[R-3] Hygienartikel und getragene Schuhe mit Nutzungsspuren ausgeschlossen.

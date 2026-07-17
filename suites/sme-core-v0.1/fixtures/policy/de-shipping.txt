@@ -1,0 +1,3 @@
+[SEC-A] Standardversand 3–5 Werktage.
+[SEC-B] Express bis 12:00 Bestellung = nächster Werktag.
+[SEC-C] Inselzuschlag 12 EUR.

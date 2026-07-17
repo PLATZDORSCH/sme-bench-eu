@@ -1,0 +1,3 @@
+Bestellung #O-77 Positionen komplett kommissioniert.
+Adressvalidierung fehlgeschlagen (PLZ 00000). Zahlung autorisiert.
+Nächster Schritt [ship, fix_address, refund]?

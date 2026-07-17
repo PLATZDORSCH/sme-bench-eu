@@ -1,0 +1,3 @@
+Schritt: Rechnung RE-9001 Nordwerk, Netto 500, MwSt 95, Brutto 595, Fällig 2026-08-01, EUR.
+Kostenstelle fehlt noch im ERP. Kreditor ist angelegt.
+Frage: Nächster Schritt im Prozess [extract_ok, request_cost_center, book_payment]?

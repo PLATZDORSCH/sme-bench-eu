@@ -1,0 +1,7 @@
+Ticket #AP-441
+
+Customer reports: duplicate charge on invoice RE-900.
+Amount 1,190 EUR appears twice on the bank statement.
+Please clarify — payment is held until corrected.
+Not urgent tonight, but this week.
+Account: finance@sample.example

@@ -1,0 +1,40 @@
+{
+  "type": "object",
+  "required": [
+    "invoice_number",
+    "supplier",
+    "currency",
+    "net_amount",
+    "vat_rate",
+    "vat_amount",
+    "gross_amount",
+    "due_date"
+  ],
+  "properties": {
+    "invoice_number": {
+      "type": "string"
+    },
+    "supplier": {
+      "type": "string"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "net_amount": {
+      "type": "number"
+    },
+    "vat_rate": {
+      "type": "number"
+    },
+    "vat_amount": {
+      "type": "number"
+    },
+    "gross_amount": {
+      "type": "number"
+    },
+    "due_date": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,9 @@
+Spesenantrag (unvollständig)
+
+Mitarbeiter: Anna Vogt
+Reiseziel: Berlin
+Belegsumme brutto: 186,40 EUR
+Datum: 2026-06-03
+
+Vorhanden: Mitarbeitername, Reiseziel, Betrag, Datum.
+Nicht genannt: Kostenstelle, Projektnummer, MwSt-Satz, IBAN für Erstattung.

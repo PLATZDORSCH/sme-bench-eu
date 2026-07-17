@@ -1,0 +1,68 @@
+schema_version: '1.0'
+id: de-grounded-qa-002
+pair_id: grounded-qa-002
+title: Nur aus Richtlinie antworten
+language: de-DE
+category: grounded_qa
+task_type: grounded_qa
+difficulty: normal
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- rag
+- citations
+messages:
+- role: system
+  content: Answer only using the policy. JSON answer + citations. Never invent terms.
+- role: user
+  content: 'Policy:
+
+    [SEC-A] Standardversand 3–5 Werktage.
+
+    [SEC-B] Express bis 12:00 Bestellung = nächster Werktag.
+
+    [SEC-C] Inselzuschlag 12 EUR.
+
+
+
+    Question: Wie lange dauert Standardversand?'
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: 3 5
+  citations:
+  - SEC-A
+  allowed_citations: &id001
+  - SEC-A
+  - SEC-B
+  - SEC-C
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: contains
+  weight: 0.45
+  params:
+    terms:
+    - '3'
+    - '5'
+    mode: all
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed: *id001
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - Sofortlieferung
+    - same day
+    - kostenlos weltweit
+    - free worldwide
+pass_threshold: 0.85

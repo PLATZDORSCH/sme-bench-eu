@@ -1,0 +1,4 @@
+Rule: Lowest total. Tie-break lead time.
+
+EcoPack: 500 + 50 shipping = 550, 7 days
+GreenBox: 530 + 20 shipping = 550, 3 days

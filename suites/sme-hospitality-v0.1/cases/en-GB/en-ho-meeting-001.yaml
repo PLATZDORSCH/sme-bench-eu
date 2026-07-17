@@ -1,0 +1,59 @@
+schema_version: '1.0'
+id: en-ho-meeting-001
+pair_id: ho-meeting-001
+title: Actions from pre-shift
+language: en-GB
+category: meeting_operations
+task_type: meeting_actions
+difficulty: normal
+risk: medium
+review_status: approved
+data_classification: synthetic
+tags:
+- hospitality
+- meeting
+messages:
+- role: system
+  content: |-
+    Extract JSON {"actions":[{"owner","task","due"}]} with due as YYYY-MM-DD. Only stated decisions.
+- role: user
+  fixture: fixtures/en-pre-shift.txt
+generation:
+  max_tokens: 300
+  temperature: 0
+  response_format: json
+expected:
+  actions:
+    - owner: Nora
+      task: allergen sheet
+      due: 2026-07-10
+    - owner: Kai
+      task: terrace
+      due: 2026-07-10
+    - owner: Mira
+      task: Q3 wine list
+      due: 2026-07-12
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/meeting-actions.schema.json
+- type: contains
+  weight: 0.4
+  params:
+    terms:
+      - Nora
+      - Kai
+      - Mira
+      - '2026-07-10'
+      - '2026-07-12'
+    mode: all
+- type: json_fields
+  weight: 0.4
+  params:
+    match: contains
+    fields:
+      - actions.0.owner
+      - actions.1.owner
+      - actions.2.owner
+pass_threshold: 0.85

@@ -1,0 +1,4 @@
+Regel: Niedrigster Gesamtpreis. Bei Gleichstand Lieferzeit.
+
+EcoPack: 500 + 50 Versand = 550, 7 Tage
+GreenBox: 530 + 20 Versand = 550, 3 Tage

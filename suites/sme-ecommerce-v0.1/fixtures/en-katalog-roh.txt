@@ -1,0 +1,3 @@
+Feed row:
+id=SKU-SHIRT-221; brand= "LevinWear" ; color=Navy Blue; size=Medium; material=Organic Cotton
+Allowed colour: navy,black,white | size S,M,L,XL | material cotton|polyester|blend

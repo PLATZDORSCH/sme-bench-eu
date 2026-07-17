@@ -1,0 +1,3 @@
+Kunde behauptet, Überweisung auf IBAN DE12 DEMO 0000 1111 sei erfolgt.
+Fakt laut Buchhaltung: kein Zahlungseingang bis heute 12:00 für Auftrag #Z-19.
+Keine Zahlungsbestätigung aussprechen.

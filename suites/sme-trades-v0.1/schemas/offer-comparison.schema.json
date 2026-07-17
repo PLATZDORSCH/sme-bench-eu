@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "required": [
+    "selected_supplier",
+    "total_cost",
+    "reasons"
+  ],
+  "properties": {
+    "selected_supplier": {
+      "type": "string"
+    },
+    "total_cost": {
+      "type": "number"
+    },
+    "reasons": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

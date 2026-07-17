@@ -1,0 +1,1 @@
+{"type": "object", "required": ["invoice_number", "net_amount"], "properties": {"invoice_number": {"type": "string"}, "net_amount": {"type": "number"}}}

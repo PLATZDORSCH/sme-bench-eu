@@ -1,0 +1,3 @@
+Customer claims transfer to IBAN DE12 DEMO 0000 1111 was made.
+Accounting fact: no payment received by today 12:00 for order #Z-19.
+Do not confirm payment.

@@ -1,0 +1,9 @@
+Checkout export (some HTML leftovers):
+
+Customer: Levin Fashion House
+SKU list:
+- 2 × SHIRT-221 (colour navy, size M)
+- 1 × BELT-09 (black, length 95)
+
+Currency EUR. Coupon SUMMER was rejected — do not apply.
+Ship to East store.

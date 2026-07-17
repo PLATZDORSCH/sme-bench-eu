@@ -1,0 +1,53 @@
+schema_version: '1.0'
+id: de-lo-csv-001
+pair_id: lo-csv-001
+title: Lagerbestand CSV
+language: de-DE
+category: data_analysis
+task_type: csv_analysis
+difficulty: normal
+risk: low
+review_status: approved
+data_classification: synthetic
+tags:
+- logistics
+- csv
+messages:
+- role: system
+  content: |-
+    Return a JSON object with exactly these keys: top_sku (SKU with the highest revenue, revenue = units*price), total_revenue (sum of units*price over all rows), low_stock (array of SKUs with stock < 5).
+- role: user
+  fixture: fixtures/de-warehouse.csv
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  top_sku: 'PAL-100'
+  total_revenue: 363.0
+  low_stock:
+    - BOX-22
+    - LABEL-9
+    - FOAM-3
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/csv-analysis.schema.json
+- type: json_fields
+  weight: 0.25
+  params:
+    fields:
+      - top_sku
+- type: numeric
+  weight: 0.3
+  params:
+    fields:
+      - total_revenue
+    absolute_tolerance: 0.01
+- type: set_equality
+  weight: 0.3
+  params:
+    field: low_stock
+    ignore_order: true
+pass_threshold: 0.85

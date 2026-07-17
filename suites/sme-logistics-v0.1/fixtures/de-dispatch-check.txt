@@ -1,0 +1,9 @@
+Prozess: Sendung freigeben
+
+Checkliste:
+- Lieferschein gedruckt: ja
+- Gewicht erfasst: ja
+- Gefahrgut-Flag: nein / nicht nötig
+- Empfängertelefon: fehlt noch
+
+Frage: Ist die Sendung versandbereit? next_step, ready, missing.

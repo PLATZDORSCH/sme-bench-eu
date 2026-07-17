@@ -1,0 +1,3 @@
+Context: Invoice RE-9001 Nordwerk, net 500, VAT 95, gross 595, due 2026-08-01, EUR.
+Cost centre still missing in ERP. Vendor master exists.
+Question: Next process step in [extract_ok, request_cost_center, book_payment]?

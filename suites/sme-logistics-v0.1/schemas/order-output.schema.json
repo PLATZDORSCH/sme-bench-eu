@@ -1,0 +1,37 @@
+{
+  "type": "object",
+  "required": [
+    "customer",
+    "items",
+    "currency"
+  ],
+  "properties": {
+    "customer": {
+      "type": "string"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "sku",
+          "qty"
+        ],
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "qty": {
+            "type": "integer"
+          },
+          "variant": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

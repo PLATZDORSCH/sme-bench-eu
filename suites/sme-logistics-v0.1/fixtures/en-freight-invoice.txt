@@ -1,0 +1,13 @@
+Freight invoice West Haulage
+
+Invoice no. FR-55012
+Supplier: WestCargo Ltd
+Bill to: South Warehouse Ltd
+
+Net 960.00 EUR
+VAT 19% = 182.40 EUR
+Gross 1,142.40 EUR
+Currency EUR
+Due 2026-09-05
+
+Note: fuel surcharge is included in net. Do not mark as already paid.

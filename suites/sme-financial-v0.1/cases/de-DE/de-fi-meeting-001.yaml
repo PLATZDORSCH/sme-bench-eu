@@ -1,0 +1,59 @@
+schema_version: '1.0'
+id: de-fi-meeting-001
+pair_id: fi-meeting-001
+title: Maßnahmen aus Finanzrunde
+language: de-DE
+category: meeting_operations
+task_type: meeting_actions
+difficulty: normal
+risk: medium
+review_status: approved
+data_classification: synthetic
+tags:
+- financial
+- meeting
+messages:
+- role: system
+  content: |-
+    Extract JSON {"actions":[{"owner","task","due"}]} with due as YYYY-MM-DD. Only stated decisions.
+- role: user
+  fixture: fixtures/de-finance-meeting.txt
+generation:
+  max_tokens: 300
+  temperature: 0
+  response_format: json
+expected:
+  actions:
+    - owner: Lea
+      task: Forecast Q3
+      due: 2026-06-20
+    - owner: Tom
+      task: Doppelbuchung RE-900
+      due: 2026-06-15
+    - owner: Mira
+      task: Debitoren > 60 Tage
+      due: 2026-06-18
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/meeting-actions.schema.json
+- type: contains
+  weight: 0.4
+  params:
+    terms:
+      - Lea
+      - Tom
+      - Mira
+      - '2026-06-20'
+      - '2026-06-15'
+      - '2026-06-18'
+    mode: all
+- type: json_fields
+  weight: 0.4
+  params:
+    fields:
+      - actions.0.owner
+      - actions.1.owner
+      - actions.2.owner
+pass_threshold: 0.85

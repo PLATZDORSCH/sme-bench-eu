@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "required": [
+    "action",
+    "safe",
+    "price"
+  ],
+  "properties": {
+    "action": {
+      "type": "string"
+    },
+    "safe": {
+      "type": "boolean"
+    },
+    "price": {
+      "type": [
+        "string",
+        "number"
+      ]
+    },
+    "reason": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,5 @@
+Shipping SLA:
+
+[L-1] Standard domestic shipping 2–4 business days.
+[L-2] Express ordered by 12:00 = next business day.
+[L-3] No same-day delivery outside 50 km.

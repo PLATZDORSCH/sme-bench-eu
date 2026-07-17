@@ -1,0 +1,9 @@
+Process: release shipment
+
+Checklist:
+- Delivery note printed: yes
+- Weight captured: yes
+- Dangerous goods flag: no / not required
+- Consignee phone: still missing
+
+Question: Is the shipment ready to dispatch? next_step, ready, missing.

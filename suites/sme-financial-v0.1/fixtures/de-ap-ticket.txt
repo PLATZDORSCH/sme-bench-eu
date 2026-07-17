@@ -1,0 +1,7 @@
+Ticket #AP-441
+
+Kunde meldet: Doppelbelastung auf Rechnung RE-900.
+Betrag 1.190 EUR erscheint zweimal auf dem Kontoauszug.
+Bitte klären — Zahlung ist blockiert, bis korrigiert.
+Nicht heute Abend, aber diese Woche.
+Konto: finance@muster.example

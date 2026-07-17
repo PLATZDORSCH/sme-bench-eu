@@ -1,0 +1,11 @@
+Catering order Hotel Northview
+
+Customer: Event Office Lakeside
+Currency: EUR
+
+Lines:
+- 40x MENUE-A fish main course
+- 10x MENUE-V vegetarian menu
+- 50x DRINK-W bottled water
+
+Note: allergen details separate; extract SKU/qty only here.

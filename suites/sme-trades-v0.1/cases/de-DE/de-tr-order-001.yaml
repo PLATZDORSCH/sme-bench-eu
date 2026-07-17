@@ -1,0 +1,58 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: de-tr-order-001
+pair_id: tr-order-001
+title: Material aus Baustellenchat
+language: de-DE
+category: sales_operations
+task_type: order_extraction
+difficulty: hard
+risk: medium
+tags:
+- trades
+- order
+- chat
+messages:
+- role: system
+  content: >-
+    Extract the order as JSON: customer (string), currency "EUR", items as an array of {sku (string), qty (integer), variant (string; use "none" if the item has no variant)}. Ignore jokes and non-order chat.
+- role: user
+  fixture: fixtures/de-material-bestellung.txt
+generation:
+  max_tokens: 350
+  temperature: 0
+  response_format: json
+expected:
+  customer: Musterbau GmbH
+  currency: EUR
+  items:
+  - sku: FK-FLEX-25
+    qty: 12
+    variant: none
+  - sku: GR-01
+    qty: 3
+    variant: none
+  - sku: SK-W
+    qty: 40
+    variant: white
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/order-output.schema.json
+- type: json_fields
+  weight: 0.35
+  params:
+    fields:
+    - customer
+    - currency
+- type: set_equality
+  weight: 0.5
+  params:
+    field: items
+    ignore_order: true
+    keys:
+    - sku
+    - qty
+pass_threshold: 0.85

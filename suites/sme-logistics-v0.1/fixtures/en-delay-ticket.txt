@@ -1,0 +1,5 @@
+Ticket #LOG-330
+
+Shipment #DHL-778899 “out for delivery” for 3 days, tracking stuck.
+Recipient waiting for spare parts — production stopped.
+Please clarify status today.

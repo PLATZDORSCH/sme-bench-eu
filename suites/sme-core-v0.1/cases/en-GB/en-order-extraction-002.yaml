@@ -1,0 +1,55 @@
+schema_version: '1.0'
+id: en-order-extraction-002
+pair_id: order-extraction-002
+title: Order with spare part
+language: en-GB
+category: sales_operations
+task_type: order_extraction
+difficulty: normal
+risk: medium
+review_status: approved
+data_classification: synthetic
+tags:
+- order
+- sku
+messages:
+- role: system
+  content: 'Extract the order as JSON: customer (string), currency "EUR", items as an
+    array of {sku (string), qty (integer), variant (string; use "none" if the item
+    has no variant)}.'
+- role: user
+  fixture: fixtures/order/en-order-002.txt
+generation:
+  max_tokens: 350
+  temperature: 0
+  response_format: json
+expected:
+  customer: City Utilities Sampletown
+  currency: EUR
+  items:
+  - sku: ART-900
+    qty: 10
+    variant: L/red
+  - sku: ART-901
+    qty: 1
+    variant: none
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/order-output.schema.json
+- type: json_fields
+  weight: 0.35
+  params:
+    fields:
+    - customer
+    - currency
+- type: set_equality
+  weight: 0.5
+  params:
+    field: items
+    ignore_order: true
+    keys:
+    - sku
+    - qty
+pass_threshold: 0.85

@@ -1,0 +1,20 @@
+Von: einkauf@holzring.example
+Betreff: WG: Rechnung HR-88421
+
+-------- Weitergeleitete Nachricht --------
+Von: rechnung@holzring.example
+Datum: Mo 12.05.2026
+
+Hallo zusammen,
+
+Rechnung HR-88421 der Holzring AG.
+Nettobetrag: 2.450,50 EUR
+USt 19 % = 465,60 EUR
+Brutto: 2.916,10 EUR
+Zahlungsziel: 28.06.2026
+
+Hinweis Intern: die alte HR-77001 war bereits bezahlt – NICHT diese!
+Lieferadresse Lager 3 ist nur Info, nicht Teil der Rechnung.
+
+Viele Grüße
+Buchhaltung Holzring

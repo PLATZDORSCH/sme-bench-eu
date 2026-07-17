@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SME-Bench Task",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "title",
+    "language",
+    "category",
+    "task_type",
+    "messages",
+    "scorers"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "pair_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "language": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "task_type": {
+      "type": "string"
+    }
+  }
+}

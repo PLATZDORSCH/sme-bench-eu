@@ -1,0 +1,73 @@
+schema_version: '1.0'
+id: de-fi-invoice-001
+pair_id: fi-invoice-001
+title: Lieferantenrechnung für Kreditorenbuchhaltung
+language: de-DE
+category: document_extraction
+task_type: invoice_extraction
+difficulty: hard
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- financial
+- invoice
+- ap
+messages:
+- role: system
+  content: |-
+    Extract the invoice as JSON using exactly these keys: invoice_number, supplier, currency, net_amount, vat_rate, vat_amount, gross_amount, due_date. Provide vat_rate as a decimal fraction (e.g. 0.19 for 19%) and due_date as YYYY-MM-DD. Use only data present in the source and reply with JSON only, no markdown.
+- role: user
+  fixture: fixtures/de-supplier-invoice.txt
+generation:
+  max_tokens: 350
+  temperature: 0
+  response_format: json
+expected:
+  invoice_number: BK-77821
+  supplier: Bürobedarf Klar GmbH
+  currency: EUR
+  net_amount: 420.0
+  vat_rate: 0.19
+  vat_amount: 79.8
+  gross_amount: 499.8
+  due_date: '2026-08-20'
+scorers:
+- type: json_schema
+  weight: 0.1
+  params:
+    schema: schemas/invoice-output.schema.json
+- type: json_fields
+  weight: 0.55
+  params:
+    fields:
+      - invoice_number
+      - supplier
+      - currency
+      - due_date
+- type: numeric
+  weight: 0.35
+  params:
+    fields:
+      - net_amount
+      - vat_rate
+      - vat_amount
+      - gross_amount
+    absolute_tolerance: 0.01
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    fields:
+      - invoice_number
+      - supplier
+      - currency
+      - net_amount
+      - vat_rate
+      - vat_amount
+      - gross_amount
+      - due_date
+    terms:
+      - 'bereits bezahlt'
+      - 'already paid'
+pass_threshold: 0.85

@@ -1,0 +1,13 @@
+Frachtrechnung Spedition West
+
+Rechnungsnr. FR-55012
+Lieferant: WestCargo GmbH
+Kunde: Lager Süd GmbH
+
+Netto 960,00 EUR
+MwSt 19% = 182,40 EUR
+Brutto 1.142,40 EUR
+Währung EUR
+Fällig 2026-09-05
+
+Hinweis: Dieselzuschlag ist in Netto enthalten. Nicht als „bereits bezahlt“ markieren.

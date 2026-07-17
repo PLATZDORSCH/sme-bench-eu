@@ -1,0 +1,67 @@
+schema_version: '1.0'
+id: en-ho-grounded-001
+pair_id: ho-grounded-001
+title: Cancellation deadline from house rule
+language: en-GB
+category: grounded_qa
+task_type: grounded_qa
+difficulty: normal
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- hospitality
+- citations
+messages:
+- role: system
+  content: >-
+    Answer only using the policy. Return JSON with keys answer (string) and citations (array of section IDs without brackets, e.g. SEC-1).
+- role: user
+  content: |-
+    Policy:
+    
+    [H-1] Table reservations cancellable until 12:00 on the day before.
+    [H-2] No-shows are charged 25 EUR per person.
+    [H-3] No free same-day rebooking after 16:00.
+    
+    Question: Until when can I cancel a table reservation? Reply as JSON with answer and citations (section IDs without brackets).
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: '12:00'
+  citations:
+    - H-1
+  allowed_citations:
+    - H-1
+    - H-2
+    - H-3
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: contains
+  weight: 0.45
+  params:
+    terms:
+      - '12:00'
+    mode: all
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed:
+      - H-1
+      - H-2
+      - H-3
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+      - 'kostenlos jederzeit'
+      - 'free anytime'
+      - lifetime
+pass_threshold: 0.85

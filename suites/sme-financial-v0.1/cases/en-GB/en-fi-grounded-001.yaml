@@ -1,0 +1,71 @@
+schema_version: '1.0'
+id: en-fi-grounded-001
+pair_id: fi-grounded-001
+title: VAT rate from policy only
+language: en-GB
+category: grounded_qa
+task_type: grounded_qa
+difficulty: normal
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- financial
+- vat
+- citations
+messages:
+- role: system
+  content: >-
+    Answer only using the policy. Return JSON with keys answer (string) and citations (array of section IDs without brackets, e.g. SEC-1).
+- role: user
+  content: |-
+    Policy:
+    
+    [V-1] Standard rate 19% for goods and services.
+    [V-2] Reduced rate 7% only for books and selected print products.
+    [V-3] No blanket tax exemption without written confirmation from the tax authority.
+    [V-4] Credit notes must use the same VAT rate as the original invoice.
+    
+    Question: What is the standard VAT rate for services? Reply as JSON with answer and citations (section IDs without brackets).
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: 19
+  citations:
+    - V-1
+  allowed_citations:
+    - V-1
+    - V-2
+    - V-3
+    - V-4
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: contains
+  weight: 0.45
+  params:
+    terms:
+      - '19'
+    mode: all
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed:
+      - V-1
+      - V-2
+      - V-3
+      - V-4
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+      - 0%
+      - 'steuerfrei pauschal'
+      - 'tax-free blanket'
+pass_threshold: 0.85

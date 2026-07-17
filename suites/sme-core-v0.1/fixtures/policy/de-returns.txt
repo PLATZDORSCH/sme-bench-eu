@@ -1,0 +1,3 @@
+[SEC-1] Rückgabe innerhalb von 30 Tagen mit Beleg.
+[SEC-2] Hygienartikel sind vom Umtausch ausgeschlossen.
+[SEC-3] Erstattung erfolgt innerhalb von 14 Werktagen nach Wareneingang.

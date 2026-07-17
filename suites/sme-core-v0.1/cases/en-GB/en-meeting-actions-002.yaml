@@ -1,0 +1,53 @@
+schema_version: '1.0'
+id: en-meeting-actions-002
+pair_id: meeting-actions-002
+title: Extract meeting actions
+language: en-GB
+category: meeting_operations
+task_type: meeting_actions
+difficulty: normal
+risk: medium
+review_status: approved
+data_classification: synthetic
+tags:
+- meeting
+messages:
+- role: system
+  content: Return JSON {actions:[{owner,task,due}]} for assigned actions only.
+- role: user
+  fixture: fixtures/meeting/en-meeting-002.txt
+generation:
+  max_tokens: 300
+  temperature: 0
+  response_format: json
+expected:
+  actions:
+  - owner: Pia
+    task: customs papers
+    due: '2026-08-01'
+  - owner: Tim
+    task: BOM
+    due: '2026-07-25'
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/meeting-actions.schema.json
+- type: json_fields
+  weight: 0.4
+  params:
+    fields:
+    - actions.0.owner
+    - actions.0.due
+    - actions.1.owner
+    - actions.1.due
+- type: contains
+  weight: 0.4
+  params:
+    terms:
+    - Pia
+    - Tim
+    - '2026-08-01'
+    - '2026-07-25'
+    mode: all
+pass_threshold: 0.85

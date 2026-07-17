@@ -1,0 +1,52 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: de-ec-csv-001
+pair_id: ec-csv-001
+title: Shop-Umsatz CSV
+language: de-DE
+category: data_analysis
+task_type: csv_analysis
+difficulty: normal
+risk: low
+tags:
+- ecommerce
+- csv
+messages:
+- role: system
+  content: >-
+    Return a JSON object with exactly these keys: top_sku (SKU with the highest revenue, revenue = units*price), total_revenue (sum of units*price over all rows), low_stock (array of SKUs with stock < 5).
+- role: user
+  fixture: fixtures/de-shop-csv.csv
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  top_sku: HAT-3
+  total_revenue: 2046.2
+  low_stock:
+  - SHIRT-221
+  - HAT-3
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/csv-analysis.schema.json
+- type: json_fields
+  weight: 0.25
+  params:
+    fields:
+    - top_sku
+- type: numeric
+  weight: 0.3
+  params:
+    fields:
+    - total_revenue
+    absolute_tolerance: 0.05
+- type: set_equality
+  weight: 0.3
+  params:
+    field: low_stock
+    ignore_order: true
+pass_threshold: 0.85

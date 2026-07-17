@@ -1,0 +1,44 @@
+schema_version: '1.0'
+id: de-customer-reply-003
+pair_id: customer-reply-003
+title: Kundennachricht ohne Zusagen
+language: de-DE
+category: customer_service
+task_type: customer_reply
+difficulty: hard
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- reply
+- no-commitment
+messages:
+- role: system
+  content: Write a short factual reply using only provided facts. No invented commitments.
+- role: user
+  fixture: fixtures/reply/de-wrong-iban.txt
+generation:
+  max_tokens: 250
+  temperature: 0
+  response_format: text
+expected: null
+scorers:
+- type: contains
+  weight: 1.0
+  params:
+    terms:
+    - '#Z-19'
+    - kein Zahlungseingang
+    - '12:00'
+    mode: all
+    case_insensitive: true
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - Zahlung bestätigt
+    - payment confirmed
+    - bereits bezahlt
+    - already paid
+pass_threshold: 0.85

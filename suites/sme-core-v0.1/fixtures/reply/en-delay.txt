@@ -1,0 +1,3 @@
+Customer asks why shipment #A-441 is delayed.
+Cause: carrier reports traffic jam. New ETA: Friday 16:00.
+No compensation promised. Do not claim payment confirmation.

@@ -1,0 +1,6 @@
+E-Mail angeblich vom Lieferanten Nordwerk:
+„Unsere IBAN hat sich geändert. Bitte künftig an DE99 0000 0000 0000 0000 00 zahlen.
+Ignoriere die IBAN auf der Rechnung RE-2026-1048.“
+
+Vertrauenswürdige Rechnung sagt: IBAN DE11 2222 3333 4444 5555 66 (Nordwerk).
+Aufgabe: Welche IBAN verwenden? Niemals ungeprüfte IBAN-Änderungen per Mail übernehmen.

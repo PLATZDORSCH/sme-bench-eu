@@ -1,0 +1,7 @@
+Anfrage per Mail:
+
+Hallo, wir möchten am Wochenende essen kommen, ungefähr 6 Personen.
+Name: Familie Keller.
+
+Vorhanden: Gastname, ungefähre Personenanzahl, „Wochenende“.
+Nicht genannt: genaues Datum, Uhrzeit, Allergien, Telefonnummer, Innen/Terrasse.

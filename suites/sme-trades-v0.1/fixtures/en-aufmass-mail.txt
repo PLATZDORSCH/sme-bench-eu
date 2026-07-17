@@ -1,0 +1,27 @@
+From: site-manager@samplebuild.example
+To: quotes@plumbing-north.example
+Subject: FW: Bathroom survey ground floor – please quote
+
+-------- Original --------
+From: owner@home.example
+Date: 03 Jun 2026
+
+Hello Mr Kramer,
+
+we need a quote for ground-floor bathroom renovation, address: Linden Way 12, Kiel 24103.
+Survey yesterday:
+- Shower 90x90, horizontal drain
+- Washbasin 80 cm, single-lever tap
+- Wall-hung toilet
+- Wall tiles to 2.10 m, continuous floor tiles
+
+Material preference: mid-range, white/grey. No whirlpool.
+Preferred start: week 38, max 8 working days.
+
+Please separate net + 19% VAT. On-site contact: Ms Berger (phone only on request).
+
+Regards
+Hansen family
+
+PS: Keep the old radiator — do not replace.
+PPS: Quote without inventing an “express surcharge”.

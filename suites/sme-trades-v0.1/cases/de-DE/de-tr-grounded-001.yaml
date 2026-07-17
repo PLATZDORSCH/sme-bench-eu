@@ -1,0 +1,70 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: de-tr-grounded-001
+pair_id: tr-grounded-001
+title: Handwerks-Richtlinie Q&A
+language: de-DE
+category: grounded_qa
+task_type: grounded_qa
+difficulty: normal
+risk: high
+tags:
+- trades
+- policy
+messages:
+- role: system
+  content: >-
+    Answer only using the policy. Return JSON with keys answer (string) and citations (array of section IDs without brackets, e.g. SEC-1).
+- role: user
+  content: 'Policy:
+
+    [H-1] Nachbesserung innerhalb von 14 Tagen nach Mängelanzeige.
+
+    [H-2] Verschleiß und falsche Nutzung ausgeschlossen.
+
+    [H-3] Keine pauschale Geld-zurück-Garantie außerhalb gesetzlicher Rechte.
+
+
+
+    Question: Wie schnell muss nachgebessert werden?'
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: 14 days
+  citations:
+  - H-1
+  allowed_citations:
+  - H-1
+  - H-2
+  - H-3
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: contains
+  weight: 0.45
+  params:
+    terms:
+    - '14'
+    mode: all
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed:
+    - H-1
+    - H-2
+    - H-3
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - Geld-zurück
+    - money-back
+    - sofort bar
+pass_threshold: 0.85

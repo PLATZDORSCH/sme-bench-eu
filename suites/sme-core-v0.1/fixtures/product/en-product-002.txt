@@ -1,0 +1,4 @@
+Raw: brand=" ALPINE ", colour=anthracite, size=extra large, material=Polyester/Cotton Mix
+Allowed colour: navy, black, white, anthracite
+Size: S,M,L,XL
+Material: cotton|polyester|blend

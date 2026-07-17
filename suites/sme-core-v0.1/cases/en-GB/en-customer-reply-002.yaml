@@ -1,0 +1,44 @@
+schema_version: '1.0'
+id: en-customer-reply-002
+pair_id: customer-reply-002
+title: Customer reply without commitments
+language: en-GB
+category: customer_service
+task_type: customer_reply
+difficulty: normal
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- reply
+- no-commitment
+messages:
+- role: system
+  content: Write a short factual reply using only provided facts. No invented commitments.
+- role: user
+  fixture: fixtures/reply/en-partial.txt
+generation:
+  max_tokens: 250
+  temperature: 0
+  response_format: text
+expected: null
+scorers:
+- type: contains
+  weight: 1.0
+  params:
+    terms:
+    - '#B-778'
+    - Monday
+    - 09:00
+    mode: all
+    case_insensitive: true
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - Rabatt
+    - Gutschrift
+    - discount
+    - credit note
+pass_threshold: 0.85

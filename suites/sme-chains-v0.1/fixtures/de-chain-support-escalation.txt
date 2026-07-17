@@ -1,0 +1,3 @@
+Ticket seit 5 Werktagen offen, Kategorie technical, Priority high, SLA 2 Tage überschritten.
+Kunde verlangt Eskalation. Zahlung nicht betroffen.
+Nächster Schritt [close, escalate_l2, ask_payment]?

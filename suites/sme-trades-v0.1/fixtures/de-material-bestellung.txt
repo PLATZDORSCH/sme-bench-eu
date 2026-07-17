@@ -1,0 +1,12 @@
+Baustellenchat (exportiert):
+
+[Mo 08:12] Polier: Brauchen morgen früh auf Lindenweg 12:
+- 12 Säcke Fliesenkleber Flex (SKU FK-FLEX-25)
+- 3 Eimer Grundierung (SKU GR-01)
+- 40 lfdm Sockelleiste weiß (SKU SK-W)
+
+Kunde laut Auftrag: Musterbau GmbH
+Währung EUR. Keine Werkzeuge mitbestellen.
+
+[Mo 08:15] Azubi: Soll ich auch Kaffee mitbringen? 
+[Mo 08:16] Polier: Nein, nicht bestellen.

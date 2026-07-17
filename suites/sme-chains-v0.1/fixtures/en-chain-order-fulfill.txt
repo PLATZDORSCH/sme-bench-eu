@@ -1,0 +1,3 @@
+Order #O-77 lines fully picked.
+Address validation failed (postcode 00000). Payment authorised.
+Next step [ship, fix_address, refund]?

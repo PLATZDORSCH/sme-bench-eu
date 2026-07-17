@@ -1,0 +1,4 @@
+Notes:
+- Lea sends the quote to the customer by 2026-07-20.
+- Omar updates stock levels by 2026-07-18.
+Ordering coffee was only mentioned, not an action.

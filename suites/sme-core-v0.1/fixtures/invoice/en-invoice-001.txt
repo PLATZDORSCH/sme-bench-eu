@@ -1,0 +1,13 @@
+From: billing@nordwerk.example
+Subject: Invoice RE-2026-1048
+
+Hello,
+
+please process invoice RE-2026-1048 from Nordwerk GmbH.
+Net: 1000.00 EUR
+VAT 19%: 190.00 EUR
+Gross: 1190.00 EUR
+Due date: 2026-08-14.
+
+Do not confuse with RE-2025-889 (already paid).
+Thanks

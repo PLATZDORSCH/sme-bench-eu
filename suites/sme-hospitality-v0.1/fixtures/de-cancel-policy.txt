@@ -1,0 +1,5 @@
+Hausregel Storno:
+
+[H-1] Tischreservierung stornierbar bis 12:00 am Vortag.
+[H-2] Bei No-Show berechnen wir 25 EUR pro Person.
+[H-3] Keine kostenlose Umbuchung am selben Tag nach 16:00.

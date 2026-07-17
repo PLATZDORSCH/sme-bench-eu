@@ -1,0 +1,11 @@
+Catering-Bestellung Hotel Nordblick
+
+Kunde: Eventbüro Seeblick
+Währung: EUR
+
+Positionen:
+- 40x MENUE-A Menü Fisch (Hauptgang)
+- 10x MENUE-V vegetarisches Menü
+- 50x DRINK-W Wasser flasche
+
+Hinweis: Allergie-Info separat; hier nur Mengen/SKU.

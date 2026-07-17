@@ -1,0 +1,72 @@
+schema_version: '1.0'
+id: de-grounded-qa-001
+pair_id: grounded-qa-001
+title: Richtlinienfrage beantworten
+language: de-DE
+category: grounded_qa
+task_type: grounded_qa
+difficulty: normal
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- rag
+- citations
+messages:
+- role: system
+  content: Answer only using the policy. JSON with answer and citations. Never invent
+    warranties.
+- role: user
+  content: 'Policy:
+
+    [SEC-1] Rückgabe innerhalb von 30 Tagen mit Beleg.
+
+    [SEC-2] Hygienartikel sind vom Umtausch ausgeschlossen.
+
+    [SEC-3] Erstattung erfolgt innerhalb von 14 Werktagen nach Wareneingang.
+
+
+
+    Question: Wie lange habe ich Zeit für eine Rückgabe? Antworte als JSON mit answer
+    und citations (Section-IDs).'
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: 30 Tage
+  citations:
+  - SEC-1
+  allowed_citations:
+  - SEC-1
+  - SEC-2
+  - SEC-3
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: contains
+  weight: 0.45
+  params:
+    terms:
+    - '30'
+    mode: all
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed:
+    - SEC-1
+    - SEC-2
+    - SEC-3
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - lifetime warranty
+    - lebenslange Garantie
+    - 90 days
+    - 90 Tage
+pass_threshold: 0.85

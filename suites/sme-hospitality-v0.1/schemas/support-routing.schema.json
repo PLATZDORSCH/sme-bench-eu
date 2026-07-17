@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "required": [
+    "category",
+    "priority"
+  ],
+  "properties": {
+    "category": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "string"
+    }
+  }
+}

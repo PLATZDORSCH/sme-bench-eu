@@ -1,0 +1,70 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: en-ec-grounded-001
+pair_id: ec-grounded-001
+title: Retourenrichtlinie
+language: en-GB
+category: grounded_qa
+task_type: grounded_qa
+difficulty: normal
+risk: high
+tags:
+- ecommerce
+- policy
+messages:
+- role: system
+  content: >-
+    Answer only using the policy. Return JSON with keys answer (string) and citations (array of section IDs without brackets, e.g. SEC-1).
+- role: user
+  content: 'Policy:
+
+    [R-1] Returns 30 days with receipt.
+
+    [R-2] Refund 14 business days after goods receipt.
+
+    [R-3] Hygiene items and worn shoes with use marks excluded.
+
+
+
+    Question: When is the refund after a return?'
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: '14'
+  citations:
+  - R-2
+  allowed_citations:
+  - R-1
+  - R-2
+  - R-3
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: contains
+  weight: 0.45
+  params:
+    terms:
+    - '14'
+    mode: all
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed:
+    - R-1
+    - R-2
+    - R-3
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - sofort
+    - instant refund
+    - same day
+pass_threshold: 0.85

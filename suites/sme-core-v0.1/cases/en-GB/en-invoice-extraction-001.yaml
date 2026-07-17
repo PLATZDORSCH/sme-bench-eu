@@ -1,0 +1,77 @@
+schema_version: '1.0'
+id: en-invoice-extraction-001
+pair_id: invoice-extraction-001
+title: Extract invoice data from an email
+language: en-GB
+category: document_extraction
+task_type: invoice_extraction
+difficulty: normal
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- invoice
+- structured-output
+- vat
+messages:
+- role: system
+  content: 'Extract the invoice as JSON using exactly these keys: invoice_number, supplier,
+    currency, net_amount, vat_rate, vat_amount, gross_amount, due_date. Provide vat_rate
+    as a decimal fraction (e.g. 0.19 for 19%) and due_date as YYYY-MM-DD. Use only
+    data present in the source and reply with JSON only, no markdown.'
+- role: user
+  fixture: fixtures/invoice/en-invoice-001.txt
+generation:
+  max_tokens: 350
+  temperature: 0
+  response_format: json
+expected:
+  invoice_number: RE-2026-1048
+  supplier: Nordwerk GmbH
+  currency: EUR
+  net_amount: 1000.0
+  vat_rate: 0.19
+  vat_amount: 190.0
+  gross_amount: 1190.0
+  due_date: '2026-08-14'
+scorers:
+- type: json_schema
+  weight: 0.1
+  params:
+    schema: schemas/invoice-output.schema.json
+- type: json_fields
+  weight: 0.55
+  params:
+    fields:
+    - invoice_number
+    - supplier
+    - currency
+    - due_date
+- type: numeric
+  weight: 0.35
+  params:
+    fields:
+    - net_amount
+    - vat_rate
+    - vat_amount
+    - gross_amount
+    absolute_tolerance: 0.01
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    fields:
+    - invoice_number
+    - supplier
+    - currency
+    - net_amount
+    - vat_rate
+    - vat_amount
+    - gross_amount
+    - due_date
+    terms:
+    - bereits bezahlt
+    - already paid
+    - Zahlung bestätigt
+    - payment confirmed
+pass_threshold: 0.85

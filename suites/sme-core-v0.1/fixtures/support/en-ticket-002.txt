@@ -1,0 +1,3 @@
+Customer email:
+Latest invoice #INV-900 shows 190 EUR VAT although we are tax-exempt.
+Please correct — otherwise we will not pay. Not urgent tonight, but this week.

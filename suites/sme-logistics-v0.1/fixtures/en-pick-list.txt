@@ -1,0 +1,10 @@
+Pick list WH-77
+
+Customer: East Hardware
+Currency: EUR
+
+- 12x PAL-100 euro pallet standard
+- 4x BOX-22 medium carton, variant brown
+- 1x LABEL-9 shipping label roll
+
+Ignore cancelled line SKU-X (qty 0).

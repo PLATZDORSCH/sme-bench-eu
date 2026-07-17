@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "required": [
+    "top_sku",
+    "total_revenue",
+    "low_stock"
+  ],
+  "properties": {
+    "top_sku": {
+      "type": "string"
+    },
+    "total_revenue": {
+      "type": "number"
+    },
+    "low_stock": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

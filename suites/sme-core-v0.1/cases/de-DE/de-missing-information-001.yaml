@@ -1,0 +1,38 @@
+schema_version: '1.0'
+id: de-missing-information-001
+pair_id: missing-information-001
+title: Fehlende Angaben erkennen
+language: de-DE
+category: sales_operations
+task_type: missing_information
+difficulty: normal
+risk: low
+review_status: approved
+data_classification: synthetic
+tags:
+- missing-fields
+messages:
+- role: system
+  content: 'Return JSON {"missing_fields": [...]} listing missing required quote fields
+    from: delivery_address, budget, colour_preference, quantity, company.'
+- role: user
+  fixture: fixtures/missing/de-quote-request.txt
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  missing_fields:
+  - delivery_address
+  - budget
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/missing-info.schema.json
+- type: set_equality
+  weight: 0.8
+  params:
+    field: missing_fields
+    ignore_order: true
+pass_threshold: 0.85

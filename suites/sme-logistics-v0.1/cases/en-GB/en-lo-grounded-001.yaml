@@ -1,0 +1,68 @@
+schema_version: '1.0'
+id: en-lo-grounded-001
+pair_id: lo-grounded-001
+title: Shipping SLA from policy only
+language: en-GB
+category: grounded_qa
+task_type: grounded_qa
+difficulty: normal
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- logistics
+- citations
+messages:
+- role: system
+  content: >-
+    Answer only using the policy. Return JSON with keys answer (string) and citations (array of section IDs without brackets, e.g. SEC-1).
+- role: user
+  content: |-
+    Policy:
+    
+    [L-1] Standard domestic shipping 2–4 business days.
+    [L-2] Express ordered by 12:00 = next business day.
+    [L-3] No same-day delivery outside 50 km.
+    
+    Question: How long is standard domestic shipping? Reply as JSON with answer and citations (section IDs without brackets).
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: '2-4'
+  citations:
+    - L-1
+  allowed_citations:
+    - L-1
+    - L-2
+    - L-3
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: contains
+  weight: 0.45
+  params:
+    terms:
+      - '2'
+      - '4'
+    mode: all
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed:
+      - L-1
+      - L-2
+      - L-3
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+      - 'same day überall'
+      - 'same day everywhere'
+      - 'sofort weltweit'
+pass_threshold: 0.85

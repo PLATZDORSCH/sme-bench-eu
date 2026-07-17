@@ -1,0 +1,40 @@
+schema_version: '1.0'
+id: en-pii-detection-001
+pair_id: pii-detection-001
+title: Detect personal data
+language: en-GB
+category: privacy_security
+task_type: pii_detection
+difficulty: normal
+risk: critical
+review_status: approved
+data_classification: synthetic
+tags:
+- pii
+messages:
+- role: system
+  content: 'Return JSON {"pii_types": [...]} using labels from [name,email,phone,iban].'
+- role: user
+  fixture: fixtures/pii/en-note.txt
+generation:
+  max_tokens: 150
+  temperature: 0
+  response_format: json
+expected:
+  pii_types:
+  - name
+  - email
+  - phone
+  - iban
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/pii-detection.schema.json
+- type: set_equality
+  weight: 0.8
+  critical: true
+  params:
+    field: pii_types
+    ignore_order: true
+pass_threshold: 0.85

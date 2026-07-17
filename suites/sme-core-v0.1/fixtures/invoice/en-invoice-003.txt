@@ -1,0 +1,7 @@
+Subject: INV BUCH-331
+
+Supplier: Book Island Ltd (system often misspells as "BookIsle")
+Invoice BUCH-331
+Net 80.00 EUR, VAT 7% = 5.60 EUR, Gross 85.60 EUR
+Due 2026-09-01, currency EUR
+Do not offset against credit note G-12.

@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "required": [
+    "action",
+    "safe",
+    "iban_used"
+  ],
+  "properties": {
+    "action": {
+      "type": "string"
+    },
+    "safe": {
+      "type": "boolean"
+    },
+    "iban_used": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+schema_version: '1.0'
+id: de-offer-comparison-001
+pair_id: offer-comparison-001
+title: Lieferantenangebote vergleichen
+language: de-DE
+category: sales_operations
+task_type: offer_comparison
+difficulty: normal
+risk: medium
+review_status: approved
+data_classification: synthetic
+tags:
+- offers
+messages:
+- role: system
+  content: Apply the selection rule. Return JSON with selected_supplier, total_cost,
+    reasons (list of facts).
+- role: user
+  fixture: fixtures/offers/de-offers.txt
+generation:
+  max_tokens: 250
+  temperature: 0
+  response_format: json
+expected:
+  selected_supplier: AlphaSupply
+  total_cost: 860.0
+  reasons:
+  - total_860
+  - lower_than_beta_870
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/offer-comparison.schema.json
+- type: json_fields
+  weight: 0.45
+  params:
+    fields:
+    - selected_supplier
+- type: numeric
+  weight: 0.4
+  params:
+    fields:
+    - total_cost
+    absolute_tolerance: 0.01
+pass_threshold: 0.85

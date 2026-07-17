@@ -1,0 +1,5 @@
+Versand-SLA:
+
+[L-1] Standardversand Inland 2–4 Werktage.
+[L-2] Express bis 12:00 Bestellung = nächster Werktag.
+[L-3] Keine Same-Day-Zustellung außerhalb 50 km.

@@ -1,0 +1,4 @@
+Rule: Lowest total including shipping. Tie-break shorter lead time.
+
+GammaTech: goods 1200 EUR + shipping 0 EUR, 10 days
+DeltaLog: goods 1150 EUR + shipping 60 EUR, 4 days

@@ -1,0 +1,71 @@
+schema_version: '1.0'
+id: de-fi-grounded-001
+pair_id: fi-grounded-001
+title: MwSt-Satz nur aus Richtlinie
+language: de-DE
+category: grounded_qa
+task_type: grounded_qa
+difficulty: normal
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- financial
+- vat
+- citations
+messages:
+- role: system
+  content: >-
+    Answer only using the policy. Return JSON with keys answer (string) and citations (array of section IDs without brackets, e.g. SEC-1).
+- role: user
+  content: |-
+    Policy:
+    
+    [V-1] Standardsteuersatz 19% für Waren und Dienstleistungen.
+    [V-2] Ermäßigter Satz 7% nur für Bücher und ausgewählte Druckwerke.
+    [V-3] Keine pauschale Steuerbefreiung ohne schriftlichen Nachweis der Finanzbehörde.
+    [V-4] Gutschriften müssen denselben Steuersatz wie die Ursprungsrechnung tragen.
+    
+    Question: Welcher Standardsteuersatz gilt für Dienstleistungen? Reply as JSON with answer and citations (section IDs without brackets).
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: 19
+  citations:
+    - V-1
+  allowed_citations:
+    - V-1
+    - V-2
+    - V-3
+    - V-4
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: contains
+  weight: 0.45
+  params:
+    terms:
+      - '19'
+    mode: all
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed:
+      - V-1
+      - V-2
+      - V-3
+      - V-4
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+      - 0%
+      - 'steuerfrei pauschal'
+      - 'tax-free blanket'
+pass_threshold: 0.85

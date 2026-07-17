@@ -1,0 +1,45 @@
+schema_version: '1.0'
+id: de-offer-comparison-002
+pair_id: offer-comparison-002
+title: Angebote nach Regel wählen
+language: de-DE
+category: sales_operations
+task_type: offer_comparison
+difficulty: normal
+risk: medium
+review_status: approved
+data_classification: synthetic
+tags:
+- offers
+messages:
+- role: system
+  content: 'Apply the selection rule. Return JSON with selected_supplier (string), total_cost
+    (number, incl. shipping), and reasons (a list of short strings).'
+- role: user
+  fixture: fixtures/offers/de-offers-002.txt
+generation:
+  max_tokens: 250
+  temperature: 0
+  response_format: json
+expected:
+  selected_supplier: GammaTech
+  total_cost: 1200.0
+  reasons:
+  - rule_applied
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/offer-comparison.schema.json
+- type: json_fields
+  weight: 0.45
+  params:
+    fields:
+    - selected_supplier
+- type: numeric
+  weight: 0.4
+  params:
+    fields:
+    - total_cost
+    absolute_tolerance: 0.01
+pass_threshold: 0.85

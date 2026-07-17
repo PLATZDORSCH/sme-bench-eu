@@ -1,0 +1,42 @@
+schema_version: '1.0'
+id: de-ho-missing-001
+pair_id: ho-missing-001
+title: Unvollständige Reservierungsanfrage
+language: de-DE
+category: sales_operations
+task_type: missing_information
+difficulty: hard
+risk: low
+review_status: approved
+data_classification: synthetic
+tags:
+- hospitality
+- missing-fields
+messages:
+- role: system
+  content: |-
+    From this candidate list, return JSON {"missing_fields":[...]} listing every field that is NOT explicitly stated: date, time, allergies, phone, seating, guest_name, party_size, weekend_mention.
+- role: user
+  fixture: fixtures/de-reservation-incomplete.txt
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  missing_fields:
+    - date
+    - time
+    - allergies
+    - phone
+    - seating
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/missing-info.schema.json
+- type: set_equality
+  weight: 0.8
+  params:
+    field: missing_fields
+    ignore_order: true
+pass_threshold: 0.85

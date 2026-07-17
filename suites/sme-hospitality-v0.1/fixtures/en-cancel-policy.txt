@@ -1,0 +1,5 @@
+House cancellation rule:
+
+[H-1] Table reservations cancellable until 12:00 on the day before.
+[H-2] No-shows are charged 25 EUR per person.
+[H-3] No free same-day rebooking after 16:00.

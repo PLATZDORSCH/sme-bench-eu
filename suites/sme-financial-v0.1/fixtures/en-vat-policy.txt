@@ -1,0 +1,6 @@
+VAT policy (internal):
+
+[V-1] Standard rate 19% for goods and services.
+[V-2] Reduced rate 7% only for books and selected print products.
+[V-3] No blanket tax exemption without written confirmation from the tax authority.
+[V-4] Credit notes must use the same VAT rate as the original invoice.
