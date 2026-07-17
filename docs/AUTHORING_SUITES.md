@@ -19,13 +19,14 @@ Use an existing small pack as a template: [`suites/sme-trades-v0.1`](../suites/s
 
 1. Create `suites/<id>/` with `suite.yaml`, `cases/de-DE/`, `cases/en-GB/`, `fixtures/`, `schemas/` as needed.
 2. Add cases as YAML; every message uses either `content` **or** `fixture` (not both, not neither).
-3. Fixture and schema paths are **relative to the suite root** and must stay inside that directory.
-4. Pair DE/EN: same `pair_id`, same `task_type`, same `difficulty`, comparable positive scorer weight sums (Δ ≤ 0.05).
-5. At least one scorer with `weight > 0`. Use `critical: true` only for hard fail conditions (effective score → 0).
-6. Validate: `uv run sme-bench validate suites/<id>`
-7. Smoke-run: `uv run sme-bench run --base-url … --model … --suite suites/<id> --repeats 1 --output runs/<id>-smoke`
-8. Optional catalog: `uv run sme-bench catalog --suite suites/<id> --output suites/<id>/CASES.md`
-9. Keep `review_status: draft` until human review; set `approved` only when ready to ship.
+3. **Author every case in both languages** — one file under `cases/de-DE/` and one under `cases/en-GB/`.
+4. Fixture and schema paths are **relative to the suite root** and must stay inside that directory.
+5. Pair DE/EN: same `pair_id`, same `task_type`, same `difficulty`, comparable positive scorer weight sums (Δ ≤ 0.05).
+6. At least one scorer with `weight > 0`. Use `critical: true` only for hard fail conditions (effective score → 0).
+7. Validate: `uv run sme-bench validate suites/<id>`
+8. Smoke-run: `uv run sme-bench run --base-url … --model … --suite suites/<id> --repeats 1 --output runs/<id>-smoke`
+9. Optional catalog: `uv run sme-bench catalog --suite suites/<id> --output suites/<id>/CASES.md`
+10. Keep `review_status: draft` until human review; set `approved` only when ready to ship.
 
 ---
 
@@ -117,7 +118,23 @@ Notes:
 
 `response_format`: `text` \| `json` \| `classification`.
 
-### Minimal example (classification)
+### Always author cases as a DE + EN pair
+
+Every custom case should exist in **both** German and English, coupled by a shared
+`pair_id`. This keeps the suite comparable across languages (the validator warns on a
+`pair_id` with fewer than two language variants and errors on inconsistent
+`task_type` / `difficulty` / incomparable scorer weights).
+
+Rules for a pair:
+
+- **Same** `pair_id`, `task_type`, `difficulty`, and comparable positive scorer weight sums (Δ ≤ 0.05).
+- **Different** `id` (language prefix), `language`, `title`, and usually the `fixture` (localised input).
+- Structured `expected` values (categories, numbers, SKUs) are typically identical; localise only free-text content.
+- Put each language under its own folder: `cases/de-DE/` and `cases/en-GB/`.
+
+### Minimal example (classification) — full DE + EN pair
+
+`cases/de-DE/de-xx-support-001.yaml`:
 
 ```yaml
 schema_version: "1.0"
@@ -166,7 +183,56 @@ scorers:
       allowed: [low, medium, high, urgent]
 ```
 
-Copy richer patterns from released cases (invoice + numeric, orders + `set_equality`, grounded QA + `citations`, injection + `forbidden_terms`).
+`cases/en-GB/en-xx-support-001.yaml` (same `pair_id`, localised `title`/`fixture`, identical structure):
+
+```yaml
+schema_version: "1.0"
+review_status: draft
+data_classification: synthetic
+id: en-xx-support-001
+pair_id: xx-support-001
+title: Prioritise ticket
+language: en-GB
+category: customer_service
+task_type: support_routing
+difficulty: normal
+risk: medium
+tags: [custom, support]
+messages:
+  - role: system
+    content: >-
+      Classify the support ticket. Return JSON with category
+      (one of [billing,shipping,technical,other]) and priority
+      (one of [low,medium,high,urgent]). …
+  - role: user
+    fixture: fixtures/en-ticket.txt
+generation:
+  max_tokens: 120
+  temperature: 0
+  response_format: json
+expected:
+  category: technical
+  priority: high
+scorers:
+  - type: json_schema
+    weight: 0.2
+    params:
+      schema: schemas/support-routing.schema.json
+  - type: classification
+    weight: 0.5
+    params:
+      field: category
+      expected: technical
+      allowed: [billing, shipping, technical, other]
+  - type: classification
+    weight: 0.3
+    params:
+      field: priority
+      expected: high
+      allowed: [low, medium, high, urgent]
+```
+
+Copy richer patterns from released cases (invoice + numeric, orders + `set_equality`, grounded QA + `citations`, injection + `forbidden_terms`) — always in matching DE/EN pairs.
 
 ---
 
