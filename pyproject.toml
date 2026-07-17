@@ -40,10 +40,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/timdau/sme-bench"
-Repository = "https://github.com/timdau/sme-bench"
-Issues = "https://github.com/timdau/sme-bench/issues"
-Changelog = "https://github.com/timdau/sme-bench/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/PLATZDORSCH/sme-bench-eu"
+Repository = "https://github.com/PLATZDORSCH/sme-bench-eu"
+Issues = "https://github.com/PLATZDORSCH/sme-bench-eu/issues"
+Changelog = "https://github.com/PLATZDORSCH/sme-bench-eu/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
