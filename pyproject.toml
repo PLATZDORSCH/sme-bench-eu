@@ -7,7 +7,7 @@ requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
-    { name = "Tim Dau", email = "dau@pd-we.de" },
+    { name = "Tim Dau", email = "dau@platzdorsch.de" },
     { name = "PLATZDORSCH Softwareentwicklung GmbH & Co. KG" },
 ]
 keywords = [

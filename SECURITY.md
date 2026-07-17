@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 If you discover a security issue, please **do not open a public issue**. Instead,
-email the maintainer at **dau@pd-we.de** with:
+email the maintainer at **dau@platzdorsch.de** with:
 
 - a description of the issue and its impact,
 - steps to reproduce,
