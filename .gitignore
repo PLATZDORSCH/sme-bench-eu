@@ -35,6 +35,7 @@ htmlcov/
 
 # Runtime outputs
 runs/
+website/
 
 # Environment / secrets
 .env
