@@ -1,18 +1,18 @@
 # SME Trades v0.1
 
-| Field | Value |
+| Feld | Wert |
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
-| **Suite ID** | `sme-trades-v0.1` |
-| **Cases** | 14 (7 DE/EN pairs) |
-| **Languages** | `de-DE`, `en-GB` |
-| **Role** | Trades/construction domain pack; part of **SME Full** |
+| **Suite-ID** | `sme-trades-v0.1` |
+| **Fälle** | 14 (7 DE/EN-Paare) |
+| **Sprachen** | `de-DE`, `en-GB` |
+| **Rolle** | Domänenpack Handwerk/Bau; Teil von **SME Full** |
 
-Longer fixtures: site-survey emails, material orders, contractor invoices, on-site communication.
+Längere Fixtures: Aufmaß-Mails, Materialbestellungen, Handwerkerrechnungen, Baustellenkommunikation.
 
-## Task types
+## Task-Typen
 
-| Pair ID | Task type |
+| Pair ID | Task-Typ |
 | --- | --- |
 | tr-invoice-001 | invoice_extraction |
 | tr-order-001 | order_extraction |
@@ -22,7 +22,7 @@ Longer fixtures: site-survey emails, material orders, contractor invoices, on-si
 | tr-meeting-001 | meeting_actions |
 | tr-process-quote-001 | process_readiness |
 
-## Usage
+## Verwendung
 
 ```bash
 uv run sme-bench validate suites/sme-trades-v0.1
@@ -30,4 +30,4 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-trades-v0.1 --output runs/trades-v01
 ```
 
-Standard ranking without `--suite` = SME Full (includes this pack).
+Standard-Ranking ohne `--suite` = SME Full (enthält diesen Pack).

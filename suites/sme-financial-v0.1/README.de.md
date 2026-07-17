@@ -1,18 +1,18 @@
 # SME Financial v0.1
 
-| Field | Value |
+| Feld | Wert |
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
-| **Suite ID** | `sme-financial-v0.1` |
-| **Cases** | 14 (7 DE/EN pairs) |
-| **Languages** | `de-DE`, `en-GB` |
-| **Role** | Accounting/finance domain pack; part of **SME Full** |
+| **Suite-ID** | `sme-financial-v0.1` |
+| **Fälle** | 14 (7 DE/EN-Paare) |
+| **Sprachen** | `de-DE`, `en-GB` |
+| **Rolle** | Domänenpack Buchhaltung/Finance; Teil von **SME Full** |
 
-Supplier invoices, expenses, VAT policies, payment reminders, and financial rounding.
+Lieferantenrechnungen, Spesen, MwSt-Richtlinien, Zahlungserinnerungen und Finanzrunden.
 
-## Task types
+## Task-Typen
 
-| Pair ID | Task type |
+| Pair ID | Task-Typ |
 | --- | --- |
 | fi-invoice-001 | invoice_extraction |
 | fi-csv-001 | csv_analysis |
@@ -22,7 +22,7 @@ Supplier invoices, expenses, VAT policies, payment reminders, and financial roun
 | fi-reply-001 | customer_reply |
 | fi-meeting-001 | meeting_actions |
 
-## Usage
+## Verwendung
 
 ```bash
 uv run sme-bench validate suites/sme-financial-v0.1
@@ -30,4 +30,4 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-financial-v0.1 --output runs/financial-v01
 ```
 
-Standard ranking without `--suite` = SME Full (includes this pack).
+Standard-Ranking ohne `--suite` = SME Full (enthält diesen Pack).

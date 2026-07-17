@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from io import StringIO
 from pathlib import Path
 
@@ -204,7 +205,10 @@ def test_run_dashboard_render() -> None:
         mean_tps=88.0,
     )
     console.print(dash.render())
-    text = buffer.getvalue()
+    # Rich splits adjacent glyphs/numbers into separate styled spans, and whether
+    # ANSI codes are emitted depends on terminal/color detection (differs across
+    # local vs CI). Strip escape sequences so substring checks are environment-agnostic.
+    text = re.sub(r"\x1b\[[0-9;]*m", "", buffer.getvalue())
     assert "✓ 1" in text
     assert "Output tok/s" in text
     assert "88.0" in text
