@@ -30,17 +30,17 @@ uv sync --all-extras --dev
 # Check the endpoint
 uv run sme-bench doctor \
   --base-url http://localhost:11434/v1 \
-  --model qwen2.5:14b
+  --model qwen3.6:27b
 
 # Start the Full benchmark (default — no --suite needed)
 uv run sme-bench run \
   --base-url http://localhost:11434/v1 \
-  --model qwen2.5:14b \
+  --model qwen3.6:27b \
   --languages de-DE,en-GB \
   --repeats 3 \
   --concurrency 1 \
   --seed 42 \
-  --output runs/qwen2.5-full
+  --output runs/qwen3.6-27b-full
 ```
 
 Run only the core benchmark (72 cases):
@@ -48,9 +48,9 @@ Run only the core benchmark (72 cases):
 ```bash
 uv run sme-bench run \
   --base-url http://localhost:11434/v1 \
-  --model qwen2.5:14b \
+  --model qwen3.6:27b \
   --suite suites/sme-core-v0.1 \
-  --output runs/qwen2.5-core
+  --output runs/qwen3.6-27b-core
 ```
 
 API keys are read from the `OPENAI_API_KEY` environment variable (default for local endpoints: `EMPTY`).
@@ -97,7 +97,7 @@ Details for each pack live in `suites/<pack>/README.md` (basis for the future we
 
 ```bash
 export BASE_URL=http://localhost:11434/v1
-export MODEL=qwen2.5:14b
+export MODEL=qwen3.6:27b
 export OPENAI_API_KEY=EMPTY
 
 # Default: Full
