@@ -1,38 +1,38 @@
 # SME-Bench
 
-SME-Bench bewertet Sprachmodelle an **realistischen Aufgaben kleiner und mittlerer Unternehmen (KMU)** auf Deutsch und Englisch — nicht an Allgemeinwissen oder Multiple-Choice-Tests.
+SME-Bench evaluates language models on **realistic tasks from small and medium-sized enterprises (SMEs)** in German and English — not on general knowledge or multiple-choice quizzes.
 
-Gemessen werden getrennt:
+It measures separately:
 
-- fachliche Qualität
-- Zuverlässigkeit über Wiederholungen
-- kritische Fehler (Halluzinationen, Datenlecks, unerlaubte Aktionen)
-- Sprachparität DE/EN
-- Format- und Prozesskonformität
-- Performance (TTFR, TTFT, Latenz, Tokens/s)
-- optional Wirtschaftlichkeit (Tokenkosten)
+- domain quality
+- reliability across repeats
+- critical failures (hallucinations, data leaks, unauthorised actions)
+- DE/EN language parity
+- format and process compliance
+- performance (TTFR, TTFT, latency, tokens/s)
+- optionally cost efficiency (token cost)
 
-Es gibt **keinen undurchsichtigen Gesamtscore allein**. Der transparente Score erscheint immer zusammen mit Erfolgsrate, kritischer Fehlerrate, Sprachvergleich und Performancewerten.
+There is **no single opaque overall score**. The transparent score always appears together with pass rate, critical failure rate, language comparison, and performance metrics.
 
 ## Installation
 
-Voraussetzung: Python ≥ 3.11 und [uv](https://docs.astral.sh/uv/).
+Requires Python ≥ 3.11 and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 uv sync --all-extras --dev
 ```
 
-## Schnellstart
+## Quick start
 
-**Standard ist der Full-Run** (Core + alle Domänenpacks, ~156 Fälle):
+**The default is the Full run** (Core + all domain packs, ~156 cases):
 
 ```bash
-# Endpoint prüfen
+# Check the endpoint
 uv run sme-bench doctor \
   --base-url http://localhost:11434/v1 \
   --model qwen2.5:14b
 
-# Full-Benchmark starten (Standard — kein --suite nötig)
+# Start the Full benchmark (default — no --suite needed)
 uv run sme-bench run \
   --base-url http://localhost:11434/v1 \
   --model qwen2.5:14b \
@@ -43,7 +43,7 @@ uv run sme-bench run \
   --output runs/qwen2.5-full
 ```
 
-Nur den Kernbenchmark (72 Fälle) ausführen:
+Run only the core benchmark (72 cases):
 
 ```bash
 uv run sme-bench run \
@@ -53,86 +53,86 @@ uv run sme-bench run \
   --output runs/qwen2.5-core
 ```
 
-API-Keys werden aus der Umgebungsvariable `OPENAI_API_KEY` gelesen (Standard für lokale Endpoints: `EMPTY`).
+API keys are read from the `OPENAI_API_KEY` environment variable (default for local endpoints: `EMPTY`).
 
-## CLI-Befehle
+## CLI commands
 
-| Befehl | Zweck |
+| Command | Purpose |
 | --- | --- |
-| `sme-bench doctor` | Erreichbarkeit, Streaming, Usage prüfen |
-| `sme-bench list --suite …` | Fälle, Sprachen, Paare auflisten |
-| `sme-bench validate …` | Suite, Fixtures, Scorer, Pairing prüfen |
-| `sme-bench run …` | Benchmark ausführen (**Default: Full**) |
-| `sme-bench catalog …` | `CASES.md` — Dokumentation aller Fälle erzeugen |
-| `sme-bench report …` | Berichte aus Rohdaten neu erzeugen (`summary|failures|success`.`de|en`.md) |
-| `sme-bench compare …` | Mehrere Läufe vergleichen |
+| `sme-bench doctor` | Check reachability, streaming, usage |
+| `sme-bench list --suite …` | List cases, languages, pairs |
+| `sme-bench validate …` | Check suite, fixtures, scorers, pairing |
+| `sme-bench run …` | Run the benchmark (**default: Full**) |
+| `sme-bench catalog …` | Generate `CASES.md` — documentation for all cases |
+| `sme-bench report …` | Rebuild reports from raw data (`summary\|failures\|success`.`de\|en`.md) |
+| `sme-bench compare …` | Compare multiple runs |
 
-## Kennzahlen
+## Metrics
 
-- **Attempt Pass Rate:** bestandene Versuche / alle Versuche (≥85 %, vollständig korrekt)
-- **Attempt Partial Rate:** teilweise bestandene Versuche (65–84 %, überwiegend korrekt)
-- **Reliable Pass Rate:** Fälle, die in *allen* Wiederholungen bestanden / alle Fälle
-- **Critical Failure:** kritischer Scorer fehlgeschlagen → effektiver Score `0` für Ranglisten
-- **SME Core Score:** Mittelwert der kategoriegewichteten effektiven Scores × 100
-- **Language gap:** Pass-/Score-Differenz `en-GB − de-DE` sowie Pair-Konsistenz
+- **Attempt Pass Rate:** passed attempts / all attempts (≥85 %, fully correct)
+- **Attempt Partial Rate:** partially passed attempts (65–84 %, mostly correct)
+- **Reliable Pass Rate:** cases that passed in *every* repeat / all cases
+- **Critical Failure:** a critical scorer failed → effective score `0` for rankings
+- **SME Core Score:** mean of category-weighted effective scores × 100
+- **Language gap:** pass/score difference `en-GB − de-DE` plus pair consistency
 
-## Aufgabenpakete
+## Task packs
 
-Alle Packs sind **released** (`review_status: approved`) und versioniert als **v0.1**.
+All packs are **released** (`review_status: approved`) and versioned as **v0.1**.
 
-| Name | Pfad | Inhalt | Fälle |
+| Name | Path | Content | Cases |
 | --- | --- | --- | --- |
-| **SME Full** | *(virtuell)* | Standard-Ranking: Core + alle Domänen | ~156 |
-| **SME Core v0.1** | `suites/sme-core-v0.1` | Kern: 12 Task-Typen × 3 Varianten (DE/EN) | 72 |
-| **SME Trades v0.1** | `suites/sme-trades-v0.1` | Handwerk/Bau | 14 |
-| **SME E-Commerce v0.1** | `suites/sme-ecommerce-v0.1` | Shop/Retail | 14 |
-| **SME Financial v0.1** | `suites/sme-financial-v0.1` | Buchhaltung/Finance | 14 |
-| **SME Hospitality v0.1** | `suites/sme-hospitality-v0.1` | Gastro/Hotel | 14 |
-| **SME Logistics v0.1** | `suites/sme-logistics-v0.1` | Logistik/Lager | 14 |
-| **SME Chains v0.1** | `suites/sme-chains-v0.1` | Prozessketten + Security/PII | 14 |
+| **SME Full** | *(virtual)* | Standard ranking: Core + all domains | ~156 |
+| **SME Core v0.1** | `suites/sme-core-v0.1` | Core: 12 task types × 3 variants (DE/EN) | 72 |
+| **SME Trades v0.1** | `suites/sme-trades-v0.1` | Trades/construction | 14 |
+| **SME E-Commerce v0.1** | `suites/sme-ecommerce-v0.1` | Shop/retail | 14 |
+| **SME Financial v0.1** | `suites/sme-financial-v0.1` | Accounting/finance | 14 |
+| **SME Hospitality v0.1** | `suites/sme-hospitality-v0.1` | Food service/hotel | 14 |
+| **SME Logistics v0.1** | `suites/sme-logistics-v0.1` | Logistics/warehouse | 14 |
+| **SME Chains v0.1** | `suites/sme-chains-v0.1` | Process chains + security/PII | 14 |
 
-Details zu jedem Pack stehen in `suites/<pack>/README.md` (Grundlage für die spätere Website).
+Details for each pack live in `suites/<pack>/README.md` (basis for the future website).
 
-### Full vs. einzelnes Pack
+### Full vs. a single pack
 
 ```bash
 export BASE_URL=http://localhost:11434/v1
 export MODEL=qwen2.5:14b
 export OPENAI_API_KEY=EMPTY
 
-# Standard: Full
+# Default: Full
 uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" --output runs/full
 
-# Optional: nur Core
+# Optional: Core only
 uv run sme-bench validate suites/sme-core-v0.1
 uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-core-v0.1 --output runs/core
 
-# Optional: nur ein Domänenpack
+# Optional: a single domain pack
 uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-financial-v0.1 --output runs/financial
 ```
 
-Enthalten im Full-Run: `sme-core-v0.1`, `sme-trades-v0.1`, `sme-ecommerce-v0.1`, `sme-financial-v0.1`, `sme-hospitality-v0.1`, `sme-logistics-v0.1`, `sme-chains-v0.1`.
+Included in the Full run: `sme-core-v0.1`, `sme-trades-v0.1`, `sme-ecommerce-v0.1`, `sme-financial-v0.1`, `sme-hospitality-v0.1`, `sme-logistics-v0.1`, `sme-chains-v0.1`.
 
-## Eigene Aufgaben
+## Authoring your own tasks
 
-Schritt-für-Schritt für Menschen und Coding-Agenten: **[docs/AUTHORING_SUITES.md](docs/AUTHORING_SUITES.md)** (Layout, Case-Schema, Scorer, Fairness, Validate/Run).
+Step by step for humans and coding agents: **[docs/AUTHORING_SUITES.md](docs/AUTHORING_SUITES.md)** (layout, case schema, scorers, fairness, validate/run).
 
-Kurz:
+In short:
 
-1. YAML unter `suites/<suite>/cases/<lang>/` anlegen.
-2. Fixtures relativ zur Suite referenzieren; Pfade dürfen das Suite-Verzeichnis nicht verlassen.
-3. DE/EN-Paare über dieselbe `pair_id` koppeln.
-4. Mit `sme-bench validate` prüfen.
+1. Create YAML under `suites/<suite>/cases/<lang>/`.
+2. Reference fixtures relative to the suite; paths must not escape the suite directory.
+3. Pair DE/EN via a shared `pair_id`.
+4. Check with `sme-bench validate`.
 
-## Datenschutz und Grenzen
+## Privacy and limitations
 
-- Local-first, keine Telemetrie.
-- Keine API-Keys in Logs oder Ergebnisdateien.
-- Kein LLM-as-a-Judge; Freitext über Pflichtinhalte, verbotene Aussagen und Struktur.
+- Local-first, no telemetry.
+- No API keys in logs or result files.
+- No LLM-as-a-Judge; free text is graded on required content, forbidden statements, and structure.
 
-## Entwicklung
+## Development
 
 ```bash
 uv run ruff check .

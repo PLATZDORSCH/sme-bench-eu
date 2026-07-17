@@ -3,24 +3,24 @@
 | | |
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
-| **Suite-ID** | `sme-core-v0.1` |
-| **Fälle** | 72 (36 DE/EN-Paare) |
-| **Sprachen** | `de-DE`, `en-GB` |
-| **Rolle** | Kernbenchmark; optionaler Teil von **SME Full** |
+| **Suite ID** | `sme-core-v0.1` |
+| **Cases** | 72 (36 DE/EN pairs) |
+| **Languages** | `de-DE`, `en-GB` |
+| **Role** | Core benchmark; optional part of **SME Full** |
 
-Cross-domain KMU-Aufgaben: Extraktion, Routing, Grounded QA, Security — branchenübergreifend.
+Cross-domain SME tasks: extraction, routing, grounded QA, security — across industries.
 
-## Varianten
+## Variants
 
-| Variante | Fokus | Beispiele |
+| Variant | Focus | Examples |
 | --- | --- | --- |
-| `*-001` | Basis | Klare E-Mails, Standardformate |
-| `*-002` | Mehr Rauschen | Forwards, Chats, Alternativformate |
-| `*-003` | Härtegrad / Sonderfälle | 7 % MwSt, Tie-Break, partielle PII |
+| `*-001` | Baseline | Clear emails, standard formats |
+| `*-002` | More noise | Forwards, chats, alternative formats |
+| `*-003` | Hard / edge cases | 7 % VAT, tie-break, partial PII |
 
-## Task-Typen
+## Task types
 
-| Task-Typ | Kategorie | Varianten |
+| Task type | Category | Variants |
 | --- | --- | --- |
 | invoice_extraction | document_extraction | 001–003 |
 | order_extraction | sales_operations | 001–003 |
@@ -35,16 +35,16 @@ Cross-domain KMU-Aufgaben: Extraktion, Routing, Grounded QA, Security — branch
 | pii_detection | privacy_security | 001–003 |
 | prompt_injection | privacy_security | 001–003 |
 
-## Herkunft
+## Provenance
 
 - `provenance.type: synthetic`
-- Keine echten Personen-, Kunden- oder Firmendaten
-- Namen, IBAN-ähnliche Strings und Domains sind demonstrativ (`example`, `demo.test`)
+- No real personal, customer, or company data
+- Names, IBAN-like strings, and domains are illustrative (`example`, `demo.test`)
 
-## Verwendung
+## Usage
 
 ```bash
-# Nur Core
+# Core only
 uv run sme-bench validate suites/sme-core-v0.1
 uv run sme-bench catalog suites/sme-core-v0.1
 uv run sme-bench run \
@@ -53,12 +53,12 @@ uv run sme-bench run \
   --suite suites/sme-core-v0.1 \
   --output runs/core-v01
 
-# Standard-Ranking: Full (Core + Domänen), kein --suite nötig
+# Standard ranking: Full (Core + domains), no --suite needed
 uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" --output runs/full
 ```
 
-## Grenzen
+## Limitations
 
-- Freitext: deterministische Scorer (Pflichtinhalte / Verbote), kein LLM-as-Judge
-- Keine branchenspezifische Rechtsberatung
-- Domänenspezifische Härte liegt in den Domain-Packs (Trades, Financial, …)
+- Free text: deterministic scorers (required content / prohibitions), no LLM-as-a-Judge
+- No industry-specific legal advice
+- Domain-specific difficulty lives in the domain packs (Trades, Financial, …)

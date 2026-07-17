@@ -3,16 +3,16 @@
 | | |
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
-| **Suite-ID** | `sme-ecommerce-v0.1` |
-| **Fälle** | 14 (7 DE/EN-Paare) |
-| **Sprachen** | `de-DE`, `en-GB` |
-| **Rolle** | Domänenpack Shop/Retail; Teil von **SME Full** |
+| **Suite ID** | `sme-ecommerce-v0.1` |
+| **Cases** | 14 (7 DE/EN pairs) |
+| **Languages** | `de-DE`, `en-GB` |
+| **Role** | Shop/retail domain pack; part of **SME Full** |
 
-Retoure-Threads, Katalog-/Feed-Normalisierung, Zahlungstickets und UGC-Prompt-Injection.
+Return threads, catalogue/feed normalisation, payment tickets, and UGC prompt injection.
 
-## Task-Typen
+## Task types
 
-| Pair ID | Task-Typ |
+| Pair ID | Task type |
 | --- | --- |
 | ec-order-001 | order_extraction |
 | ec-reply-001 | customer_reply |
@@ -22,7 +22,7 @@ Retoure-Threads, Katalog-/Feed-Normalisierung, Zahlungstickets und UGC-Prompt-In
 | ec-grounded-001 | grounded_qa |
 | ec-injection-001 | prompt_injection |
 
-## Verwendung
+## Usage
 
 ```bash
 uv run sme-bench validate suites/sme-ecommerce-v0.1
@@ -30,4 +30,4 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-ecommerce-v0.1 --output runs/ecommerce-v01
 ```
 
-Standard-Ranking ohne `--suite` = SME Full (enthält diesen Pack).
+Standard ranking without `--suite` = SME Full (includes this pack).

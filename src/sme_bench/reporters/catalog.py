@@ -30,35 +30,35 @@ def write_case_catalog(
     )
 
     lines = [
-        f"# Fallkatalog — {suite_id} {suite_version}",
+        f"# Case catalogue — {suite_id} {suite_version}",
         "",
-        "Referenz für alle Benchmark-Fälle: Was wird geprüft, welche Fehler sind kritisch?",
+        "Reference for every benchmark case: what is checked, which failures are critical?",
         "",
-        f"- **Fälle gesamt:** {len(tasks)}",
-        f"- **Mit kritischen Scorern:** {critical_count}",
-        f"- **Sprachen:** {', '.join(sorted({t.language for t in tasks}))}",
+        f"- **Total cases:** {len(tasks)}",
+        f"- **With critical scorers:** {critical_count}",
+        f"- **Languages:** {', '.join(sorted({t.language for t in tasks}))}",
         "",
-        "## Schnellübersicht",
+        "## Quick overview",
         "",
-        "| ID | Titel | Sprache | Risiko | Variante | Pair |",
+        "| ID | Title | Language | Risk | Variant | Pair |",
         "| --- | --- | --- | --- | --- | --- |",
     ]
 
     for task in sorted_tasks:
-        brief = task_brief(task)
+        brief = task_brief(task, lang="en")
         risk_badge = f"**{brief['risk']}**" if brief["risk"] in {"critical", "high"} else brief["risk"]
         lines.append(
             f"| `{brief['id']}` | {brief['title']} | {brief['language']} | "
             f"{risk_badge} | {brief['variant']} | `{brief['pair_id'] or '—'}` |"
         )
 
-    lines.extend(["", "## Nach Task-Typ", ""])
+    lines.extend(["", "## By task type", ""])
 
     for task_type in sorted(by_type):
-        label = TASK_TYPE_LABELS["de"].get(task_type, task_type)
+        label = TASK_TYPE_LABELS["en"].get(task_type, task_type)
         lines.extend([f"### {label} (`{task_type}`)", ""])
         for task in by_type[task_type]:
-            lines.extend(_task_section(task_brief(task)))
+            lines.extend(_task_section(task_brief(task, lang="en")))
             lines.append("")
 
     path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
@@ -68,21 +68,21 @@ def _task_section(brief: dict[str, Any]) -> list[str]:
     lines = [
         f"#### `{brief['id']}` — {brief['title']}",
         "",
-        f"- **Sprache:** {brief['language']} · **Pair:** `{brief['pair_id'] or '—'}` · "
-        f"**Variante {brief['variant']}:** {brief['variant_label']}",
-        f"- **Kategorie:** `{brief['category']}` · **Schwierigkeit:** {brief['difficulty']} · "
-        f"**Risiko:** {brief['risk']} — {brief['risk_label']}",
-        f"- **Bestehen ab:** {brief['pass_threshold']:.0%} gewichteter Score",
+        f"- **Language:** {brief['language']} · **Pair:** `{brief['pair_id'] or '—'}` · "
+        f"**Variant {brief['variant']}:** {brief['variant_label']}",
+        f"- **Category:** `{brief['category']}` · **Difficulty:** {brief['difficulty']} · "
+        f"**Risk:** {brief['risk']} — {brief['risk_label']}",
+        f"- **Pass from:** {brief['pass_threshold']:.0%} weighted score",
         "",
-        "**Aufgabe (System-Prompt):**",
+        "**Task (system prompt):**",
         f"> {brief['system_prompt']}",
         "",
     ]
     if brief["critical_checks"]:
-        lines.append("**Kritische Prüfungen (K.-o. bei Verstoß → effektiver Score 0):**")
+        lines.append("**Critical checks (fail → effective score 0):**")
         for check in brief["critical_checks"]:
             lines.append(f"- {check}")
         lines.append("")
-    lines.append("**Scorer:**")
-    lines.extend(brief["scorers"] or ["- (keine)"])
+    lines.append("**Scorers:**")
+    lines.extend(brief["scorers"] or ["- (none)"])
     return lines

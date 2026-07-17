@@ -3,16 +3,16 @@
 | | |
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
-| **Suite-ID** | `sme-logistics-v0.1` |
-| **Fälle** | 14 (7 DE/EN-Paare) |
-| **Sprachen** | `de-DE`, `en-GB` |
-| **Rolle** | Domänenpack Logistik/Lager; Teil von **SME Full** |
+| **Suite ID** | `sme-logistics-v0.1` |
+| **Cases** | 14 (7 DE/EN pairs) |
+| **Languages** | `de-DE`, `en-GB` |
+| **Role** | Logistics/warehouse domain pack; part of **SME Full** |
 
-Frachtrechnungen, Kommissionierung, Versand-SLA, Verspätungstickets und Dispatch-Readiness.
+Freight invoices, order picking, shipping SLAs, delay tickets, and dispatch readiness.
 
-## Task-Typen
+## Task types
 
-| Pair ID | Task-Typ |
+| Pair ID | Task type |
 | --- | --- |
 | lo-invoice-001 | invoice_extraction |
 | lo-order-001 | order_extraction |
@@ -22,7 +22,7 @@ Frachtrechnungen, Kommissionierung, Versand-SLA, Verspätungstickets und Dispatc
 | lo-grounded-001 | grounded_qa |
 | lo-process-001 | process_readiness |
 
-## Verwendung
+## Usage
 
 ```bash
 uv run sme-bench validate suites/sme-logistics-v0.1
@@ -30,4 +30,4 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-logistics-v0.1 --output runs/logistics-v01
 ```
 
-Standard-Ranking ohne `--suite` = SME Full (enthält diesen Pack).
+Standard ranking without `--suite` = SME Full (includes this pack).

@@ -603,7 +603,8 @@ def test_case_catalog_and_failures_report(tmp_path: Path) -> None:
     write_case_catalog(catalog_path, [task], suite_id="test", suite_version="0.0")
     text = catalog_path.read_text(encoding="utf-8")
     assert "de-pii-detection-001" in text
-    assert "K.-o." in text
+    assert "Case catalogue" in text
+    assert "K.O." in text
 
     ok = AttemptResult(
         task_id=task.id,
