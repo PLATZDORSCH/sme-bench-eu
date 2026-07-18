@@ -13,7 +13,7 @@ tags:
 - meeting
 messages:
 - role: system
-  content: Return JSON {actions:[{owner,task,due}]} for assigned actions only.
+  content: "Gib JSON {actions:[{owner,task,due}]} nur für zugewiesene Aufgaben zurück."
 - role: user
   fixture: fixtures/meeting/de-meeting-002.txt
 generation:

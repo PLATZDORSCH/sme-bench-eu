@@ -15,15 +15,7 @@ tags:
 - long
 messages:
 - role: system
-  content: >-
-    Decide if a binding quote can be sent. Return JSON with exactly these keys:
-    next_step (string: "send_quote" or "request_missing"), ready (boolean),
-    missing (array of strings).
-    Readiness rule: if the message already states site address, surveyed scope
-    items, material preference, and preferred timing, set next_step=send_quote,
-    ready=true, missing=[]. Do not invent missing fields that are already present,
-    and do not require extra details such as exact tile areas, brand catalogues,
-    or demolition scope when the readiness rule is already met.
+  content: "Entscheide, ob ein verbindliches Angebot gesendet werden kann. Gib JSON mit genau diesen Schlüsseln zurück: next_step (string: \"send_quote\" oder \"request_missing\"), ready (boolean), missing (Array von Strings). Bereitschaftsregel: Wenn die Nachricht bereits Baustellenadresse, erfassten Leistungsumfang, Materialwunsch und bevorzugten Zeitpunkt nennt, setze next_step=send_quote, ready=true, missing=[]. Erfinde keine fehlenden Felder, die bereits vorhanden sind, und verlange keine Extra-Details wie exakte Flächenangaben, Markenkataloge oder Abbruchumfang, wenn die Bereitschaftsregel bereits erfüllt ist."
 - role: user
   fixture: fixtures/de-aufmass-mail.txt
 generation:

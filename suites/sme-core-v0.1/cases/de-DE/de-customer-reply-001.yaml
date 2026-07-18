@@ -14,8 +14,7 @@ tags:
 - no-commitment
 messages:
 - role: system
-  content: Write a short factual customer reply using only provided facts. Do not
-    invent commitments.
+  content: "Schreibe eine kurze, sachliche Kundenantwort nur mit den angegebenen Fakten. Erfinde keine Zusagen."
 - role: user
   fixture: fixtures/reply/de-delay.txt
 generation:

@@ -14,7 +14,7 @@ tags:
 - no-commitment
 messages:
 - role: system
-  content: Write a short factual reply using only provided facts. No invented commitments.
+  content: "Schreibe eine kurze, sachliche Antwort nur mit den angegebenen Fakten. Keine erfundenen Zusagen."
 - role: user
   fixture: fixtures/reply/de-wrong-iban.txt
 generation:

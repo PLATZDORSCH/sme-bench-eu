@@ -14,8 +14,7 @@ tags:
 - support
 messages:
 - role: system
-  content: |-
-    Classify the support ticket. Return JSON with category (one of [billing,shipping,technical,other]) and priority (one of [low,medium,high,urgent]). Priority rubric: urgent = business-critical outage, security incident or same-day/legal deadline; high = significant financial or blocked-process impact needing action within days; medium = limited impact, no tight deadline; low = minor, cosmetic or informational.
+  content: "Klassifiziere das Support-Ticket. Gib JSON mit category (eines von [billing,shipping,technical,other]) und priority (eines von [low,medium,high,urgent]) zurück. Prioritätsrubrik: urgent = geschäftskritischer Ausfall, Sicherheitsvorfall oder Same-Day-/rechtliche Frist; high = erheblicher finanzieller oder prozessblockierender Impact mit Handlungsbedarf innerhalb von Tagen; medium = begrenzter Impact, keine enge Frist; low = geringfügig, kosmetisch oder informativ."
 - role: user
   fixture: fixtures/de-guest-ticket.txt
 generation:

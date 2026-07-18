@@ -14,8 +14,7 @@ tags:
 - csv
 messages:
 - role: system
-  content: |-
-    Return a JSON object with exactly these keys: top_sku (SKU with the highest revenue, revenue = units*price), total_revenue (sum of units*price over all rows), low_stock (array of SKUs with stock < 5).
+  content: "Gib ein JSON-Objekt mit genau diesen Schlüsseln zurück: top_sku (SKU mit dem höchsten Umsatz, Umsatz = units*price), total_revenue (Summe von units*price über alle Zeilen), low_stock (Array der SKUs mit stock < 5)."
 - role: user
   fixture: fixtures/de-expenses.csv
 generation:

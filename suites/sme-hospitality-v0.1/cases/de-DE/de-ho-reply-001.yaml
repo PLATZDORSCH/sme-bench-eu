@@ -14,7 +14,7 @@ tags:
 - reply
 messages:
 - role: system
-  content: 'Write a short factual guest reply using only provided facts. Do not invent commitments.'
+  content: "Schreibe eine kurze, sachliche Gästeantwort nur mit den angegebenen Fakten. Erfinde keine Zusagen."
 - role: user
   fixture: fixtures/de-booking-facts.txt
 generation:

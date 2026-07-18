@@ -14,8 +14,7 @@ tags:
 - invoice
 messages:
 - role: system
-  content: |-
-    Extract the invoice as JSON using exactly these keys: invoice_number, supplier, currency, net_amount, vat_rate, vat_amount, gross_amount, due_date. Provide vat_rate as a decimal fraction (e.g. 0.19 for 19%) and due_date as YYYY-MM-DD. Use only data present in the source and reply with JSON only, no markdown.
+  content: "Extrahiere die Rechnung als JSON mit genau diesen Schlüsseln: invoice_number, supplier, currency, net_amount, vat_rate, vat_amount, gross_amount, due_date. Gib vat_rate als Dezimalbruch an (z. B. 0.19 für 19%) und due_date als YYYY-MM-DD. Verwende nur Daten aus der Quelle und antworte nur mit JSON, ohne Markdown."
 - role: user
   fixture: fixtures/de-freight-invoice.txt
 generation:

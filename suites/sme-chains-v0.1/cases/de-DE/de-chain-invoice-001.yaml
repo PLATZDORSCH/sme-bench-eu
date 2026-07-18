@@ -14,11 +14,7 @@ tags:
 - chain
 messages:
 - role: system
-  content: |-
-    Return JSON {next_step, ready, missing}. Choose next_step from the options
-    stated in the user text. ready=true only if process can proceed without blocking
-    gaps. missing must be an array of short tokens (English snake_case preferred,
-    e.g. cost_center).
+  content: "Gib JSON {next_step, ready, missing} zurück. Wähle next_step aus den Optionen im Benutzertext. ready=true nur, wenn der Prozess ohne blockierende Lücken fortgesetzt werden kann. missing muss ein Array kurzer Tokens sein (bevorzugt englisches snake_case, z. B. cost_center)."
 - role: user
   fixture: fixtures/de-chain-invoice.txt
 generation:

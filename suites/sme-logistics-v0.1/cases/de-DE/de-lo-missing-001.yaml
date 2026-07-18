@@ -14,8 +14,7 @@ tags:
 - missing-fields
 messages:
 - role: system
-  content: |-
-    From this candidate list, return JSON {"missing_fields":[...]} listing every field that is NOT explicitly stated: street_address, preferred_date, incoterm, phone, destination_city, origin, carton_count, weight.
+  content: "Gib aus dieser Kandidatenliste JSON {\"missing_fields\":[...]} zurück und liste jedes Feld, das NICHT ausdrücklich steht: street_address, preferred_date, incoterm, phone, destination_city, origin, carton_count, weight."
 - role: user
   fixture: fixtures/de-ship-request.txt
 generation:

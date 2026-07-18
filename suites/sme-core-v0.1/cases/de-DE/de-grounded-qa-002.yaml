@@ -14,7 +14,7 @@ tags:
 - citations
 messages:
 - role: system
-  content: Answer only using the policy. JSON answer + citations. Never invent terms.
+  content: "Antworte nur anhand der Richtlinie. JSON answer + citations. Erfinde keine Bedingungen."
 - role: user
   content: 'Policy:
 

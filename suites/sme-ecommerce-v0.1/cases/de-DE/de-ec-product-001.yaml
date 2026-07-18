@@ -14,8 +14,7 @@ tags:
 - catalog
 messages:
 - role: system
-  content: >-
-    Return JSON with exactly these keys: brand, color, size, material. Normalize to the allowed vocabulary stated in the user message / fixture.
+  content: "Gib JSON mit genau diesen Schlüsseln zurück: brand, color, size, material. Normalisiere auf das erlaubte Vokabular aus der Benutzernachricht / dem Fixture."
 - role: user
   fixture: fixtures/de-katalog-roh.txt
 generation:

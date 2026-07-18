@@ -13,8 +13,7 @@ tags:
 - missing-fields
 messages:
 - role: system
-  content: 'Return JSON {"missing_fields": [...]} listing missing required quote fields
-    from: delivery_address, budget, colour_preference, quantity, company.'
+  content: "Gib JSON {\"missing_fields\": [...]} zurück und liste fehlende Pflichtfelder für das Angebot aus: delivery_address, budget, colour_preference, quantity, company."
 - role: user
   fixture: fixtures/missing/de-quote-request.txt
 generation:

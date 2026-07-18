@@ -13,8 +13,7 @@ tags:
 - missing-fields
 messages:
 - role: system
-  content: 'Return JSON {"missing_fields":[...]} from: delivery_address, budget, colour_preference,
-    quantity, company, contract_term.'
+  content: "Gib JSON {\"missing_fields\":[...]} zurück aus: delivery_address, budget, colour_preference, quantity, company, contract_term."
 - role: user
   fixture: fixtures/missing/de-quote-002.txt
 generation:

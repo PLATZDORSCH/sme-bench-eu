@@ -13,7 +13,7 @@ tags:
 - catalog
 messages:
 - role: system
-  content: Return JSON brand,color,size,material using allowed vocabularies.
+  content: "Gib JSON brand,color,size,material anhand der erlaubten Vokabulare zurück."
 - role: user
   fixture: fixtures/product/de-product-002.txt
 generation:

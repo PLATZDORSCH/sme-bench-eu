@@ -14,8 +14,7 @@ tags:
 - missing-fields
 messages:
 - role: system
-  content: |-
-    From this candidate list, return JSON {"missing_fields":[...]} listing every field that is NOT explicitly stated in the message: cost_centre, project_code, vat_rate, iban, employee, destination, amount, date.
+  content: "Gib aus dieser Kandidatenliste JSON {\"missing_fields\":[...]} zurück und liste jedes Feld, das in der Nachricht NICHT ausdrücklich steht: cost_centre, project_code, vat_rate, iban, employee, destination, amount, date."
 - role: user
   fixture: fixtures/de-expense-claim.txt
 generation:

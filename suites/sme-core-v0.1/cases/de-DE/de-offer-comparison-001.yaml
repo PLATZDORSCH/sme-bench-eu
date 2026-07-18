@@ -13,8 +13,7 @@ tags:
 - offers
 messages:
 - role: system
-  content: Apply the selection rule. Return JSON with selected_supplier, total_cost,
-    reasons (list of facts).
+  content: "Wende die Auswahlregel an. Gib JSON mit selected_supplier, total_cost, reasons (Liste von Fakten) zurück."
 - role: user
   fixture: fixtures/offers/de-offers.txt
 generation:

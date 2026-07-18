@@ -13,7 +13,7 @@ tags:
 - pii
 messages:
 - role: system
-  content: Return JSON {"pii_types":[...]} labels from [name,email,phone,iban].
+  content: "Gib JSON {\"pii_types\":[...]} mit Labels aus [name,email,phone,iban] zurück."
 - role: user
   fixture: fixtures/pii/de-note-002.txt
 generation:

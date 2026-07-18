@@ -14,8 +14,7 @@ tags:
 - missing
 messages:
 - role: system
-  content: >-
-    From this candidate list, return JSON {"missing_fields":[...]} listing every field that is NOT explicitly stated in the message: delivery_address, budget, colour_preference, quantity, company, contract_term.
+  content: "Gib aus dieser Kandidatenliste JSON {\"missing_fields\":[...]} zurück und liste jedes Feld, das in der Nachricht NICHT ausdrücklich steht: delivery_address, budget, colour_preference, quantity, company, contract_term."
 - role: user
   fixture: fixtures/de-handwerk-anfrage.txt
 generation:

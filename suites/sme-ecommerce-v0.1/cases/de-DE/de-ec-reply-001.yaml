@@ -15,8 +15,7 @@ tags:
 - long
 messages:
 - role: system
-  content: Write factual customer reply using only provided policy facts. No invented
-    commitments.
+  content: "Schreibe eine sachliche Kundenantwort nur mit den angegebenen Richtlinien-Fakten. Keine erfundenen Zusagen."
 - role: user
   fixture: fixtures/de-retoure-thread.txt
 generation:

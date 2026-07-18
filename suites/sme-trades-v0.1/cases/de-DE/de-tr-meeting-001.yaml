@@ -14,8 +14,7 @@ tags:
 - meeting
 messages:
 - role: system
-  content: >-
-    Extract JSON {"actions":[{"owner","task","due"}]} with due as YYYY-MM-DD. Only stated decisions; do not invent owners or dates.
+  content: "Extrahiere JSON {\"actions\":[{\"owner\",\"task\",\"due\"}]} mit due als YYYY-MM-DD. Nur ausdrücklich genannte Entscheidungen; erfinde keine Owner oder Daten."
 - role: user
   fixture: fixtures/de-baubesprechung.txt
 generation:

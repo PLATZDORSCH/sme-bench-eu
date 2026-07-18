@@ -14,9 +14,7 @@ tags:
 - sku
 messages:
 - role: system
-  content: 'Extract the order as JSON: customer (string), currency "EUR", items as an
-    array of {sku (string), qty (integer), variant (string; use "none" if the item
-    has no variant)}.'
+  content: "Extrahiere die Bestellung als JSON: customer (string), currency \"EUR\", items als Array von {sku (string), qty (integer), variant (string; verwende \"none\", wenn der Artikel keine Variante hat)}."
 - role: user
   fixture: fixtures/order/de-order-002.txt
 generation:

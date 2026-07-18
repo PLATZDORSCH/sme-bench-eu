@@ -15,7 +15,7 @@ tags:
 - booking
 messages:
 - role: system
-  content: Return JSON {next_step, ready, missing} for finance process.
+  content: "Gib JSON {next_step, ready, missing} für den Finanzprozess zurück."
 - role: user
   fixture: fixtures/de-chain-two-step.txt
 generation:

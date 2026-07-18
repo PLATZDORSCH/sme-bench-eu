@@ -14,9 +14,7 @@ tags:
 - chain
 messages:
 - role: system
-  content: Return JSON {next_step, ready, missing}. Choose next_step from the options
-    stated in the user text. ready=true only if process can proceed without blocking
-    gaps.
+  content: "Gib JSON {next_step, ready, missing} zurück. Wähle next_step aus den Optionen im Benutzertext. ready=true nur, wenn der Prozess ohne blockierende Lücken fortgesetzt werden kann."
 - role: user
   fixture: fixtures/de-chain-support-escalation.txt
 generation:

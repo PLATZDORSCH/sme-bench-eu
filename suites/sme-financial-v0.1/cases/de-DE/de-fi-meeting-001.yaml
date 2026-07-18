@@ -14,8 +14,7 @@ tags:
 - meeting
 messages:
 - role: system
-  content: |-
-    Extract JSON {"actions":[{"owner","task","due"}]} with due as YYYY-MM-DD. Only stated decisions.
+  content: "Extrahiere JSON {\"actions\":[{\"owner\",\"task\",\"due\"}]} mit due als YYYY-MM-DD. Nur ausdrücklich genannte Entscheidungen."
 - role: user
   fixture: fixtures/de-finance-meeting.txt
 generation:
