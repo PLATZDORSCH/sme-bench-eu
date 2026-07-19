@@ -253,7 +253,7 @@ Each entry:
 | `json_fields` | Exact/loose match on named fields vs `expected` | `fields`, optional `match`, `case_insensitive` |
 | `numeric` | Float fields with tolerance | `fields`, `absolute_tolerance`, `relative_tolerance` |
 | `classification` | Label in a field | `field`, `expected`, `allowed`, optional `scale` + `adjacent_credit` |
-| `contains` | Required substrings in output | `terms` (or `required`), `mode: all\|any`, `case_insensitive` |
+| `contains` | Required substrings in output | `terms` (or `required`): string or list of alternatives per slot; `mode: all\|any`, `case_insensitive` |
 | `forbidden_terms` | Must not appear (often `critical: true`) | `terms`, optional `fields` / `exclude_fields`, `ignore_negated` |
 | `set_equality` | Unordered lists (orders, line items) | `field`, `ignore_order`, optional `keys` (project dicts), `aliases` |
 | `citations` | Citation ids must be in allow-list | `field`, `allowed`, `require_nonempty` |
@@ -330,6 +330,8 @@ Validate fails on unknown scorer types, missing fixtures, path escapes, invalid 
 ## Adding to SME Full (maintainers)
 
 Released packs live under `suites/` and are listed in `FULL_SUITE_IDS`. Custom community suites usually stay separate and are invoked with `--suite`. Only maintainers should extend Full after review (`review_status: approved`, unique task ids, docs, changelog).
+
+Changing prompts, fixtures, expected answers, or weights requires a **new content version** — see [VERSIONING.md](VERSIONING.md).
 
 ---
 

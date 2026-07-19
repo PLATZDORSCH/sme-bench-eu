@@ -2,13 +2,6 @@
 
 ## Unreleased
 
-### Benchmark
-
-- Sharpened case prompts where existing runs showed format ambiguity (PII label strings, `missing` as array, invoice amounts as numbers, grounded citation IDs, missing-field semantics, exact SKUs, fulfill `address` token, trades support category)
-- Fixed corrupted system prompts (YAML leakage into `content`); reformulated grounded prompts without naming wrong keys; removed meta annotations from missing-info fixtures; clarified product-normalization vocab mapping
-- Grounded prompts: concrete JSON example shape; missing-info: clarify empty array semantics; product size mapping examples (`medium`→`M`)
-- CLI `--enable-thinking` sets `chat_template_kwargs.enable_thinking=true` (Qwen/vLLM/LiteLLM); pair with `--max-tokens-mult` / `--max-tokens-min`
-
 ## 0.1.0
 
 ### Benchmark
@@ -20,6 +13,11 @@
 - Domain packs: Trades, E-Commerce, Financial, Hospitality, Logistics, Chains
 - Partial grade, fairness scorers (`forbidden_terms` fields/`exclude_fields`, citations normalisation,
   order `keys`), `catalog`, `report --rescore`
+- Sharpened case prompts where existing runs showed format ambiguity (PII label strings, `missing` as array, invoice amounts as numbers, grounded citation IDs, missing-field semantics, exact SKUs, fulfill `address` token, trades support category)
+- Fixed corrupted system prompts (YAML leakage into `content`); reformulated grounded prompts without naming wrong keys; removed meta annotations from missing-info fixtures; clarified product-normalization vocab mapping
+- Grounded prompts: concrete JSON example shape; missing-info: clarify empty array semantics; product size mapping examples (`medium`→`M`)
+- CLI `--enable-thinking` sets `chat_template_kwargs.enable_thinking=true` (Qwen/vLLM/LiteLLM); pair with `--max-tokens-mult` / `--max-tokens-min`
+- Restored missing `.env` loader module used by the CLI
 
 ### Reports
 
@@ -30,8 +28,9 @@
 
 ### Documentation
 
-- Root and suite READMEs in English (basis for a future website)
+- Root and suite READMEs in English and German
 - **[docs/AUTHORING_SUITES.md](docs/AUTHORING_SUITES.md)** — guide for custom suites and DE/EN case pairs
+- **[docs/VERSIONING.md](docs/VERSIONING.md)** — release policy (tool vs. benchmark content)
 
 ### Open source
 
@@ -40,6 +39,7 @@
 - CI workflow (ruff, mypy, pytest + coverage on Python 3.11/3.12)
 - `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`
 - Reproducible installs via committed `uv.lock`
+- First GitHub Release: **v0.1.0**
 
 ### Tests
 

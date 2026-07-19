@@ -148,7 +148,7 @@ Ausführliche Beispiele (Classification, JSON Schema, `set_equality`, `citations
 | `json_fields` | Feldabgleich vs. `expected` | `fields`, optional `match`, `case_insensitive` |
 | `numeric` | Float-Felder mit Toleranz | `fields`, `absolute_tolerance`, `relative_tolerance` |
 | `classification` | Label in einem Feld | `field`, `expected`, `allowed`, optional `scale` + `adjacent_credit` |
-| `contains` | Pflicht-Substrings | `terms`, `mode: all\|any`, `case_insensitive` |
+| `contains` | Pflicht-Substrings | `terms`: String oder Liste von Alternativen pro Slot; `mode: all\|any`, `case_insensitive` |
 | `forbidden_terms` | Darf nicht vorkommen (oft `critical: true`) | `terms`, optional `fields` / `exclude_fields`, `ignore_negated` |
 | `set_equality` | Ungeordnete Listen | `field`, `ignore_order`, optional `keys`, `aliases` |
 | `citations` | Zitations-IDs in Allow-List | `field`, `allowed`, `require_nonempty` |
@@ -225,6 +225,8 @@ Validate schlägt fehl bei unbekannten Scorer-Typen, fehlenden Fixtures, Path-Es
 ## SME Full (Maintainer)
 
 Released Packs unter `suites/`, gelistet in `FULL_SUITE_IDS`. Community-Suites bleiben getrennt (`--suite`). Full-Erweiterung nur nach Review (`review_status: approved`, eindeutige Task-IDs, Doku, Changelog).
+
+Änderungen an Prompts, Fixtures, Expected Answers oder Gewichten erfordern eine **neue Inhaltsversion** — siehe [VERSIONING.de.md](VERSIONING.de.md).
 
 ---
 

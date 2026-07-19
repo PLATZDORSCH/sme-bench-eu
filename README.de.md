@@ -160,6 +160,12 @@ uv run sme-bench run \
 - **SME Rank Score:** `SME Core × Reliable Pass × max(0, 1 − 5 × critical_rate) × max(0, 1 − 2 × partial_rate)` — primäre Leaderboard-Metrik
 - **Language gap:** Pass-/Score-Differenz `en-GB − de-DE` plus Paarkonsistenz
 
+## Releases und Versionierung
+
+Aktuelles Release: **[v0.1.0](https://github.com/PLATZDORSCH/sme-bench-eu/releases/tag/v0.1.0)**.
+
+Harness-Bugfixes bleiben auf derselben Inhaltslinie (Patch). Prompt-, Case- oder score-relevante Änderungen bekommen eine **neue Version**, damit Leaderboard-Runs vergleichbar bleiben. Details: **[docs/VERSIONING.de.md](docs/VERSIONING.de.md)**.
+
 ## Task-Packs
 
 Alle Packs sind **released** (`review_status: approved`) und als **v0.1** versioniert.
