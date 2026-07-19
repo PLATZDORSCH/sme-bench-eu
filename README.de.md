@@ -162,13 +162,13 @@ uv run sme-bench run \
 
 ## Releases und Versionierung
 
-Aktuelles Release: **[v0.1.0](https://github.com/PLATZDORSCH/sme-bench-eu/releases/tag/v0.1.0)**.
+Aktuelles Release: **[v0.2.0](https://github.com/PLATZDORSCH/sme-bench-eu/releases/tag/v0.2.0)**.
 
 Harness-Bugfixes bleiben auf derselben Inhaltslinie (Patch). Prompt-, Case- oder score-relevante Änderungen bekommen eine **neue Version**, damit Leaderboard-Runs vergleichbar bleiben. Details: **[docs/VERSIONING.de.md](docs/VERSIONING.de.md)**.
 
 ## Task-Packs
 
-Alle Packs sind **released** (`review_status: approved`) und als **v0.1** versioniert.
+Alle Packs sind **released** (`review_status: approved`). Ordner-IDs bleiben `*-v0.1`; Pack-`version` ist **0.2.0**.
 
 | Name | Pfad | Inhalt | Cases |
 | --- | --- | --- | --- |

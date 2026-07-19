@@ -1,7 +1,7 @@
 schema_version: '1.0'
 id: sme-trades-v0.1
 name: SME Trades Domain Pack
-version: 0.1.0
+version: 0.2.0
 description: 'Trades & construction cases: site surveys, materials, contractor invoices'
 languages:
 - de-DE

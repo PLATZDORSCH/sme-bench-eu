@@ -1,7 +1,7 @@
 schema_version: '1.0'
 id: sme-core-v0.1
 name: SME Core Benchmark
-version: 0.1.0
+version: 0.2.0
 description: 12 Task-Typen × 3 Varianten (DE/EN) mit Rauschen, Alternativformaten
   und Härtegraden
 languages:
@@ -24,4 +24,4 @@ category_weights:
   process_ops: 1.0
 provenance:
   type: synthetic
-  notes: Synthetisch; alle 72 Fälle approved (v0.1.0).
+  notes: Synthetisch; alle 72 Fälle approved (Inhalt 0.2.0, Pack-ID v0.1).

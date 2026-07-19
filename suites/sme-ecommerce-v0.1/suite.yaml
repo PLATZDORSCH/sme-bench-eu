@@ -1,7 +1,7 @@
 schema_version: '1.0'
 id: sme-ecommerce-v0.1
 name: SME E-Commerce Domain Pack
-version: 0.1.0
+version: 0.2.0
 description: 'Shop-nahe Fälle: Retoure, Katalog, Warenkorb, längere Ticket-Threads'
 languages:
 - de-DE

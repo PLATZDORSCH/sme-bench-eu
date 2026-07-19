@@ -13,7 +13,7 @@ def print_summary(
     *,
     model: str,
     suite_label: str,
-    version: str = "0.1.0",
+    version: str = "0.2.0",
     console: Console | None = None,
 ) -> None:
     out = console or Console()

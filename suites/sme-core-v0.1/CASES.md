@@ -1,4 +1,4 @@
-# Case catalogue — sme-core-v0.1 0.1.0
+# Case catalogue — sme-core-v0.1 0.2.0
 
 Reference for every benchmark case: what is checked, which failures are critical?
 

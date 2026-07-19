@@ -20,11 +20,16 @@ CLI, Client, Scorer und Reporter.
 
 Cases, Prompts, Fixtures, Expected Answers, Gewichte und Pack-Zusammensetzung.
 
+Pack-**Ordner-IDs** (z. B. `sme-core-v0.1`) bleiben bei kleinen Inhalts-Bumps stabil.
+Die genaue Inhaltslinie ist das Suite-YAML-Feld `version` und das Package-Release
+(z. B. Ordner weiter `*-v0.1`, Suite `version: 0.2.0` → veröffentlicht als **v0.2.0**).
+Ordner nur bei größerem Pack-Redesign umbenennen.
+
 | Änderung | Aktion |
 | --- | --- |
 | Nur Tippfehler in Docs / README | Kein Suite-Bump |
-| Prompt, Fixture, Expected, Gewichte oder Suite-Zusammensetzung | **Neue Suite- / Inhaltsversion** (z. B. `v0.2`, Package entsprechend minor/patch) |
-| Scorer-Fix, der Noten bei gleicher Modell-Ausgabe ändert | **Neues Release**; dokumentieren, dass alte Runs `--rescore` brauchen und nicht stillschweigend vergleichbar sind |
+| Prompt, Fixture, Expected, Gewichte, Suite-Zusammensetzung oder score-relevantes Scorer-Verhalten | Suite-`version` + Package-Release anheben (z. B. **0.2.0**); bei Wiederverwendung alter Attempts `--rescore` dokumentieren |
+| Scorer-Fix, der Noten bei gleicher Modell-Ausgabe ändert | Wie oben; Runs unterschiedlicher Inhaltsversionen nicht stillschweigend vergleichen |
 
 **Gleiche Inhaltsversion = vergleichbare Runs.** Leaderboard-Zeilen unterschiedlicher Inhaltsversionen nicht ohne Kennzeichnung mischen.
 

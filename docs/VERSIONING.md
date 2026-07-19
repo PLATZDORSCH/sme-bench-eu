@@ -20,11 +20,16 @@ The CLI, client, scorers, and reporters.
 
 Cases, prompts, fixtures, expected answers, weights, and pack membership.
 
+Pack **folder ids** (e.g. `sme-core-v0.1`) stay stable across small content line bumps.
+The precise content line is the suite YAML `version` field and the package release
+(e.g. folders still named `*-v0.1`, suite `version: 0.2.0` → published as **v0.2.0**).
+Rename folders only for a larger pack redesign.
+
 | Change | Action |
 | --- | --- |
 | Typo in docs / README only | No suite bump |
-| Prompt, fixture, expected, weights, or suite composition | **New suite / overall content version** (e.g. `v0.2`, package minor or patch as appropriate) |
-| Scorer fix that changes grades for the same model output | **New release**; document that old runs need `--rescore` and are not silently comparable |
+| Prompt, fixture, expected, weights, suite composition, or score-changing scorer behaviour | Bump suite `version` + package release (e.g. **0.2.0**); document `--rescore` if old attempts are reused |
+| Scorer fix that changes grades for the same model output | Same as above; runs are not silently comparable across content versions |
 
 **Same content version = comparable runs.** Do not mix leaderboard rows from different content versions without labelling them.
 

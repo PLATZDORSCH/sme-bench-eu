@@ -1,7 +1,7 @@
 schema_version: '1.0'
 id: sme-financial-v0.1
 name: SME Financial Domain Pack
-version: 0.1.0
+version: 0.2.0
 description: 'Bookkeeping & finance SME cases: invoices, expense claims, VAT policy, payment reminders'
 languages:
 - de-DE

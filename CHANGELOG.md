@@ -2,10 +2,17 @@
 
 ## Unreleased
 
+## 0.2.0
+
 ### Benchmark
 
 - `contains` scorer accepts alternative term groups (any match satisfies the group)
 - Loosened payment-phrasing requirements in `en/de-customer-reply-003`
+- Suite pack `version` fields and Full suite bumped to **0.2.0** (folder ids remain `*-v0.1`)
+- Leaderboard results after rescore align with this content line
+
+### Tool
+
 - OpenAI client: `max_completion_tokens` for GPT-5/4o/4.1/o-series; omit `temperature` for GPT-5/o-series
 - Ruff SIM103 cleanup in `forbidden_terms`
 

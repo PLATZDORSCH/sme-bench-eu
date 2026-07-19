@@ -1,7 +1,7 @@
 schema_version: '1.0'
 id: sme-hospitality-v0.1
 name: SME Hospitality Domain Pack
-version: 0.1.0
+version: 0.2.0
 description: 'Restaurant & hotel SME cases: catering orders, bookings, allergen policy, guest tickets'
 languages:
 - de-DE
