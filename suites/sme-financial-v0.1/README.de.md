@@ -6,7 +6,7 @@
 | **Suite-ID** | `sme-financial-v0.1` |
 | **Fälle** | 14 (7 DE/EN-Paare) |
 | **Sprachen** | `de-DE`, `en-GB` |
-| **Rolle** | Domänenpack Buchhaltung/Finance; Teil von **SME Full** |
+| **Rolle** | Test-Suite Buchhaltung/Finance; Teil von **SME Full** |
 
 Lieferantenrechnungen, Spesen, MwSt-Richtlinien, Zahlungserinnerungen und Finanzrunden.
 
@@ -30,4 +30,4 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-financial-v0.1 --output runs/financial-v01
 ```
 
-Standard-Ranking ohne `--suite` = SME Full (enthält diesen Pack).
+Standard-Ranking ohne `--suite` = SME Full (enthält diese Test-Suite).

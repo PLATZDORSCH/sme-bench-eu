@@ -1,8 +1,8 @@
 # Suite-Authoring (Menschen & Coding-Agents)
 
-Anleitung für **eigene SME-Bench-Suites**: Verzeichnisstruktur, `suite.yaml`, Case-YAML, Scorer, Validierung, Fairness-Regeln.
+Anleitung für **eigene SME-Bench-Test-Suites**: Verzeichnisstruktur, `suite.yaml`, Case-YAML, Scorer, Validierung, Fairness-Regeln.
 
-Vorlage: [`sme-trades-v0.1`](/suites/sme-trades-v01) (`suites/sme-trades-v0.1/`).
+Vorlage: [`demo-v0.1`](../suites/demo-v0.1) (minimal) oder [`sme-trades-v0.1`](../suites/sme-trades-v0.1).
 
 ---
 
@@ -35,7 +35,7 @@ Vorlage: [`sme-trades-v0.1`](/suites/sme-trades-v01) (`suites/sme-trades-v0.1/`)
 ```text
 suites/my-domain-v0.1/
 ├── suite.yaml                 # Pflicht-Manifest
-├── README.md                  # optionale Pack-Beschreibung
+├── README.md                  # optionale Test-Suite-Beschreibung
 ├── cases/
 │   ├── de-DE/
 │   │   └── de-xx-task-001.yaml
@@ -48,7 +48,7 @@ suites/my-domain-v0.1/
     └── ….schema.json
 ```
 
-Namenskonventionen (released Packs):
+Namenskonventionen (freigegebene Test-Suites):
 
 | Element | Muster | Beispiel |
 | --- | --- | --- |
@@ -64,7 +64,7 @@ Namenskonventionen (released Packs):
 ```yaml
 schema_version: "1.0"
 id: my-domain-v0.1
-name: My Domain Pack
+name: My Domain Test Suite
 version: 0.1.0
 description: Kurzbeschreibung Domain und Task-Mix
 languages:
@@ -81,7 +81,7 @@ category_weights:
   # … nur genutzte Kategorien
 provenance:
   type: synthetic
-  notes: "Custom pack. Synthetic fixtures."
+  notes: "Eigene Test-Suite. Synthetische Fixtures."
 ```
 
 Hinweise:
@@ -208,9 +208,9 @@ Validate schlägt fehl bei unbekannten Scorer-Typen, fehlenden Fixtures, Path-Es
 
 **Do**
 
-- Bestehendes Pack als Vorlage für Scorer- und Prompt-Stil.
+- Bestehende Test-Suite als Vorlage für Scorer- und Prompt-Stil.
 - Reviewbare Fixture-Länge; lange Inputs in `fixtures/`.
-- Pack in `suites/<id>/README.md` dokumentieren (Task-Tabelle + Run-Befehle).
+- Test-Suite in `suites/<id>/README.md` dokumentieren (Task-Tabelle + Run-Befehle).
 - `data_classification: synthetic` für erfundene Inhalte.
 
 **Don't**
@@ -224,7 +224,7 @@ Validate schlägt fehl bei unbekannten Scorer-Typen, fehlenden Fixtures, Path-Es
 
 ## SME Full (Maintainer)
 
-Released Packs unter `suites/`, gelistet in `FULL_SUITE_IDS`. Community-Suites bleiben getrennt (`--suite`). Full-Erweiterung nur nach Review (`review_status: approved`, eindeutige Task-IDs, Doku, Changelog).
+Freigegebene Test-Suites unter `suites/`, gelistet in `FULL_SUITE_IDS`. Community-Suites bleiben getrennt (`--suite`). Full-Erweiterung nur nach Review (`review_status: approved`, eindeutige Task-IDs, Doku, Changelog).
 
 Änderungen an Prompts, Fixtures, Expected Answers oder Gewichten erfordern eine **neue Inhaltsversion** — siehe [VERSIONING.de.md](VERSIONING.de.md).
 
@@ -232,11 +232,12 @@ Released Packs unter `suites/`, gelistet in `FULL_SUITE_IDS`. Community-Suites b
 
 ## Referenz-Implementierungen
 
-| Pack | Eignung als Vorlage |
+| Test-Suite | Eignung als Vorlage |
 | --- | --- |
-| [`sme-trades-v0.1`](/suites/sme-trades-v01) | Kompaktes Domain-Pack (14 Cases) |
-| [`sme-core-v0.1`](/suites/sme-core-v01) | Vollständige Task-Typ-Abdeckung |
-| [`sme-chains-v0.1`](/suites/sme-chains-v01) | Prozessketten + Security / PII / Injection |
+| [`demo-v0.1`](../suites/demo-v0.1) | Minimale Custom-Suite (2 Cases, draft) |
+| [`sme-trades-v0.1`](../suites/sme-trades-v0.1) | Kompakte Domänen-Test-Suite (14 Cases) |
+| [`sme-core-v0.1`](../suites/sme-core-v0.1) | Vollständige Task-Typ-Abdeckung |
+| [`sme-chains-v0.1`](../suites/sme-chains-v0.1) | Prozessketten + Security / PII / Injection |
 
 Modelle: `src/sme_bench/models.py` (`BenchmarkTask`, `SuiteManifest`, `ScorerSpec`).  
 Loader / Checks: `src/sme_bench/task_loader.py`.  

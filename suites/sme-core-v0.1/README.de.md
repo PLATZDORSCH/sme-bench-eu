@@ -61,4 +61,4 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" --output runs/full
 
 - Freitext: deterministische Scorer (Pflichtinhalte / Verbote), kein LLM-as-Judge
 - Keine branchenspezifische Rechtsberatung
-- Domänenspezifische Härte liegt in den Domain-Packs (Trades, Financial, …)
+- Domänenspezifische Härte liegt in den Domänen-Test-Suites (Trades, Financial, …)

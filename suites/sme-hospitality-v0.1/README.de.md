@@ -6,7 +6,7 @@
 | **Suite-ID** | `sme-hospitality-v0.1` |
 | **Fälle** | 14 (7 DE/EN-Paare) |
 | **Sprachen** | `de-DE`, `en-GB` |
-| **Rolle** | Domänenpack Gastro/Hotel; Teil von **SME Full** |
+| **Rolle** | Test-Suite Gastro/Hotel; Teil von **SME Full** |
 
 Catering-Bestellungen, Reservierungen, Gästetickets, F&B-Umsatz und Hausregeln.
 
@@ -30,4 +30,4 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-hospitality-v0.1 --output runs/hospitality-v01
 ```
 
-Standard-Ranking ohne `--suite` = SME Full (enthält diesen Pack).
+Standard-Ranking ohne `--suite` = SME Full (enthält diese Test-Suite).

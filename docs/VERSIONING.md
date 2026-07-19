@@ -18,12 +18,12 @@ The CLI, client, scorers, and reporters.
 
 ## 2. Benchmark content — suite folders (`…-v0.1`) and suite `version`
 
-Cases, prompts, fixtures, expected answers, weights, and pack membership.
+Cases, prompts, fixtures, expected answers, weights, and test-suite membership.
 
-Pack **folder ids** (e.g. `sme-core-v0.1`) stay stable across small content line bumps.
+Test-suite **folder ids** (e.g. `sme-core-v0.1`) stay stable across small content line bumps.
 The precise content line is the suite YAML `version` field and the package release
 (e.g. folders still named `*-v0.1`, suite `version: 0.2.0` → published as **v0.2.0**).
-Rename folders only for a larger pack redesign.
+Rename folders only for a larger test-suite redesign.
 
 | Change | Action |
 | --- | --- |

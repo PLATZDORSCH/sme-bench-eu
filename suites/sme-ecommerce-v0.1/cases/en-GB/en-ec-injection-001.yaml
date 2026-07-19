@@ -26,6 +26,7 @@ generation:
 expected:
   action: extract_price
   safe: true
+  price: "29.90 EUR"
 scorers:
 - type: json_schema
   weight: 0.2

@@ -1,8 +1,8 @@
 # Suite authoring guide (for humans & coding agents)
 
-How to create a **custom SME-Bench suite**: directory layout, `suite.yaml`, case YAML, scorers, validation, and fairness rules.
+How to create a **custom SME-Bench test suite**: directory layout, `suite.yaml`, case YAML, scorers, validation, and fairness rules.
 
-Use an existing small pack as a template: [`suites/sme-trades-v0.1`](../suites/sme-trades-v0.1).
+Use an existing small test suite as a template: [`suites/sme-trades-v0.1`](../suites/sme-trades-v0.1) or the minimal example [`suites/demo-v0.1`](../suites/demo-v0.1).
 
 ---
 
@@ -35,7 +35,7 @@ Use an existing small pack as a template: [`suites/sme-trades-v0.1`](../suites/s
 ```text
 suites/my-domain-v0.1/
 ├── suite.yaml                 # required manifest
-├── README.md                  # optional pack description
+├── README.md                  # optional test-suite description
 ├── cases/
 │   ├── de-DE/
 │   │   └── de-xx-task-001.yaml
@@ -48,7 +48,7 @@ suites/my-domain-v0.1/
     └── ….schema.json
 ```
 
-Naming conventions used in released packs:
+Naming conventions used in released test suites:
 
 | Item | Pattern | Example |
 | --- | --- | --- |
@@ -64,7 +64,7 @@ Naming conventions used in released packs:
 ```yaml
 schema_version: "1.0"
 id: my-domain-v0.1
-name: My Domain Pack
+name: My Domain Test Suite
 version: 0.1.0
 description: Short description of the domain and task mix
 languages:
@@ -81,7 +81,7 @@ category_weights:
   # … only categories you actually use
 provenance:
   type: synthetic
-  notes: "Custom pack. Synthetic fixtures."
+  notes: "Custom test suite. Synthetic fixtures."
 ```
 
 Notes:
@@ -313,9 +313,9 @@ Validate fails on unknown scorer types, missing fixtures, path escapes, invalid 
 
 **Do**
 
-- Mirror an existing pack for scorer + prompt style.
+- Mirror an existing test suite for scorer + prompt style.
 - Keep fixtures short enough to be reviewable; put long inputs in `fixtures/`.
-- Document the pack in `suites/<id>/README.md` (task table + how to run).
+- Document the test suite in `suites/<id>/README.md` (task table + how to run).
 - Use `data_classification: synthetic` for made-up content.
 
 **Don’t**
@@ -329,7 +329,7 @@ Validate fails on unknown scorer types, missing fixtures, path escapes, invalid 
 
 ## Adding to SME Full (maintainers)
 
-Released packs live under `suites/` and are listed in `FULL_SUITE_IDS`. Custom community suites usually stay separate and are invoked with `--suite`. Only maintainers should extend Full after review (`review_status: approved`, unique task ids, docs, changelog).
+Released test suites live under `suites/` and are listed in `FULL_SUITE_IDS`. Custom community suites usually stay separate and are invoked with `--suite`. Only maintainers should extend Full after review (`review_status: approved`, unique task ids, docs, changelog).
 
 Changing prompts, fixtures, expected answers, or weights requires a **new content version** — see [VERSIONING.md](VERSIONING.md).
 
@@ -337,9 +337,10 @@ Changing prompts, fixtures, expected answers, or weights requires a **new conten
 
 ## Reference implementations
 
-| Pack | Why useful as a template |
+| Test suite | Why useful as a template |
 | --- | --- |
-| [`sme-trades-v0.1`](../suites/sme-trades-v0.1) | Compact domain pack (14 cases) |
+| [`demo-v0.1`](../suites/demo-v0.1) | Minimal custom suite (2 cases, draft) |
+| [`sme-trades-v0.1`](../suites/sme-trades-v0.1) | Compact domain test suite (14 cases) |
 | [`sme-core-v0.1`](../suites/sme-core-v0.1) | Full task-type coverage |
 | [`sme-chains-v0.1`](../suites/sme-chains-v0.1) | Process chains + security / PII / injection |
 

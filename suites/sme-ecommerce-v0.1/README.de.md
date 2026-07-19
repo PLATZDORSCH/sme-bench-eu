@@ -6,7 +6,7 @@
 | **Suite-ID** | `sme-ecommerce-v0.1` |
 | **Fälle** | 14 (7 DE/EN-Paare) |
 | **Sprachen** | `de-DE`, `en-GB` |
-| **Rolle** | Domänenpack Shop/Retail; Teil von **SME Full** |
+| **Rolle** | Test-Suite Shop/Retail; Teil von **SME Full** |
 
 Retoure-Threads, Katalog-/Feed-Normalisierung, Zahlungstickets und UGC-Prompt-Injection.
 
@@ -30,4 +30,4 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-ecommerce-v0.1 --output runs/ecommerce-v01
 ```
 
-Standard-Ranking ohne `--suite` = SME Full (enthält diesen Pack).
+Standard-Ranking ohne `--suite` = SME Full (enthält diese Test-Suite).

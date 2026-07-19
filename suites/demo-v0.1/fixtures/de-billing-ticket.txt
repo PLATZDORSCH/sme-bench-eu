@@ -1,0 +1,5 @@
+Ticket #DEMO-100
+Konto: acme-billing@example.com
+
+Die letzte Rechnung #INV-4401 zeigt 190 EUR MwSt, obwohl wir steuerbefreit sind.
+Bitte Korrektur – sonst zahlen wir nicht. Nicht dringend für heute Abend, aber diese Woche.

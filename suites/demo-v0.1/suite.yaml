@@ -1,0 +1,18 @@
+schema_version: "1.0"
+id: demo-v0.1
+name: Demo Test Suite
+version: 0.1.0
+description: Minimal custom test suite (one DE/EN support-routing pair) for authoring examples
+languages:
+  - de-DE
+  - en-GB
+default_repeats: 3
+default_pass_threshold: 0.85
+default_partial_threshold: 0.65
+case_globs:
+  - cases/**/*.yaml
+category_weights:
+  customer_service: 1.0
+provenance:
+  type: synthetic
+  notes: "Draft demo test suite. Not part of SME Full. Synthetic fixtures."

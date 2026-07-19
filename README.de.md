@@ -30,7 +30,7 @@ uv sync --all-extras --dev
 cp .env.example .env
 ```
 
-**Standardziel ist SME Full** (Core + alle Domain-Packs, ~156 Cases × Repeats).
+**Standardziel ist SME Full** (Core + alle Domänen-Test-Suites, ~156 Cases × Repeats).
 
 ### Ollama
 
@@ -166,9 +166,9 @@ Aktuelles Release: **[v0.3.0](https://github.com/PLATZDORSCH/sme-bench-eu/releas
 
 Harness-Bugfixes bleiben auf derselben Inhaltslinie (Patch). Prompt-, Case- oder score-relevante Änderungen bekommen eine **neue Version**, damit Leaderboard-Runs vergleichbar bleiben. Details: **[docs/VERSIONING.de.md](docs/VERSIONING.de.md)**.
 
-## Task-Packs
+## Test-Suites
 
-Alle Packs sind **released** (`review_status: approved`). Ordner-IDs bleiben `*-v0.1`; Pack-`version` ist **0.2.0** (Cases); Ranking-Metrik-Linie ist **0.3.0**.
+Alle freigegebenen Test-Suites haben `review_status: approved`. Ordner-IDs bleiben `*-v0.1`; Suite-`version` ist **0.2.0** (Cases); Ranking-Metrik-Linie ist **0.3.0**.
 
 | Name | Pfad | Inhalt | Cases |
 | --- | --- | --- | --- |
@@ -181,9 +181,9 @@ Alle Packs sind **released** (`review_status: approved`). Ordner-IDs bleiben `*-
 | **SME Logistics v0.1** | `suites/sme-logistics-v0.1` | Logistik/Lager | 14 |
 | **SME Chains v0.1** | `suites/sme-chains-v0.1` | Prozessketten + Security/PII | 14 |
 
-Details zu jedem Pack stehen in `suites/<pack>/README.md`.
+Details zu jeder Test-Suite stehen in `suites/<id>/README.md`.
 
-### Full vs. einzelnes Pack
+### Full vs. einzelne Test-Suite
 
 ```bash
 export BASE_URL=http://localhost:11434/v1
@@ -198,14 +198,16 @@ uv run sme-bench validate suites/sme-core-v0.1
 uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-core-v0.1 --output runs/core
 
-# Optional: ein Domain-Pack
+# Optional: eine Domänen-Test-Suite
 uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-financial-v0.1 --output runs/financial
 ```
 
 Im Full-Lauf enthalten: `sme-core-v0.1`, `sme-trades-v0.1`, `sme-ecommerce-v0.1`, `sme-financial-v0.1`, `sme-hospitality-v0.1`, `sme-logistics-v0.1`, `sme-chains-v0.1`.
 
-## Eigene Tasks schreiben
+Custom-Beispiel (nicht in Full): [`suites/demo-v0.1`](suites/demo-v0.1) — mit `--suite suites/demo-v0.1` starten.
+
+## Eigene Test-Suite schreiben
 
 Schritt für Schritt für Menschen und Coding-Agents: **[docs/AUTHORING_SUITES.de.md](docs/AUTHORING_SUITES.de.md)** (Layout, Case-Schema, Scorer, Fairness, validate/run).
 

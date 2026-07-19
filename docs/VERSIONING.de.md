@@ -18,12 +18,12 @@ CLI, Client, Scorer und Reporter.
 
 ## 2. Benchmark-Inhalt — Suite-Ordner (`…-v0.1`) und Suite-`version`
 
-Cases, Prompts, Fixtures, Expected Answers, Gewichte und Pack-Zusammensetzung.
+Cases, Prompts, Fixtures, Expected Answers, Gewichte und Test-Suite-Zusammensetzung.
 
-Pack-**Ordner-IDs** (z. B. `sme-core-v0.1`) bleiben bei kleinen Inhalts-Bumps stabil.
+Test-Suite-**Ordner-IDs** (z. B. `sme-core-v0.1`) bleiben bei kleinen Inhalts-Bumps stabil.
 Die genaue Inhaltslinie ist das Suite-YAML-Feld `version` und das Package-Release
 (z. B. Ordner weiter `*-v0.1`, Suite `version: 0.2.0` → veröffentlicht als **v0.2.0**).
-Ordner nur bei größerem Pack-Redesign umbenennen.
+Ordner nur bei größerem Test-Suite-Redesign umbenennen.
 
 | Änderung | Aktion |
 | --- | --- |

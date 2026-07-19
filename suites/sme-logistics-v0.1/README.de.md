@@ -6,7 +6,7 @@
 | **Suite-ID** | `sme-logistics-v0.1` |
 | **Fälle** | 14 (7 DE/EN-Paare) |
 | **Sprachen** | `de-DE`, `en-GB` |
-| **Rolle** | Domänenpack Logistik/Lager; Teil von **SME Full** |
+| **Rolle** | Test-Suite Logistik/Lager; Teil von **SME Full** |
 
 Frachtrechnungen, Kommissionierung, Versand-SLA, Verspätungstickets und Dispatch-Readiness.
 
@@ -30,4 +30,4 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-logistics-v0.1 --output runs/logistics-v01
 ```
 
-Standard-Ranking ohne `--suite` = SME Full (enthält diesen Pack).
+Standard-Ranking ohne `--suite` = SME Full (enthält diese Test-Suite).

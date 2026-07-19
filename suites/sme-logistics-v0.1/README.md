@@ -6,7 +6,7 @@
 | **Suite ID** | `sme-logistics-v0.1` |
 | **Cases** | 14 (7 DE/EN pairs) |
 | **Languages** | `de-DE`, `en-GB` |
-| **Role** | Logistics/warehouse domain pack; part of **SME Full** |
+| **Role** | Logistics/warehouse test suite; part of **SME Full** |
 
 Freight invoices, order picking, shipping SLAs, delay tickets, and dispatch readiness.
 
@@ -30,4 +30,4 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-logistics-v0.1 --output runs/logistics-v01
 ```
 
-Standard ranking without `--suite` = SME Full (includes this pack).
+Standard ranking without `--suite` = SME Full (includes this test suite).

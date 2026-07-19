@@ -14,7 +14,7 @@ from typing import Any
 import aiohttp
 
 from sme_bench.models import RequestResult
-from sme_bench.utils import normalize_base_url, redact_secrets
+from sme_bench.utils import normalize_base_url, redact_secrets, separate_thinking_content
 
 
 def _text_from_content_field(value: Any) -> str:
@@ -281,6 +281,15 @@ class OpenAICompatibleClient:
 
         content_text = "".join(content_parts)
         reasoning_text = "".join(reasoning_parts)
+        # Some proxies leak chain-of-thought into delta.content (Qwen thinking).
+        # Split that out so scorers see the answer, not the CoT dump.
+        if content_text:
+            answer, embedded = separate_thinking_content(content_text)
+            if embedded:
+                reasoning_text = (
+                    f"{reasoning_text}\n\n{embedded}".strip() if reasoning_text else embedded
+                )
+            content_text = answer
         # Some GLM/Nebius deployments put the visible answer only in
         # reasoning_* while delta.content stays empty/null.
         if content_text:

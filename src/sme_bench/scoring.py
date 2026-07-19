@@ -6,7 +6,7 @@ from typing import Any
 
 from sme_bench.models import AttemptResult, BenchmarkTask, ScoreResult, ScorerSpec
 from sme_bench.scorers.base import Scorer, get_scorer, known_scorer_names
-from sme_bench.utils import extract_json_payload
+from sme_bench.utils import extract_json_payload, separate_thinking_content
 
 
 def evaluate_attempt(
@@ -19,6 +19,9 @@ def evaluate_attempt(
         score_results, weighted_score, effective_score, passed, partial,
         critical_failure, parsed_output
     """
+    # Strip leaked CoT so rescoring old thinking dumps matches new client behaviour.
+    answer_text, _reasoning = separate_thinking_content(output_text)
+
     parsed: Any | None = None
     needs_json = any(
         s.type in {"json_schema", "json_fields", "numeric", "set_equality", "citations"}
@@ -28,7 +31,7 @@ def evaluate_attempt(
     # Also try parse for set_equality on lists
     if needs_json or any(s.type == "set_equality" for s in task.scorers):
         try:
-            parsed = extract_json_payload(output_text)
+            parsed = extract_json_payload(answer_text)
         except (ValueError, TypeError):
             parsed = None
 
@@ -37,7 +40,7 @@ def evaluate_attempt(
         scorer: Scorer = get_scorer(spec.type)
         result = scorer.score(
             task=task,
-            output_text=output_text,
+            output_text=answer_text,
             parsed_output=parsed,
             spec=spec,
         )

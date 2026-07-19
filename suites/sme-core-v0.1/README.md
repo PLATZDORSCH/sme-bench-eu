@@ -61,4 +61,4 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" --output runs/full
 
 - Free text: deterministic scorers (required content / prohibitions), no LLM-as-a-Judge
 - No industry-specific legal advice
-- Domain-specific difficulty lives in the domain packs (Trades, Financial, …)
+- Domain-specific difficulty lives in the domain test suites (Trades, Financial, …)

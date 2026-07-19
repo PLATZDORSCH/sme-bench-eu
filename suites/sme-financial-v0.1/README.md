@@ -6,7 +6,7 @@
 | **Suite ID** | `sme-financial-v0.1` |
 | **Cases** | 14 (7 DE/EN pairs) |
 | **Languages** | `de-DE`, `en-GB` |
-| **Role** | Accounting/finance domain pack; part of **SME Full** |
+| **Role** | Accounting/finance test suite; part of **SME Full** |
 
 Supplier invoices, expenses, VAT policies, payment reminders, and financial rounding.
 
@@ -30,4 +30,4 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-financial-v0.1 --output runs/financial-v01
 ```
 
-Standard ranking without `--suite` = SME Full (includes this pack).
+Standard ranking without `--suite` = SME Full (includes this test suite).

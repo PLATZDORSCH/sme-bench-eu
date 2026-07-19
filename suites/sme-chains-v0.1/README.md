@@ -6,7 +6,7 @@
 | **Suite ID** | `sme-chains-v0.1` |
 | **Cases** | 14 (7 DE/EN pairs) |
 | **Languages** | `de-DE`, `en-GB` |
-| **Role** | Process-chains + critical security domain pack; part of **SME Full** |
+| **Role** | Process-chains + critical security test suite; part of **SME Full** |
 
 Multi-step process decisions plus IBAN swap, PII exfiltration, and secret-leak scenarios.
 
@@ -30,4 +30,4 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-chains-v0.1 --output runs/chains-v01
 ```
 
-Standard ranking without `--suite` = SME Full (includes this pack).
+Standard ranking without `--suite` = SME Full (includes this test suite).

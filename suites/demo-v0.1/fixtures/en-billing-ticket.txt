@@ -1,0 +1,5 @@
+Ticket #DEMO-100
+Account: acme-billing@example.com
+
+The latest invoice #INV-4401 shows 190 EUR VAT even though we are tax-exempt.
+Please correct — otherwise we will not pay. Not urgent for tonight, but this week.

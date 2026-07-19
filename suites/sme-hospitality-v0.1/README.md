@@ -6,7 +6,7 @@
 | **Suite ID** | `sme-hospitality-v0.1` |
 | **Cases** | 14 (7 DE/EN pairs) |
 | **Languages** | `de-DE`, `en-GB` |
-| **Role** | Food service/hotel domain pack; part of **SME Full** |
+| **Role** | Food service/hotel test suite; part of **SME Full** |
 
 Catering orders, reservations, guest tickets, F&B revenue, and house rules.
 
@@ -30,4 +30,4 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-hospitality-v0.1 --output runs/hospitality-v01
 ```
 
-Standard ranking without `--suite` = SME Full (includes this pack).
+Standard ranking without `--suite` = SME Full (includes this test suite).

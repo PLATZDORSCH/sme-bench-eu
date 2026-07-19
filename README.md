@@ -30,7 +30,7 @@ Copy `.env.example` to `.env` and fill in the keys you need. The CLI loads `.env
 cp .env.example .env
 ```
 
-**The default run target is SME Full** (Core + all domain packs, ~156 cases × repeats).
+**The default run target is SME Full** (Core + all domain test suites, ~156 cases × repeats).
 
 ### Ollama
 
@@ -166,9 +166,9 @@ Current release: **[v0.3.0](https://github.com/PLATZDORSCH/sme-bench-eu/releases
 
 Harness bugfixes stay on the same content line (patch). Prompt, case, or score-changing changes get a **new version** so leaderboard runs stay comparable. Details: **[docs/VERSIONING.md](docs/VERSIONING.md)**.
 
-## Task packs
+## Test suites
 
-All packs are **released** (`review_status: approved`). Folder ids stay `*-v0.1`; pack `version` is **0.2.0** (cases); ranking metric line is **0.3.0**.
+All released test suites have `review_status: approved`. Folder ids stay `*-v0.1`; suite `version` is **0.2.0** (cases); ranking metric line is **0.3.0**.
 
 | Name | Path | Content | Cases |
 | --- | --- | --- | --- |
@@ -181,9 +181,9 @@ All packs are **released** (`review_status: approved`). Folder ids stay `*-v0.1`
 | **SME Logistics v0.1** | `suites/sme-logistics-v0.1` | Logistics/warehouse | 14 |
 | **SME Chains v0.1** | `suites/sme-chains-v0.1` | Process chains + security/PII | 14 |
 
-Details for each pack live in `suites/<pack>/README.md` (basis for the future website).
+Details for each test suite live in `suites/<id>/README.md` (basis for the future website).
 
-### Full vs. a single pack
+### Full vs. a single test suite
 
 ```bash
 export BASE_URL=http://localhost:11434/v1
@@ -198,14 +198,16 @@ uv run sme-bench validate suites/sme-core-v0.1
 uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-core-v0.1 --output runs/core
 
-# Optional: a single domain pack
+# Optional: a single domain test suite
 uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-financial-v0.1 --output runs/financial
 ```
 
 Included in the Full run: `sme-core-v0.1`, `sme-trades-v0.1`, `sme-ecommerce-v0.1`, `sme-financial-v0.1`, `sme-hospitality-v0.1`, `sme-logistics-v0.1`, `sme-chains-v0.1`.
 
-## Authoring your own tasks
+Custom example (not in Full): [`suites/demo-v0.1`](suites/demo-v0.1) — run with `--suite suites/demo-v0.1`.
+
+## Authoring your own test suite
 
 Step by step for humans and coding agents: **[docs/AUTHORING_SUITES.md](docs/AUTHORING_SUITES.md)** (layout, case schema, scorers, fairness, validate/run).
 

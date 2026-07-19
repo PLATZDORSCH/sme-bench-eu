@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+### Docs
+
+- Terminology: **task packs** → **test suites** (README, authoring, versioning, suite READMEs)
+- Example custom suite [`suites/demo-v0.1`](suites/demo-v0.1) (draft, not in SME Full)
+
+### Benchmark
+
+- Prompt-injection / secret cases: `expected` now includes `price` (as in the
+  fixture) so success/failure reports match the schema and prompt; scoring
+  unchanged (`json_fields` still checks `action`/`safe`, price via `contains`)
+
+### Tool
+
+- Strip leaked chain-of-thought from model `content` (Qwen-style thinking dumps /
+  `<think>` blocks) before scoring; store CoT in `reasoning_text` when present
+- `extract_json_payload` tries all fences (prefer `json`), then the richest
+  top-level JSON object — fixes false fails when CoT quotes source text in a fence
+- `report --rescore` rewrites cleaned `output_text` (and fills `reasoning_text`)
+  so existing thinking runs can be re-graded without a full re-run
+
 ## 0.3.0
 
 ### Ranking

@@ -1,0 +1,65 @@
+schema_version: "1.0"
+review_status: draft
+data_classification: synthetic
+id: de-demo-support-001
+pair_id: demo-support-001
+title: Demo Billing-Ticket klassifizieren
+language: de-DE
+category: customer_service
+task_type: support_routing
+difficulty: normal
+risk: medium
+tags:
+  - demo
+  - support
+messages:
+  - role: system
+    content: >-
+      Klassifiziere das Support-Ticket. Gib JSON mit category (eines von
+      [billing,shipping,technical,other]) und priority (eines von
+      [low,medium,high,urgent]) zurück. Prioritätsrubrik: urgent = geschäftskritischer
+      Ausfall, Sicherheitsvorfall oder Same-Day-/rechtliche Frist; high = erheblicher
+      finanzieller oder prozessblockierender Impact mit Handlungsbedarf innerhalb von
+      Tagen; medium = begrenzter Impact, keine enge Frist; low = geringfügig,
+      kosmetisch oder informativ. Antworte nur mit JSON, ohne Denkprotokoll.
+  - role: user
+    fixture: fixtures/de-billing-ticket.txt
+generation:
+  max_tokens: 120
+  temperature: 0
+  response_format: json
+expected:
+  category: billing
+  priority: high
+scorers:
+  - type: json_schema
+    weight: 0.2
+    params:
+      schema: schemas/support-routing.schema.json
+  - type: classification
+    weight: 0.5
+    params:
+      field: category
+      expected: billing
+      allowed:
+        - billing
+        - shipping
+        - technical
+        - other
+  - type: classification
+    weight: 0.3
+    params:
+      field: priority
+      expected: high
+      allowed:
+        - low
+        - medium
+        - high
+        - urgent
+      scale:
+        - low
+        - medium
+        - high
+        - urgent
+      adjacent_credit: 0.5
+pass_threshold: 0.85

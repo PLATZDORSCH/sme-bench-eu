@@ -6,7 +6,7 @@
 | **Suite ID** | `sme-trades-v0.1` |
 | **Cases** | 14 (7 DE/EN pairs) |
 | **Languages** | `de-DE`, `en-GB` |
-| **Role** | Trades/construction domain pack; part of **SME Full** |
+| **Role** | Trades/construction test suite; part of **SME Full** |
 
 Longer fixtures: site-survey emails, material orders, contractor invoices, on-site communication.
 
@@ -30,4 +30,4 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-trades-v0.1 --output runs/trades-v01
 ```
 
-Standard ranking without `--suite` = SME Full (includes this pack).
+Standard ranking without `--suite` = SME Full (includes this test suite).

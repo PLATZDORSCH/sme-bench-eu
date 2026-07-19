@@ -30,6 +30,7 @@ from sme_bench.scorers.base import known_scorer_names
 from sme_bench.scoring import apply_partial_grade, evaluate_attempt
 from sme_bench.statistics import aggregate, dedupe_attempts
 from sme_bench.task_loader import load_suite, load_suite_from_metadata
+from sme_bench.utils import separate_thinking_content
 
 load_env_files()
 
@@ -295,23 +296,27 @@ def _rescore_attempt(attempt: AttemptResult, task: BenchmarkTask) -> AttemptResu
     """Re-run scorers on a stored model output using the current suite definition.
 
     Infrastructure errors have no usable output and are left untouched.
+    Persists a cleaned ``output_text`` when leaked thinking was stripped.
     """
     if attempt.infrastructure_error:
         return attempt
+    answer_text, reasoning = separate_thinking_content(attempt.output_text)
     score_results, weighted, effective, passed, partial, critical, parsed = evaluate_attempt(
-        task, attempt.output_text
+        task, answer_text
     )
-    return attempt.model_copy(
-        update={
-            "parsed_output": parsed,
-            "score_results": score_results,
-            "weighted_score": weighted,
-            "effective_score": effective,
-            "passed": passed,
-            "partial": partial,
-            "critical_failure": critical,
-        }
-    )
+    updates: dict = {
+        "parsed_output": parsed,
+        "score_results": score_results,
+        "weighted_score": weighted,
+        "effective_score": effective,
+        "passed": passed,
+        "partial": partial,
+        "critical_failure": critical,
+        "output_text": answer_text,
+    }
+    if reasoning and not attempt.reasoning_text:
+        updates["reasoning_text"] = reasoning
+    return attempt.model_copy(update=updates)
 
 
 @app.command("report")

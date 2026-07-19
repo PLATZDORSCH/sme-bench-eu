@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from json import JSONDecoder
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse, urlunparse
@@ -15,6 +16,20 @@ _SECRET_PATTERNS = [
     re.compile(r"(?i)(x-api-key\s*[:=]\s*['\"]?)[^\s'\"]+", re.IGNORECASE),
     re.compile(r"sk-[A-Za-z0-9_-]{10,}"),
 ]
+
+# Qwen / vLLM-style redacted thinking blocks leaked into ``content``.
+_THINK_TAG_RE = re.compile(
+    r"<think>([\s\S]*?)</think\s*>",
+    re.IGNORECASE,
+)
+# Plain-text CoT dumps (some proxies put thinking in content, not reasoning_*).
+_THINKING_PREFIX_RE = re.compile(
+    r"(?is)^\s*(?:"
+    r"here'?s\s+a\s+thinking\s+process\s*:"
+    r"|thinking\s+process\s*:"
+    r"|let\s+me\s+think\s+(?:step\s+by\s+step\s+)?:?"
+    r")"
+)
 
 
 def normalize_base_url(base_url: str) -> str:
@@ -85,32 +100,135 @@ def compute_suite_hash(suite_dir: Path, task_ids: list[str]) -> str:
     return digest.hexdigest()
 
 
+def _iter_json_spans(text: str) -> list[tuple[int, int, Any]]:
+    """Return ``(start, end, value)`` for every successful ``raw_decode`` from ``{``/``[``."""
+    decoder = JSONDecoder()
+    spans: list[tuple[int, int, Any]] = []
+    for index, char in enumerate(text):
+        if char not in "{[":
+            continue
+        try:
+            value, end = decoder.raw_decode(text, index)
+        except json.JSONDecodeError:
+            continue
+        spans.append((index, end, value))
+    return spans
+
+
+def _last_top_level_json(text: str) -> Any | None:
+    """Best top-level JSON value in *text* (prefer complete objects over fragments).
+
+    Nested objects found by scanning every ``{`` are discarded when their span is
+    strictly contained in another successful parse. Among remaining top-level
+    dicts we prefer more keys / larger payloads so a late CoT draft like
+    ``{"pii_types": ["name"]}`` does not override an earlier complete answer.
+    Later spans win ties. If there is no dict, the last top-level value is used.
+    """
+    spans = _iter_json_spans(text)
+    if not spans:
+        return None
+    top_level = [
+        (start, end, value)
+        for start, end, value in spans
+        if not any(s < start and end < e for s, e, _ in spans)
+    ]
+    if not top_level:
+        return None
+    objects = [item for item in top_level if isinstance(item[2], dict)]
+    if objects:
+
+        def _rank(item: tuple[int, int, Any]) -> tuple[int, int, int]:
+            start, _end, value = item
+            assert isinstance(value, dict)
+            return (
+                len(value),
+                len(json.dumps(value, ensure_ascii=False)),
+                start,
+            )
+
+        return max(objects, key=_rank)[2]
+    return top_level[-1][2]
+
+
 def extract_json_payload(text: str) -> Any:
-    """Extract pure JSON or a single Markdown fenced JSON code block."""
+    """Extract JSON from model output (raw, fenced, or embedded in prose/CoT)."""
     stripped = text.strip()
     if not stripped:
         raise ValueError("Empty output; expected JSON")
 
-    fence = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", stripped, re.IGNORECASE)
-    if fence:
-        candidate = fence.group(1).strip()
-        return json.loads(candidate)
+    # Prefer ```json fences, then other fences; fall through on parse errors so a
+    # quoted source fence in chain-of-thought does not block a later JSON fence.
+    fence_matches = list(
+        re.finditer(r"```(?:json)?\s*([\s\S]*?)\s*```", stripped, re.IGNORECASE)
+    )
+    fence_matches.sort(
+        key=lambda m: (0 if m.group(0).lstrip("`").lower().startswith("json") else 1, m.start())
+    )
+    for match in fence_matches:
+        candidate = match.group(1).strip()
+        if not candidate:
+            continue
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
 
-    # Try whole string, then first {...} or [...]
     try:
         return json.loads(stripped)
     except json.JSONDecodeError:
         pass
 
-    for opener, closer in (("{", "}"), ("[", "]")):
-        start = stripped.find(opener)
-        end = stripped.rfind(closer)
-        if start != -1 and end != -1 and end > start:
-            try:
-                return json.loads(stripped[start : end + 1])
-            except json.JSONDecodeError:
-                continue
+    embedded = _last_top_level_json(stripped)
+    if embedded is not None:
+        return embedded
+
     raise ValueError("Could not extract valid JSON from model output")
+
+
+def separate_thinking_content(text: str) -> tuple[str, str | None]:
+    """Split leaked chain-of-thought from the scorable answer.
+
+    Returns ``(answer, reasoning)``. ``reasoning`` is ``None`` when no thinking
+    markers are present. Handles:
+
+    - ``<think>...</think>`` blocks (answer is the remaining text)
+    - Plain-text dumps starting with ``Here's a thinking process:`` (answer is
+      recovered via :func:`extract_json_payload` when possible; otherwise the
+      original text is left unchanged so free-text tasks are not mangled)
+    """
+    if not text:
+        return "", None
+
+    reasoning_parts: list[str] = []
+    remainder = text
+    while True:
+        match = _THINK_TAG_RE.search(remainder)
+        if not match:
+            break
+        chunk = match.group(1).strip()
+        if chunk:
+            reasoning_parts.append(chunk)
+        remainder = (remainder[: match.start()] + remainder[match.end() :]).strip()
+
+    if reasoning_parts:
+        answer = remainder.strip()
+        reasoning = "\n\n".join(reasoning_parts)
+        if answer:
+            return answer, reasoning
+        try:
+            recovered = extract_json_payload(reasoning)
+        except ValueError:
+            return text, reasoning
+        return json.dumps(recovered, ensure_ascii=False), reasoning
+
+    if _THINKING_PREFIX_RE.match(text):
+        try:
+            recovered = extract_json_payload(text)
+        except ValueError:
+            return text, None
+        return json.dumps(recovered, ensure_ascii=False), text
+
+    return text, None
 
 
 def get_by_path(data: Any, path: str) -> Any:

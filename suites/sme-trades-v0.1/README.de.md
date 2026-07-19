@@ -6,7 +6,7 @@
 | **Suite-ID** | `sme-trades-v0.1` |
 | **Fälle** | 14 (7 DE/EN-Paare) |
 | **Sprachen** | `de-DE`, `en-GB` |
-| **Rolle** | Domänenpack Handwerk/Bau; Teil von **SME Full** |
+| **Rolle** | Test-Suite Handwerk/Bau; Teil von **SME Full** |
 
 Längere Fixtures: Aufmaß-Mails, Materialbestellungen, Handwerkerrechnungen, Baustellenkommunikation.
 
@@ -30,4 +30,4 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-trades-v0.1 --output runs/trades-v01
 ```
 
-Standard-Ranking ohne `--suite` = SME Full (enthält diesen Pack).
+Standard-Ranking ohne `--suite` = SME Full (enthält diese Test-Suite).
