@@ -15,8 +15,7 @@ tags:
 - chat
 messages:
 - role: system
-  content: >-
-    Extract the order as JSON: customer (string), currency "EUR", items as an array of {sku (string), qty (integer), variant (string; use "none" if the item has no variant)}. Ignore jokes and non-order chat.
+  content: "Extract the order as JSON: customer (string), currency \"EUR\", items as an array of {sku (string), qty (integer), variant (string; use \"none\" if the item has no variant)}. Ignore jokes and non-order chat. Use the exact sku string as written (including any prefix, e.g. \"SKU-A100\", not \"A100\"). variant as one string (size/colour with \"/\", e.g. \"M/navy\")."
 - role: user
   fixture: fixtures/en-material-bestellung.txt
 generation:

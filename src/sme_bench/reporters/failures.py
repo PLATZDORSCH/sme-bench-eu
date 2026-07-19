@@ -10,6 +10,7 @@ from typing import Any, Literal
 from sme_bench.models import AttemptResult, BenchmarkTask
 from sme_bench.reporters.i18n import FAILURES, REPORT_LANGS, SUCCESS, Lang, report_path
 from sme_bench.reporters.task_docs import task_brief
+from sme_bench.statistics import dedupe_attempts
 
 OutcomeKind = Literal["pass", "partial", "fail", "critical"]
 
@@ -193,6 +194,7 @@ def _model_output_block(attempt: AttemptResult, *, lang: Lang) -> list[str]:
 def _group_attempts(
     attempts: list[AttemptResult],
 ) -> dict[OutcomeKind, list[tuple[str, dict[str, Any], list[AttemptResult]]]]:
+    attempts = dedupe_attempts(attempts)
     by_task: dict[str, list[AttemptResult]] = defaultdict(list)
     for attempt in attempts:
         by_task[attempt.task_id].append(attempt)

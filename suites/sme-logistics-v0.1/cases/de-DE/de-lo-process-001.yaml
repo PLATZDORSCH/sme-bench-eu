@@ -14,7 +14,7 @@ tags:
 - process
 messages:
 - role: system
-  content: "Entscheide die Versandbereitschaft. Gib JSON {next_step, ready, missing} zurück, wobei ready false ist, wenn ein Pflichtpunkt der Checkliste fehlt. next_step soll ein kurzer Aktions-String sein."
+  content: "Entscheide die Versandbereitschaft. Gib JSON {next_step, ready, missing} zurück. ready=false, wenn ein Pflichtpunkt fehlt. missing MUSS ein Array kurzer Tokens sein (engl. snake_case, z. B. [\"phone\"]), kein einzelner String. next_step ist ein kurzer Aktions-String."
 - role: user
   fixture: fixtures/de-dispatch-check.txt
 generation:

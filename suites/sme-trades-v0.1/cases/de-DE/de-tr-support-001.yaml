@@ -14,7 +14,7 @@ tags:
 - support
 messages:
 - role: system
-  content: "Klassifiziere das Support-Ticket. Gib JSON mit category (eines von [billing,shipping,technical,other]) und priority (eines von [low,medium,high,urgent]) zurück. Prioritätsrubrik: urgent = geschäftskritischer Ausfall, Sicherheitsvorfall oder Same-Day-/rechtliche Frist; high = erheblicher finanzieller oder prozessblockierender Impact mit Handlungsbedarf innerhalb von Tagen; medium = begrenzter Impact, keine enge Frist; low = geringfügig, kosmetisch oder informativ."
+  content: "Klassifiziere das Support-Ticket. Gib JSON mit category (eines von [billing,shipping,technical,other]) und priority (eines von [low,medium,high,urgent]) zurück. Baustellen-/Übergabe-/Zugangsprobleme und Betriebsstörungen vor Ort sind category=technical (nicht shipping, nicht other). Prioritätsrubrik: urgent = geschäftskritischer Ausfall, Sicherheitsvorfall oder Same-Day-/rechtliche Frist; high = erheblicher finanzieller oder prozessblockierender Impact mit Handlungsbedarf innerhalb von Tagen; medium = begrenzter Impact, keine enge Frist; low = geringfügig, kosmetisch oder informativ. Antworte nur mit JSON, ohne Denkprotokoll."
 - role: user
   fixture: fixtures/de-baustelle-ticket.txt
 generation:

@@ -14,8 +14,7 @@ tags:
 - policy
 messages:
 - role: system
-  content: >-
-    Answer only using the policy. Return JSON with keys answer (string) and citations (array of section IDs without brackets, e.g. SEC-1).
+  content: "Answer only using the policy. Return exactly one JSON object with these keys only: answer (string) and citations (array of section ID strings without brackets). Example shape: {\"answer\":\"30 days\",\"citations\":[\"SEC-1\"]}. Put only section IDs in citations, never policy text. Never invent terms."
 - role: user
   content: 'Policy:
 

@@ -41,7 +41,7 @@ def test_case_catalog_and_failures_report(tmp_path: Path) -> None:
     text = catalog_path.read_text(encoding="utf-8")
     assert "de-pii-detection-001" in text
     assert "Case catalogue" in text
-    assert "K.O." in text
+    assert "Critical" in text
 
     ok = AttemptResult(
         task_id=task.id,
@@ -125,9 +125,54 @@ def test_case_catalog_and_failures_report(tmp_path: Path) -> None:
     assert "**Modellausgabe:**" in success_text
 
 
+def test_failures_report_dedupes_duplicate_repeats(tmp_path: Path) -> None:
+    """Resume can leave duplicate (task_id, repeat_index) rows — report once each."""
+    task = make_task(id="de-offer-comparison-002", title="Angebote")
+
+    def make(repeat: int, output: str) -> AttemptResult:
+        return AttemptResult(
+            task_id=task.id,
+            language="de-DE",
+            category="sales_operations",
+            task_type="offer_comparison",
+            difficulty="normal",
+            risk="medium",
+            repeat_index=repeat,
+            passed=False,
+            partial=False,
+            effective_score=0.15,
+            output_text=output,
+        )
+
+    attempts = [
+        make(0, '{"v":1}'),
+        make(0, '{"v":2}'),
+        make(1, '{"v":3}'),
+        make(1, '{"v":4}'),
+        make(2, '{"v":5}'),
+    ]
+    path = tmp_path / "failures.de.md"
+    write_failures_markdown(
+        path,
+        attempts,
+        model="test-model",
+        suite_id="test",
+        tasks_by_id={task.id: task},
+        lang="de",
+    )
+    text = path.read_text(encoding="utf-8")
+    assert text.count("**Wiederholung 1**") == 1
+    assert text.count("**Wiederholung 2**") == 1
+    assert text.count("**Wiederholung 3**") == 1
+    assert "0/3 pass" in text
+    assert '{"v":2}' in text  # last duplicate for repeat 0 kept
+    assert '{"v":1}' not in text
+
+
 def test_print_summary_includes_tps() -> None:
     summary = {
         "sme_core_score": 90.0,
+        "sme_rank_score": 88.0,
         "overall": {
             "attempt_pass_rate": 0.8,
             "attempt_partial_rate": 0.1,
@@ -152,6 +197,8 @@ def test_print_summary_includes_tps() -> None:
     print_summary(summary, model="test-model", suite_label="Test Suite", console=console)
     text = buffer.getvalue()
     assert "Output tokens/s" in text
+    assert "SME Rank Score" in text
+    assert "88.0" in text
     assert "42.5 tok/s" in text
     assert "40.0" in text
 
@@ -161,6 +208,7 @@ def test_write_summary_markdown_includes_tps(tmp_path: Path) -> None:
         "suite_id": "test",
         "suite_version": "0.1",
         "sme_core_score": 90.0,
+        "sme_rank_score": 88.0,
         "overall": {
             "attempt_pass_rate": 0.8,
             "attempt_partial_rate": 0.1,
@@ -185,6 +233,9 @@ def test_write_summary_markdown_includes_tps(tmp_path: Path) -> None:
     path = tmp_path / "summary.de.md"
     write_summary_markdown(path, summary, model="test-model", lang="de")
     text = path.read_text(encoding="utf-8")
+    assert "**SME Rank Score: 88.0 / 100**" in text
+    assert "SME Core Score: 90.0 / 100" in text
+    assert "SME Core Score: **90.0 / 100**" not in text
     assert "Output tokens/s (Ø): 55.0 tok/s" in text
     assert "| Tok/s |" in text
 

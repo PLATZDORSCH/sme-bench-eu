@@ -276,8 +276,10 @@ def test_compare_cmd(mock_base_url: str, tmp_path: Path) -> None:
 
     result = RUNNER.invoke(app, ["compare", str(run_a), str(run_b)])
     assert result.exit_code == 0, result.output
+    assert "SME Rank Score" in result.output
     assert "SME Core Score" in result.output
     assert "Attempt Pass Rate" in result.output
+    assert "Leaderboard" in result.output
 
     meta_b = json.loads((run_b / "metadata.json").read_text(encoding="utf-8"))
     meta_b["suite_hash"] = "different-hash"

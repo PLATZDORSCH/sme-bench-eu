@@ -14,9 +14,7 @@ tags:
 - chain
 messages:
 - role: system
-  content: Return JSON {next_step, ready, missing}. Choose next_step from the options
-    stated in the user text. ready=true only if process can proceed without blocking
-    gaps.
+  content: "Return JSON {next_step, ready, missing}. Choose next_step from the options in the user text. ready=true only if the process can proceed without blocking gaps. missing MUST be an array of short tokens (English snake_case); if nothing is missing use missing=[]. Never false, null, \"\" or {}. Example: {\"next_step\":\"escalate_l2\",\"ready\":true,\"missing\":[]}."
 - role: user
   fixture: fixtures/en-chain-support-escalation.txt
 generation:

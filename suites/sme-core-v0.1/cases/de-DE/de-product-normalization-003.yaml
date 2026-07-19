@@ -13,7 +13,7 @@ tags:
 - catalog
 messages:
 - role: system
-  content: "Gib JSON brand,color,size,material anhand der erlaubten Vokabulare zurück."
+  content: "Gib JSON mit brand, color, size, material zurück. Mappe Rohwerte auf die erlaubten Vokabulare aus der Benutzernachricht (z. B. Größe „medium“/„extra large“ → „M“/„XL“; Mischgewebe → „blend“). brand kleingeschrieben; für color/size/material nur erlaubte Tokens."
 - role: user
   fixture: fixtures/product/de-product-003.txt
 generation:

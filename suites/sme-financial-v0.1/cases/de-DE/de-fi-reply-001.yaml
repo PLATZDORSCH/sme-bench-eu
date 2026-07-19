@@ -38,6 +38,7 @@ scorers:
   weight: 0
   critical: true
   params:
+    ignore_negated: true
     terms:
       - 'bereits bezahlt'
       - 'already paid'

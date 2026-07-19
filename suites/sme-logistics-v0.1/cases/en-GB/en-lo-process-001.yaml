@@ -14,8 +14,7 @@ tags:
 - process
 messages:
 - role: system
-  content: |-
-    Decide shipment readiness. Return JSON {next_step, ready, missing} where ready is false if any required checklist item is missing. next_step should be a short action string.
+  content: "Decide shipment readiness. Return JSON {next_step, ready, missing}. ready=false if any required checklist item is missing. missing MUST be an array of short tokens (English snake_case, e.g. [\"phone\"]), never a single string. next_step is a short action string."
 - role: user
   fixture: fixtures/en-dispatch-check.txt
 generation:

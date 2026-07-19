@@ -52,6 +52,16 @@ def _normalize_token(item: Any, lookup: dict[str, str]) -> Any:
     return item
 
 
+def _alias_variants(canonical: str, lookup: dict[str, str]) -> set[str]:
+    """Canonical token plus all alternate labels that map to it (casefolded)."""
+    canon = str(canonical).casefold()
+    variants = {canon}
+    for alt, target in lookup.items():
+        if str(target).casefold() == canon:
+            variants.add(str(alt).casefold())
+    return variants
+
+
 def _elements_match(
     actual: Any,
     expected: Any,
@@ -62,9 +72,15 @@ def _elements_match(
     lookup = alias_lookup or {}
     actual_n = _normalize_token(actual, lookup)
     expected_n = _normalize_token(expected, lookup)
-    if match_mode == "substring" and isinstance(actual_n, str) and isinstance(expected_n, str):
-        return expected_n.casefold() in actual_n.casefold()
-    return bool(actual_n == expected_n)
+    if actual_n == expected_n:
+        return True
+    if match_mode == "substring" and isinstance(actual, str) and isinstance(expected_n, str):
+        # Accept if expected token *or any of its aliases* appears inside actual
+        # (e.g. expected ``address``, actual ``Validierte Lieferadresse`` with
+        # alias ``Adresse`` → ``adresse`` ⊂ ``…lieferadresse``).
+        act = actual.casefold()
+        return any(variant in act for variant in _alias_variants(expected_n, lookup) if variant)
+    return False
 
 
 def _match_lists(

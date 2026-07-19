@@ -13,8 +13,7 @@ tags:
 - missing-fields
 messages:
 - role: system
-  content: 'Return JSON {"missing_fields":[...]} from: delivery_address, budget, colour_preference,
-    quantity, company, contract_term.'
+  content: "Return JSON {\"missing_fields\":[...]}. Include only fields from this candidate list that are NOT explicitly stated in the message: delivery_address, budget, colour_preference, quantity, company, contract_term. Omit fields that are already present. Do not invent extra field names. Include every candidate field that has no explicit value in the message; an empty missing_fields array means everything in the list is present."
 - role: user
   fixture: fixtures/missing/en-quote-002.txt
 generation:

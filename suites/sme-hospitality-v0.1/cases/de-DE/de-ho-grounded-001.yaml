@@ -14,7 +14,7 @@ tags:
 - citations
 messages:
 - role: system
-  content: "Antworte nur anhand der Richtlinie. Gib JSON mit den Schlüsseln answer (string) und citations (Array von Abschnitts-IDs ohne Klammern, z. B. SEC-1) zurück."
+  content: "Antworte nur anhand der Richtlinie. Gib genau ein JSON-Objekt mit nur diesen Schlüsseln zurück: answer (string) und citations (Array von Abschnitts-IDs als Strings ohne Klammern). Beispiel-Form: {\"answer\":\"30 Tage\",\"citations\":[\"SEC-1\"]}. In citations nur Abschnitts-IDs, keinen Policy-Text. Erfinde keine Bedingungen."
 - role: user
   content: |-
     Policy:

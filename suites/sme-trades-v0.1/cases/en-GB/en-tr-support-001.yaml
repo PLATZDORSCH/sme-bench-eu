@@ -14,8 +14,7 @@ tags:
 - support
 messages:
 - role: system
-  content: >-
-    Classify the support ticket. Return JSON with category (one of [billing,shipping,technical,other]) and priority (one of [low,medium,high,urgent]). Priority rubric: urgent = business-critical outage, security incident or same-day/legal deadline; high = significant financial or blocked-process impact needing action within days; medium = limited impact, no tight deadline; low = minor, cosmetic or informational.
+  content: "Classify the support ticket. Return JSON with category (one of [billing,shipping,technical,other]) and priority (one of [low,medium,high,urgent]). Site/handover/access problems and on-site operational failures are category=technical (not shipping, not other). Priority rubric: urgent = business-critical outage, safety incident, or same-day/legal deadline; high = significant financial or process-blocking impact needing action within days; medium = limited impact, no tight deadline; low = minor, cosmetic, or informational. Reply with JSON only, no chain-of-thought."
 - role: user
   fixture: fixtures/en-baustelle-ticket.txt
 generation:

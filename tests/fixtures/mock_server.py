@@ -64,6 +64,15 @@ async def chat_handler(request: web.Request) -> web.Response:
     ):
         content = json.dumps({"text": content})
 
+    # Special status injection via model name suffix for unit tests
+    model = str(body.get("model") or "")
+    if model.endswith(":429"):
+        return web.Response(status=429, text="rate limited")
+    if model.endswith(":500"):
+        return web.Response(status=500, text="server boom Authorization: Bearer sk-SECRETKEY123")
+
+    reasoning_only = model.endswith(":reasoning-only")
+
     async def stream() -> web.StreamResponse:
         resp = web.StreamResponse(
             status=200,
@@ -84,18 +93,45 @@ async def chat_handler(request: web.Request) -> web.Response:
                 )
             )
         )
-        await resp.write(
-            _sse(json.dumps({"choices": [{"delta": {"reasoning_content": "think"}, "index": 0}]}))
-        )
-        # Split content across chunks to exercise buffering
-        mid = max(1, len(content) // 2)
-        for part in (content[:mid], content[mid:]):
-            if not part:
-                continue
+        if reasoning_only:
+            # Nebius/GLM-style: answer only in reasoning_content, content null
+            mid = max(1, len(content) // 2)
+            for part in (content[:mid], content[mid:]):
+                if not part:
+                    continue
+                await resp.write(
+                    _sse(
+                        json.dumps(
+                            {
+                                "choices": [
+                                    {
+                                        "delta": {
+                                            "reasoning_content": part,
+                                            "content": None,
+                                        },
+                                        "index": 0,
+                                    }
+                                ]
+                            }
+                        )
+                    )
+                )
+                await asyncio.sleep(0)
+        else:
             await resp.write(
-                _sse(json.dumps({"choices": [{"delta": {"content": part}, "index": 0}]}))
+                _sse(
+                    json.dumps({"choices": [{"delta": {"reasoning_content": "think"}, "index": 0}]})
+                )
             )
-            await asyncio.sleep(0)
+            # Split content across chunks to exercise buffering
+            mid = max(1, len(content) // 2)
+            for part in (content[:mid], content[mid:]):
+                if not part:
+                    continue
+                await resp.write(
+                    _sse(json.dumps({"choices": [{"delta": {"content": part}, "index": 0}]}))
+                )
+                await asyncio.sleep(0)
         await resp.write(
             _sse(
                 json.dumps(
@@ -113,13 +149,6 @@ async def chat_handler(request: web.Request) -> web.Response:
         await resp.write(b"data: [DONE]\n\n")
         await resp.write_eof()
         return resp
-
-    # Special status injection via model name suffix for unit tests
-    model = str(body.get("model") or "")
-    if model.endswith(":429"):
-        return web.Response(status=429, text="rate limited")
-    if model.endswith(":500"):
-        return web.Response(status=500, text="server boom Authorization: Bearer sk-SECRETKEY123")
 
     return await stream()
 

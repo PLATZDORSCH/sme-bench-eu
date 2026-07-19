@@ -36,6 +36,7 @@ def write_summary_markdown(
             suite_id=summary.get("suite_id", ""),
             suite_version=summary.get("suite_version", ""),
         ),
+        t["rank_score"].format(score=float(summary.get("sme_rank_score", 0))),
         t["core_score"].format(score=float(summary.get("sme_core_score", 0))),
         t["attempt_pass"].format(value=_pct(overall.get("attempt_pass_rate"))),
         t["attempt_partial"].format(value=_pct(overall.get("attempt_partial_rate"))),

@@ -14,9 +14,7 @@ tags:
 - transcript
 messages:
 - role: system
-  content: 'Extract the order as JSON: customer (string), currency "EUR", items as an
-    array of {sku (string), qty (integer), variant (string; use "none" if the item
-    has no variant)}.'
+  content: "Extract the order as JSON: customer (string), currency \"EUR\", items as an array of {sku (string), qty (integer), variant (string; use \"none\" if the item has no variant)}. Use the exact sku string as written (including any prefix, e.g. \"SKU-A100\", not \"A100\"). variant as one string (size/colour with \"/\", e.g. \"M/navy\")."
 - role: user
   fixture: fixtures/order/en-order-003.txt
 generation:

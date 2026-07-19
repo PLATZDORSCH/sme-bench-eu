@@ -13,8 +13,10 @@ Params:
         of these top-level keys.
     exclude_fields: list[str] — if set and output is a JSON object, scan every
         value except those of these top-level keys.
-    ignore_negated: bool = False — when True, skip a hit if a negator immediately
-        precedes the term (e.g. "do not offer instant credit").
+    ignore_negated: bool = False — when True, skip a hit if a negator appears in
+        the same sentence before the term, or a clear post-negation pattern
+        appears after it (DE/EN), e.g. ``Sofortgutschrift … nicht zugesagt`` or
+        ``instant credit can … not be promised``.
 """
 
 from __future__ import annotations
@@ -24,6 +26,7 @@ from typing import Any
 
 from sme_bench.models import BenchmarkTask, ScoreResult, ScorerSpec
 from sme_bench.scorers.base import register
+from sme_bench.utils import extract_json_payload
 
 _NEGATORS = (
     "no",
@@ -31,8 +34,13 @@ _NEGATORS = (
     "n't",
     "never",
     "without",
+    "cannot",
     "kein",
     "keine",
+    "keinen",
+    "keinem",
+    "keiner",
+    "keines",
     "nicht",
     "ohne",
 )
@@ -43,6 +51,34 @@ _NEGATOR_PATTERN = re.compile(
 )
 _NEGATOR_WORDS = {n.casefold() for n in _NEGATORS}
 _NEGATION_WINDOW_WORDS = 8
+
+# Same-sentence post-negation after the term, DE + EN:
+#   "Sofortgutschrift kann … nicht zugesagt werden"
+#   "instant credit can unfortunately not be promised"
+#   "instant refund is not available" / "cannot be offered"
+_POST_NEGATION = re.compile(
+    r"(?:"
+    # German: modal/copula … nicht
+    r"\b(?:kann|können|konnte|konnten|wird|werden|wurde|wurden|ist|sind|war|waren|"
+    r"darf|dürfen|soll|sollen|muss|müssen)\b"
+    r"[^.!?\n]{0,80}\bnicht\b"
+    r"|"
+    # English: modal/auxiliary … not (incl. contracted forms already covered below)
+    r"\b(?:can|could|will|would|shall|should|may|might|must|is|are|was|were|"
+    r"do|does|did|has|have|had)\b"
+    r"[^.!?\n]{0,80}\bnot\b"
+    r"|"
+    # nicht/not/never/no + refusal word
+    r"\b(?:nicht|not|never|no)\b\s+"
+    r"(?:zugesagt|angeboten|möglich|gewährt|verfügbar|zusagbar|"
+    r"offered|available|promised|possible|eligible|granted)"
+    r"|"
+    # Compact English forms right after the term
+    r"\b(?:cannot|can't|won't|isn't|aren't|wasn't|weren't|doesn't|don't|didn't|"
+    r"hasn't|haven't|hadn't)\b"
+    r")",
+    re.IGNORECASE,
+)
 
 
 def _iter_strings(value: Any) -> list[str]:
@@ -65,6 +101,23 @@ def _iter_strings(value: Any) -> list[str]:
     return [str(value)]
 
 
+def _strip_excluded_fields_raw(text: str, exclude_fields: list[str]) -> str:
+    """Best-effort removal of excluded JSON string fields when parse fails.
+
+    Handles truncated outputs where ``reason`` (etc.) is cut mid-string so
+    ``exclude_fields`` can still avoid scanning explanatory text.
+    """
+    out = text
+    for field in exclude_fields:
+        out = re.sub(
+            rf'"{re.escape(field)}"\s*:\s*"(?:\\.|[^"\\])*(?:"|$)',
+            f'"{field}":""',
+            out,
+            flags=re.DOTALL,
+        )
+    return out
+
+
 def _build_haystack(
     output_text: str,
     parsed_output: Any | None,
@@ -78,19 +131,35 @@ def _build_haystack(
     """
     if not fields and not exclude_fields:
         return output_text
-    if not isinstance(parsed_output, dict):
-        return output_text
 
-    if fields:
-        selected = {k: v for k, v in parsed_output.items() if k in set(fields)}
-    else:
-        excluded = set(exclude_fields or [])
-        selected = {k: v for k, v in parsed_output.items() if k not in excluded}
-    return " ".join(_iter_strings(selected))
+    data = parsed_output
+    if not isinstance(data, dict):
+        try:
+            data = extract_json_payload(output_text)
+        except (ValueError, TypeError):
+            data = None
+    if isinstance(data, dict):
+        if fields:
+            selected = {k: v for k, v in data.items() if k in set(fields)}
+        else:
+            excluded = set(exclude_fields or [])
+            selected = {k: v for k, v in data.items() if k not in excluded}
+        return " ".join(_iter_strings(selected))
+
+    if exclude_fields and not fields:
+        return _strip_excluded_fields_raw(output_text, list(exclude_fields))
+    return output_text
 
 
-def _is_negated(haystack: str, start: int) -> bool:
-    """Return True if a negator appears in the word window before *start*."""
+def _sentence_suffix(haystack: str, after_idx: int) -> str:
+    """Text after *after_idx* until the next sentence boundary."""
+    after = haystack[after_idx:]
+    end = re.search(r"[.!?\n]", after)
+    return after[: end.start()] if end else after
+
+
+def _is_negated(haystack: str, start: int, term_len: int) -> bool:
+    """Return True if the hit looks negated in the same sentence."""
     prefix = haystack[:start].rstrip()
     if _NEGATOR_PATTERN.search(prefix):
         return True
@@ -101,6 +170,12 @@ def _is_negated(haystack: str, start: int) -> bool:
     for i, word in enumerate(window):
         if word == "do" and i + 1 < len(window) and window[i + 1] == "not":
             return True
+        if word == "can" and i + 1 < len(window) and window[i + 1] == "not":
+            return True
+
+    suffix = _sentence_suffix(haystack, start + term_len)
+    if _POST_NEGATION.search(suffix):
+        return True
     return False
 
 
@@ -121,10 +196,10 @@ def _find_forbidden_terms(
             idx = search_in.find(needle, start)
             if idx == -1:
                 break
-            if not ignore_negated or not _is_negated(search_in, idx):
+            if not ignore_negated or not _is_negated(search_in, idx, len(needle)):
                 found = True
                 break
-            start = idx + 1
+            start = idx + max(len(needle), 1)
         if found:
             hits.append(term)
     return hits

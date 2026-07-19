@@ -2,6 +2,3 @@ Shipping request:
 
 Please send 200 cartons to Hamburg, origin South Warehouse.
 Total weight approx. 1.2 t.
-
-Present: destination city, origin, carton count, weight.
-Not stated: street delivery address, preferred date, Incoterm, contact phone.

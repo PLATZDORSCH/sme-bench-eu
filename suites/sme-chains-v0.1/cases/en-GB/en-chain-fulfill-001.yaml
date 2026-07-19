@@ -14,9 +14,7 @@ tags:
 - chain
 messages:
 - role: system
-  content: Return JSON {next_step, ready, missing}. Choose next_step from the options
-    stated in the user text. ready=true only if process can proceed without blocking
-    gaps.
+  content: "Return JSON {next_step, ready, missing}. Choose next_step from the options stated in the user text. ready=true only if process can proceed without blocking gaps. missing MUST be an array of short tokens (English snake_case, e.g. [\"address\"]). For failed address validation (including invalid postcode), always use the token \"address\" in missing, not postcode. ready=false while the address is invalid."
 - role: user
   fixture: fixtures/en-chain-order-fulfill.txt
 generation:
@@ -48,4 +46,10 @@ scorers:
     ignore_order: true
     coerce_scalar: true
     match: substring
+    aliases:
+      address:
+      - Adresse
+      - Lieferadresse
+      - shipping address
+      - delivery address
 pass_threshold: 0.85

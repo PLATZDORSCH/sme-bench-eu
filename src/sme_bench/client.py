@@ -17,6 +17,33 @@ from sme_bench.models import RequestResult
 from sme_bench.utils import normalize_base_url, redact_secrets
 
 
+def _text_from_content_field(value: Any) -> str:
+    """Normalize OpenAI ``content`` which may be a string or multimodal parts."""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        parts: list[str] = []
+        for item in value:
+            if isinstance(item, str):
+                parts.append(item)
+            elif isinstance(item, dict):
+                text = item.get("text")
+                if isinstance(text, str):
+                    parts.append(text)
+                elif item.get("type") == "text" and isinstance(item.get("content"), str):
+                    parts.append(item["content"])
+        return "".join(parts)
+    return ""
+
+
+def _reasoning_from_delta(delta: dict[str, Any]) -> str:
+    for key in ("reasoning_content", "reasoning"):
+        value = delta.get(key)
+        if isinstance(value, str) and value:
+            return value
+    return ""
+
+
 class OpenAICompatibleClient:
     def __init__(
         self,
@@ -33,7 +60,11 @@ class OpenAICompatibleClient:
         self._session: aiohttp.ClientSession | None = None
 
     def _api_key(self) -> str:
-        return os.environ.get(self.api_key_env) or "EMPTY"
+        """Return the API key from ``api_key_env`` only (no silent fallbacks)."""
+        value = os.environ.get(self.api_key_env)
+        if value:
+            return value
+        return "EMPTY"
 
     def _headers(self) -> dict[str, str]:
         return {
@@ -212,12 +243,36 @@ class OpenAICompatibleClient:
             result.error_type = "transport_error"
             result.error_message = redact_secrets(str(exc))
 
-        result.output_text = "".join(content_parts)
-        if reasoning_parts:
-            result.reasoning_text = "".join(reasoning_parts)
+        content_text = "".join(content_parts)
+        reasoning_text = "".join(reasoning_parts)
+        # Some GLM/Nebius deployments put the visible answer only in
+        # reasoning_* while delta.content stays empty/null.
+        if content_text:
+            result.output_text = content_text
+        elif reasoning_text:
+            result.output_text = reasoning_text
+        else:
+            result.output_text = ""
+        if reasoning_text:
+            result.reasoning_text = reasoning_text
         result.end_monotonic = time.monotonic()
         result.completed_at = datetime.now(UTC)
         return result
+
+    def _note_token(
+        self,
+        *,
+        result: RequestResult,
+        on_first_token: Any | None,
+        content_parts: list[str],
+    ) -> None:
+        if result.first_token_monotonic is None:
+            result.first_token_monotonic = time.monotonic()
+            result.token_timestamps.append(result.first_token_monotonic)
+        else:
+            result.token_timestamps.append(time.monotonic())
+        if on_first_token and len(content_parts) == 1:
+            result.__dict__["_first_token_cb"] = on_first_token
 
     def _consume_event(
         self,
@@ -239,24 +294,26 @@ class OpenAICompatibleClient:
         choice = choices[0]
         if choice.get("finish_reason"):
             result.finish_reason = choice["finish_reason"]
+
         delta = choice.get("delta") or {}
-        reasoning = delta.get("reasoning_content")
-        if isinstance(reasoning, str) and reasoning:
+        message = choice.get("message") or {}
+
+        reasoning = _reasoning_from_delta(delta) or _reasoning_from_delta(message)
+        if reasoning:
             reasoning_parts.append(reasoning)
-        content = delta.get("content")
-        if isinstance(content, str) and content:
-            if result.first_token_monotonic is None:
+            # Count reasoning tokens for TTFT when content is empty (GLM).
+            if not content_parts and result.first_token_monotonic is None:
                 result.first_token_monotonic = time.monotonic()
                 result.token_timestamps.append(result.first_token_monotonic)
-                if on_first_token:
-                    # fire-and-forget sync callback scheduling handled by caller
-                    pass
-            else:
-                result.token_timestamps.append(time.monotonic())
-            content_parts.append(content)
-            # Store callback invocation via attribute for async runner
-            if on_first_token and len(content_parts) == 1:
-                result.__dict__["_first_token_cb"] = on_first_token
+
+        for source in (delta, message):
+            chunk = _text_from_content_field(source.get("content"))
+            if not chunk:
+                continue
+            content_parts.append(chunk)
+            self._note_token(
+                result=result, on_first_token=on_first_token, content_parts=content_parts
+            )
 
 
 async def _maybe_await(cb: Any) -> None:
@@ -299,18 +356,25 @@ async def run_doctor(
             result = await client.chat_completion(
                 model=model,
                 messages=[{"role": "user", "content": "Reply with the single word: pong"}],
-                max_tokens=16,
+                max_tokens=64,
                 temperature=0,
             )
             report["latency_s"] = result.total_latency
             if result.error_type:
                 report["error"] = result.error_message
             else:
-                report["chat_ok"] = True
                 report["streaming_ok"] = True
-                report["first_token_ok"] = result.first_token_monotonic is not None
                 report["usage_available"] = result.prompt_tokens is not None
-                report["sample_output"] = result.output_text[:80]
+                report["sample_output"] = (result.output_text or "")[:80]
+                report["first_token_ok"] = result.first_token_monotonic is not None
+                # Require visible model text — empty streams are not healthy.
+                if (result.output_text or "").strip():
+                    report["chat_ok"] = True
+                else:
+                    report["error"] = (
+                        "Stream completed without visible content "
+                        "(empty delta.content / reasoning fallback)"
+                    )
     except Exception as exc:  # noqa: BLE001
         report["error"] = redact_secrets(str(exc))
     return report

@@ -8,6 +8,22 @@ from typing import Any
 from sme_bench.models import AttemptResult, output_tokens_per_second
 from sme_bench.utils import percentile
 
+# Leaderboard: rank = core × reliable × max(0, 1 − k × rate) for critical & partial
+CRITICAL_RATE_PENALTY_K = 5
+PARTIAL_RATE_PENALTY_K = 2
+
+
+def dedupe_attempts(attempts: list[AttemptResult]) -> list[AttemptResult]:
+    """Keep the last attempt per (task_id, repeat_index).
+
+    Resume/re-runs can append duplicate rows to attempts.jsonl; reports and
+    metrics should treat each repeat slot once.
+    """
+    by_key: dict[tuple[str, int], AttemptResult] = {}
+    for attempt in attempts:
+        by_key[(attempt.task_id, attempt.repeat_index)] = attempt
+    return sorted(by_key.values(), key=lambda a: (a.task_id, a.repeat_index))
+
 
 def _slice_metrics(attempts: list[AttemptResult]) -> dict[str, Any]:
     if not attempts:
@@ -154,11 +170,25 @@ def sme_core_score(
     return (weighted_sum / weight_total) * 100.0
 
 
+def sme_rank_score(
+    core_score: float,
+    *,
+    reliable_pass_rate: float,
+    critical_failure_rate: float,
+    attempt_partial_rate: float,
+) -> float:
+    """Leaderboard score: domain quality × reliability × safety/format penalties."""
+    critical_factor = max(0.0, 1.0 - CRITICAL_RATE_PENALTY_K * critical_failure_rate)
+    partial_factor = max(0.0, 1.0 - PARTIAL_RATE_PENALTY_K * attempt_partial_rate)
+    return core_score * reliable_pass_rate * critical_factor * partial_factor
+
+
 def aggregate(
     attempts: list[AttemptResult],
     *,
     category_weights: dict[str, float] | None = None,
 ) -> dict[str, Any]:
+    attempts = dedupe_attempts(attempts)
     weights = category_weights or {}
     overall = _slice_metrics(attempts)
     by_language = {
@@ -178,9 +208,19 @@ def aggregate(
         for d in sorted({a.difficulty for a in attempts})
     }
     parity = language_parity(attempts)
+    core = sme_core_score(attempts, weights)
+    crit_rate = float(overall["critical_failure_rate"])
+    partial_rate = float(overall["attempt_partial_rate"])
+    reliable_rate = float(overall["reliable_pass_rate"])
     return {
         "overall": overall,
-        "sme_core_score": sme_core_score(attempts, weights),
+        "sme_core_score": core,
+        "sme_rank_score": sme_rank_score(
+            core,
+            reliable_pass_rate=reliable_rate,
+            critical_failure_rate=crit_rate,
+            attempt_partial_rate=partial_rate,
+        ),
         "by_language": by_language,
         "by_category": by_category,
         "by_task_type": by_task_type,

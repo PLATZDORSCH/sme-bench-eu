@@ -66,3 +66,30 @@ async def test_doctor(mock_base_url: str) -> None:
     assert report["chat_ok"] is True
     assert report["streaming_ok"] is True
     assert report["first_token_ok"] is True
+
+
+@pytest.mark.asyncio
+async def test_reasoning_only_stream_fallback(mock_base_url: str) -> None:
+    """GLM/Nebius may stream the answer only in reasoning_content."""
+    async with OpenAICompatibleClient(base_url=mock_base_url, retries=0) as client:
+        result = await client.chat_completion(
+            model="mock-model:reasoning-only",
+            messages=[{"role": "user", "content": "Reply with the single word: pong"}],
+            max_tokens=16,
+        )
+    assert result.error_type is None
+    assert "pong" in result.output_text.lower()
+    assert result.reasoning_text is not None
+    assert "pong" in result.reasoning_text.lower()
+    assert result.first_token_monotonic is not None
+
+
+@pytest.mark.asyncio
+async def test_multimodal_content_parts_in_delta(mock_base_url: str) -> None:
+    from sme_bench.client import _text_from_content_field
+
+    assert _text_from_content_field("hi") == "hi"
+    assert (
+        _text_from_content_field([{"type": "text", "text": "hello"}, {"type": "text", "text": "!"}])
+        == "hello!"
+    )

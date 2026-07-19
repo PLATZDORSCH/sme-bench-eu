@@ -14,7 +14,7 @@ tags:
 - chain
 messages:
 - role: system
-  content: "Gib JSON {next_step, ready, missing} zurück. Wähle next_step aus den Optionen im Benutzertext. ready=true nur, wenn der Prozess ohne blockierende Lücken fortgesetzt werden kann."
+  content: "Gib JSON {next_step, ready, missing} zurück. Wähle next_step aus den Optionen im Benutzertext. ready=true nur, wenn der Prozess ohne blockierende Lücken fortgesetzt werden kann. missing muss ein Array kurzer Tokens sein (bevorzugt englisches snake_case, z. B. address). Bei fehlgeschlagener Adressvalidierung (inkl. ungültiger PLZ) immer Token \"address\" in missing verwenden, nicht postcode/postal_code. ready=false, solange die Adresse ungültig ist."
 - role: user
   fixture: fixtures/de-chain-order-fulfill.txt
 generation:
@@ -46,4 +46,10 @@ scorers:
     ignore_order: true
     coerce_scalar: true
     match: substring
+    aliases:
+      address:
+      - Adresse
+      - Lieferadresse
+      - shipping address
+      - delivery address
 pass_threshold: 0.85

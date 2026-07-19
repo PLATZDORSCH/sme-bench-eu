@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -31,6 +32,8 @@ class RunConfig(BaseModel):
     seed: int = 42
     timeout: float = 120.0
     retries: int = 1
+    max_tokens_multiplier: float = 1.0
+    max_tokens_floor: int | None = None
     extra_body: dict[str, Any] = Field(default_factory=dict)
     pricing: PricingConfig = Field(default_factory=PricingConfig)
     save_reasoning: bool = False
@@ -53,6 +56,20 @@ class RunConfig(BaseModel):
             raise ValueError("must be >= 0")
         return value
 
+    @field_validator("max_tokens_multiplier")
+    @classmethod
+    def multiplier_positive(cls, value: float) -> float:
+        if value <= 0:
+            raise ValueError("max_tokens_multiplier must be > 0")
+        return value
+
+    @field_validator("max_tokens_floor")
+    @classmethod
+    def floor_positive(cls, value: int | None) -> int | None:
+        if value is not None and value < 1:
+            raise ValueError("max_tokens_floor must be >= 1")
+        return value
+
     @model_validator(mode="after")
     def concurrency_at_least_one(self) -> RunConfig:
         if self.concurrency < 1:
@@ -60,6 +77,18 @@ class RunConfig(BaseModel):
         if self.repeats < 1:
             raise ValueError("repeats must be >= 1")
         return self
+
+    def effective_max_tokens(self, task_max_tokens: int) -> int:
+        """Apply the per-run multiplier and floor to a task's ``max_tokens``.
+
+        Lets reasoning models (which stream chain-of-thought into ``content``)
+        finish thinking *and* emit the final answer instead of being truncated
+        mid-reasoning. Neutral by default (multiplier 1.0, no floor).
+        """
+        value = math.ceil(task_max_tokens * self.max_tokens_multiplier)
+        if self.max_tokens_floor is not None:
+            value = max(value, self.max_tokens_floor)
+        return max(1, value)
 
 
 def load_extra_body(path: Path | None) -> dict[str, Any]:
@@ -83,3 +112,22 @@ def load_extra_body(path: Path | None) -> dict[str, Any]:
         raise ValueError(f"extra_body must not contain auth fields: {auth_keys}")
     _ = overlap
     return data
+
+
+def apply_enable_thinking(extra_body: dict[str, Any], *, enabled: bool) -> dict[str, Any]:
+    """Merge ``chat_template_kwargs.enable_thinking`` into ``extra_body``.
+
+    Used by LiteLLM / vLLM-style endpoints (e.g. Platzdorsch Token Studio, Qwen).
+    CLI ``--enable-thinking`` wins over the same key from ``--extra-body-file``.
+    Returns a shallow-copied dict; nested ``chat_template_kwargs`` is also copied.
+    """
+    if not enabled:
+        return dict(extra_body)
+    merged = dict(extra_body)
+    raw_kwargs = merged.get("chat_template_kwargs") or {}
+    if not isinstance(raw_kwargs, dict):
+        raise ValueError("extra_body.chat_template_kwargs must be a JSON object")
+    kwargs = dict(raw_kwargs)
+    kwargs["enable_thinking"] = True
+    merged["chat_template_kwargs"] = kwargs
+    return merged

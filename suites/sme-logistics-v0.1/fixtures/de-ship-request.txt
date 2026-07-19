@@ -2,6 +2,3 @@ Versandanfrage:
 
 Bitte 200 Kartons nach Hamburg schicken, Absender Lager Süd.
 Gewicht gesamt ca. 1,2 t.
-
-Vorhanden: Zielstadt, Absender, Kartonanzahl, Gewicht.
-Nicht genannt: Lieferadresse Straße, Wunschtermin, Incoterm, Kontakttelefon.

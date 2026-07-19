@@ -13,7 +13,7 @@ tags:
 - catalog
 messages:
 - role: system
-  content: Return JSON brand,color,size,material using allowed vocabularies.
+  content: "Return JSON with brand, color, size, material. Map raw values to the allowed vocabularies given in the user message (e.g. size \"medium\"/\"extra large\" → \"M\"/\"XL\"; material blends → \"blend\"). brand lowercase; use only allowed tokens for color/size/material."
 - role: user
   fixture: fixtures/product/en-product-002.txt
 generation:

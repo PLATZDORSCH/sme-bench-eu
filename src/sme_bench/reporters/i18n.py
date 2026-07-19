@@ -76,7 +76,8 @@ SUMMARY: dict[Lang, dict[str, str]] = {
     "de": {
         "title": "SME-Bench Report — {model}",
         "suite": "Suite: `{suite_id}` {suite_version}",
-        "core_score": "SME Core Score: **{score:.1f} / 100**",
+        "core_score": "SME Core Score: {score:.1f} / 100",
+        "rank_score": "**SME Rank Score: {score:.1f} / 100**",
         "attempt_pass": "Attempt Pass Rate: {value}",
         "attempt_partial": "Attempt Partial Rate: {value}",
         "reliable_pass": "Reliable Pass Rate: {value}",
@@ -95,7 +96,8 @@ SUMMARY: dict[Lang, dict[str, str]] = {
     "en": {
         "title": "SME-Bench Report — {model}",
         "suite": "Suite: `{suite_id}` {suite_version}",
-        "core_score": "SME Core Score: **{score:.1f} / 100**",
+        "core_score": "SME Core Score: {score:.1f} / 100",
+        "rank_score": "**SME Rank Score: {score:.1f} / 100**",
         "attempt_pass": "Attempt Pass Rate: {value}",
         "attempt_partial": "Attempt Partial Rate: {value}",
         "reliable_pass": "Reliable Pass Rate: {value}",
@@ -123,13 +125,13 @@ FAILURES: dict[Lang, dict[str, str]] = {
         "critical_attempts": "- Kritische Fehler (Versuche): **{n}**",
         "intro": (
             "> Pro Fall: **Aufgabe**, **erwartetes Ergebnis**, **Modellausgabe** und Scorer-Details.\n"
-            "> Bestanden ≥ Pass-Schwelle · Teilweise = 65–84 % · Fail < 65 % · K.-o. = kritischer Scorer."
+            "> Bestanden ≥ Pass-Schwelle · Teilweise = 65–84 % · Fail < 65 % · Kritisch = kritischer Scorer."
         ),
         "see_also": (
             "Siehe auch `success.{lang}.md` für bestandene Fälle und `CASES.md` für Fallbeschreibungen."
         ),
         "all_passed": "Alle Fälle in allen Wiederholungen vollständig bestanden.",
-        "section_critical": "## Kritische Fehler (K.-o.)",
+        "section_critical": "## Kritische Fehler",
         "section_fail": "## Fehlgeschlagen",
         "section_partial": "## Teilweise bestanden",
         "partial_blurb": "Größtenteils korrekt, aber unter der Pass-Schwelle.",
@@ -138,7 +140,7 @@ FAILURES: dict[Lang, dict[str, str]] = {
         "status_pass": "PASS",
         "status_partial": "TEILWEISE",
         "status_fail": "FAIL",
-        "ko": " **K.-o.**",
+        "ko": " **kritisch**",
         "infra_line": "- **Infrastruktur:** {error}",
         "required_contains": "Pflichtinhalte (contains): {terms}",
         "forbidden": "Verboten: {terms}",
@@ -175,13 +177,13 @@ FAILURES: dict[Lang, dict[str, str]] = {
         "critical_attempts": "- Critical failures (attempts): **{n}**",
         "intro": (
             "> Per case: **task**, **expected result**, **model output**, and scorer details.\n"
-            "> Passed ≥ pass threshold · Partial = 65–84 % · Fail < 65 % · K.O. = critical scorer."
+            "> Passed ≥ pass threshold · Partial = 65–84 % · Fail < 65 % · Critical = critical scorer."
         ),
         "see_also": (
             "See also `success.{lang}.md` for passed cases and `CASES.md` for case descriptions."
         ),
         "all_passed": "All cases fully passed in every repeat.",
-        "section_critical": "## Critical failures (K.O.)",
+        "section_critical": "## Critical failures",
         "section_fail": "## Failed",
         "section_partial": "## Partially passed",
         "partial_blurb": "Mostly correct, but below the pass threshold.",
@@ -190,7 +192,7 @@ FAILURES: dict[Lang, dict[str, str]] = {
         "status_pass": "PASS",
         "status_partial": "PARTIAL",
         "status_fail": "FAIL",
-        "ko": " **K.O.**",
+        "ko": " **critical**",
         "infra_line": "- **Infrastructure:** {error}",
         "required_contains": "Required content (contains): {terms}",
         "forbidden": "Forbidden: {terms}",

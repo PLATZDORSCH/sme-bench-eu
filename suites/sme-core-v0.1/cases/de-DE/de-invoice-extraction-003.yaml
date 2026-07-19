@@ -14,10 +14,7 @@ tags:
 - reduced-vat
 messages:
 - role: system
-  content: 'Extrahiere die Rechnung als JSON mit genau diesen Schlüsseln: invoice_number,
-    supplier, currency, net_amount, vat_rate, vat_amount, gross_amount, due_date. Gib
-    vat_rate als Dezimalbruch an (z. B. 0.07 für 7%) und due_date als JJJJ-MM-TT. Verwende
-    nur vorhandene Daten und antworte ausschließlich mit JSON, ohne Markdown.'
+  content: "Extrahiere die Rechnung als JSON mit genau diesen Schlüsseln: invoice_number, supplier, currency, net_amount, vat_rate, vat_amount, gross_amount, due_date. Gib vat_rate als Dezimalbruch an (z. B. 0.07 für 7%) und due_date als JJJJ-MM-TT. Verwende nur vorhandene Daten und antworte ausschließlich mit JSON, ohne Markdown. net_amount, vat_amount und gross_amount als JSON-Zahlen (nicht Strings); keine Tausendertrenner und keine Währungssymbole in diesen Feldern."
 - role: user
   fixture: fixtures/invoice/de-invoice-003.txt
 generation:

@@ -27,7 +27,7 @@ from sme_bench.reporters.failures import write_failures_reports, write_success_r
 from sme_bench.reporters.json_reporter import write_summary_json
 from sme_bench.reporters.markdown import write_summary_reports
 from sme_bench.scoring import evaluate_attempt
-from sme_bench.statistics import aggregate
+from sme_bench.statistics import aggregate, dedupe_attempts
 from sme_bench.task_loader import LoadedSuite, filter_tasks
 from sme_bench.utils import redact_secrets, sanitize_base_url_for_metadata, suite_path_for_metadata
 
@@ -130,6 +130,9 @@ async def run_benchmark(config: RunConfig, suite: LoadedSuite) -> Path:
         "seed": config.seed,
         "timeout": config.timeout,
         "retries": config.retries,
+        "max_tokens_multiplier": config.max_tokens_multiplier,
+        "max_tokens_floor": config.max_tokens_floor,
+        "extra_body": config.extra_body,
         "pricing": config.pricing.model_dump(),
         "save_reasoning": config.save_reasoning,
         "status": "running",
@@ -231,7 +234,7 @@ async def run_benchmark(config: RunConfig, suite: LoadedSuite) -> Path:
                 req = await client.chat_completion(
                     model=config.model,
                     messages=_messages_payload(task),
-                    max_tokens=task.generation.max_tokens,
+                    max_tokens=config.effective_max_tokens(task.generation.max_tokens),
                     temperature=task.generation.temperature,
                     seed=task.generation.seed,
                     response_format=task.generation.response_format,
@@ -425,8 +428,8 @@ async def run_benchmark(config: RunConfig, suite: LoadedSuite) -> Path:
         else:
             await run_pending()
 
-    # Deterministic sort for aggregation
-    results.sort(key=lambda a: (a.task_id, a.repeat_index))
+    # Deterministic sort for aggregation; drop duplicate resume rows
+    results = dedupe_attempts(results)
 
     summary = aggregate(results, category_weights=suite.manifest.category_weights)
     summary["run_id"] = run_id

@@ -2,7 +2,7 @@ schema_version: '1.0'
 id: sme-chains-v0.1
 name: SME Process Chains & Critical Security
 version: 0.1.0
-description: Mehrstufige Prozessfälle und harte Security/PII-K.-o.-Szenarien
+description: Mehrstufige Prozessfälle und harte Security/PII-Szenarien
 languages:
 - de-DE
 - en-GB

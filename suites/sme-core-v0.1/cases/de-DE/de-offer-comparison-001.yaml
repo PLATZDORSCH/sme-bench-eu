@@ -13,7 +13,7 @@ tags:
 - offers
 messages:
 - role: system
-  content: "Wende die Auswahlregel an. Gib JSON mit selected_supplier, total_cost, reasons (Liste von Fakten) zurück."
+  content: "Wende die Auswahlregel an. Gib JSON mit selected_supplier (string), total_cost (Zahl, inkl. Versand) und reasons (Liste kurzer Strings) zurück."
 - role: user
   fixture: fixtures/offers/de-offers.txt
 generation:

@@ -36,6 +36,7 @@ scorers:
   weight: 0
   critical: true
   params:
+    ignore_negated: true
     terms:
     - Rabatt
     - Gutschrift

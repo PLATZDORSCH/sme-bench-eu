@@ -14,8 +14,7 @@ tags:
 - citations
 messages:
 - role: system
-  content: Answer only using the policy. JSON with answer and citations. Never invent
-    warranties.
+  content: "Answer only using the policy. Return exactly one JSON object with these keys only: answer (string) and citations (array of section ID strings without brackets). Example shape: {\"answer\":\"30 days\",\"citations\":[\"SEC-1\"]}. Put only section IDs in citations, never policy text. Never invent terms."
 - role: user
   content: 'Policy:
 

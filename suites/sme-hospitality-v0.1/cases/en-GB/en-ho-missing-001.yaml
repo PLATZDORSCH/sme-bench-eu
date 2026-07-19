@@ -14,8 +14,7 @@ tags:
 - missing-fields
 messages:
 - role: system
-  content: |-
-    From this candidate list, return JSON {"missing_fields":[...]} listing every field that is NOT explicitly stated: date, time, allergies, phone, seating, guest_name, party_size, weekend_mention.
+  content: "From this candidate list, return JSON {\"missing_fields\":[...]} listing every field that is NOT explicitly stated: date, time, allergies, phone, seating, guest_name, party_size, weekend_mention. Omit fields that are already present. Do not invent extra field names. Include every candidate field that has no explicit value in the message; an empty missing_fields array means everything in the list is present."
 - role: user
   fixture: fixtures/en-reservation-incomplete.txt
 generation:

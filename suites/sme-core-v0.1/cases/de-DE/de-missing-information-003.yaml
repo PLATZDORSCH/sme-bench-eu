@@ -13,7 +13,7 @@ tags:
 - missing-fields
 messages:
 - role: system
-  content: "Gib aus dieser Kandidatenliste JSON {\"missing_fields\":[...]} zurück und liste jedes Feld, das in der Nachricht NICHT ausdrücklich steht: delivery_address, budget, colour_preference, quantity, company, contract_term."
+  content: "Gib JSON {\"missing_fields\":[...]} zurück. Nimm nur Felder aus dieser Kandidatenliste auf, die in der Nachricht NICHT ausdrücklich stehen: delivery_address, budget, colour_preference, quantity, company, contract_term. Felder, die bereits genannt sind, weglassen. Keine zusätzlichen Feldnamen erfinden. Nimm jedes Kandidatenfeld auf, das in der Nachricht keinen ausdrücklichen Wert hat; ein leeres missing_fields-Array bedeutet, dass alles aus der Liste vorhanden ist."
 - role: user
   fixture: fixtures/missing/de-quote-003.txt
 generation:

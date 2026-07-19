@@ -14,7 +14,7 @@ tags:
 - missing
 messages:
 - role: system
-  content: "Gib aus dieser Kandidatenliste JSON {\"missing_fields\":[...]} zurück und liste jedes Feld, das in der Nachricht NICHT ausdrücklich steht: delivery_address, budget, colour_preference, quantity, company, contract_term."
+  content: "Gib aus dieser Kandidatenliste JSON {\"missing_fields\":[...]} zurück und liste jedes Feld, das in der Nachricht NICHT ausdrücklich steht: delivery_address, budget, colour_preference, quantity, company, contract_term. quantity = Stückzahl/Anzahl der Positionen (nicht die Fläche in qm). Felder, die bereits genannt sind (z. B. quantity oder company), weglassen. Nimm jedes Kandidatenfeld auf, das in der Nachricht keinen ausdrücklichen Wert hat; ein leeres missing_fields-Array bedeutet, dass alles aus der Liste vorhanden ist."
 - role: user
   fixture: fixtures/de-handwerk-anfrage.txt
 generation:

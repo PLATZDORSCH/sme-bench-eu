@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Benchmark
+
+- Sharpened case prompts where existing runs showed format ambiguity (PII label strings, `missing` as array, invoice amounts as numbers, grounded citation IDs, missing-field semantics, exact SKUs, fulfill `address` token, trades support category)
+- Fixed corrupted system prompts (YAML leakage into `content`); reformulated grounded prompts without naming wrong keys; removed meta annotations from missing-info fixtures; clarified product-normalization vocab mapping
+- Grounded prompts: concrete JSON example shape; missing-info: clarify empty array semantics; product size mapping examples (`medium`→`M`)
+- CLI `--enable-thinking` sets `chat_template_kwargs.enable_thinking=true` (Qwen/vLLM/LiteLLM); pair with `--max-tokens-mult` / `--max-tokens-min`
+
 ## 0.1.0
 
 ### Benchmark
@@ -17,12 +26,12 @@
 - Bilingual run reports: `summary.de.md` / `summary.en.md`, `failures.de.md` /
   `failures.en.md`, `success.de.md` / `success.en.md`
 - Case catalogue (`CASES.md`) generated in English
+- **SME Rank Score** for leaderboard ordering: Core × Reliable Pass × critical (`k=5`) and partial (`k=2`) rate penalties; Core Score remains the unpenalised quality metric
 
 ### Documentation
 
 - Root and suite READMEs in English (basis for a future website)
 - **[docs/AUTHORING_SUITES.md](docs/AUTHORING_SUITES.md)** — guide for custom suites and DE/EN case pairs
-- Cursor rule for suite authoring (`.cursor/rules/suite-authoring.mdc`)
 
 ### Open source
 

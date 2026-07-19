@@ -4,6 +4,3 @@ Employee: Anna Vogt
 Destination: Berlin
 Receipt total gross: 186.40 EUR
 Date: 2026-06-03
-
-Present: employee name, destination, amount, date.
-Not stated: cost centre, project code, VAT rate, IBAN for reimbursement.

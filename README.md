@@ -24,36 +24,119 @@ uv sync --all-extras --dev
 
 ## Quick start
 
-**The default is the Full run** (Core + all domain packs, ~156 cases):
+Copy `.env.example` to `.env` and fill in the keys you need. The CLI loads `.env` automatically. Use `--api-key-env` to select which variable to send (default: `OPENAI_API_KEY`). Local servers often accept any value or `EMPTY`.
 
 ```bash
-# Check the endpoint
+cp .env.example .env
+```
+
+**The default run target is SME Full** (Core + all domain packs, ~156 cases × repeats).
+
+### Ollama
+
+```bash
 uv run sme-bench doctor \
   --base-url http://localhost:11434/v1 \
-  --model qwen3.6:27b
+  --model qwen3.6:27b \
+  --api-key-env OPENAI_API_KEY
 
-# Start the Full benchmark (default — no --suite needed)
 uv run sme-bench run \
   --base-url http://localhost:11434/v1 \
   --model qwen3.6:27b \
-  --languages de-DE,en-GB \
-  --repeats 3 \
-  --concurrency 1 \
-  --seed 42 \
-  --output runs/qwen3.6-27b-full
+  --api-key-env OPENAI_API_KEY \
+  --output runs/ollama-qwen3.6-27b
 ```
 
-Run only the core benchmark (72 cases):
+### LM Studio
+
+LM Studio’s local server is OpenAI-compatible (default port `1234`):
+
+```bash
+uv run sme-bench doctor \
+  --base-url http://localhost:1234/v1 \
+  --model local-model \
+  --api-key-env OPENAI_API_KEY
+
+uv run sme-bench run \
+  --base-url http://localhost:1234/v1 \
+  --model local-model \
+  --api-key-env OPENAI_API_KEY \
+  --output runs/lmstudio
+```
+
+Use the model id shown in LM Studio (loaded model / API name).
+
+### OpenAI
+
+```bash
+uv run sme-bench doctor \
+  --base-url https://api.openai.com/v1 \
+  --model gpt-4o-mini \
+  --api-key-env OPENAI_API_KEY
+
+uv run sme-bench run \
+  --base-url https://api.openai.com/v1 \
+  --model gpt-4o-mini \
+  --api-key-env OPENAI_API_KEY \
+  --output runs/gpt-4o-mini
+```
+
+### Nebius
+
+```bash
+uv run sme-bench doctor \
+  --base-url https://api.tokenfactory.nebius.com/v1 \
+  --model zai-org/GLM-5.2 \
+  --api-key-env NEBIUS_API_KEY
+
+uv run sme-bench run \
+  --base-url https://api.tokenfactory.nebius.com/v1 \
+  --model zai-org/GLM-5.2 \
+  --api-key-env NEBIUS_API_KEY \
+  --extra-body-file examples/extra-body-glm-no-thinking.json \
+  --output runs/glm-5.2
+```
+
+### LiteLLM / vLLM
+
+Any OpenAI-compatible proxy (LiteLLM, vLLM, …):
+
+```bash
+uv run sme-bench doctor \
+  --base-url http://localhost:4000/v1 \
+  --model qwen3.6-35b \
+  --api-key-env LITELLM_API_KEY
+
+uv run sme-bench run \
+  --base-url http://localhost:4000/v1 \
+  --model qwen3.6-35b \
+  --api-key-env LITELLM_API_KEY \
+  --output runs/litellm-qwen
+```
+
+Optional: enable Qwen-style thinking and raise the token budget so answers are not truncated mid-reasoning:
+
+```bash
+uv run sme-bench run \
+  --base-url http://localhost:4000/v1 \
+  --model qwen3.6-35b \
+  --api-key-env LITELLM_API_KEY \
+  --enable-thinking \
+  --max-tokens-mult 8 \
+  --save-reasoning \
+  --output runs/litellm-qwen-thinking
+```
+
+### Core only
 
 ```bash
 uv run sme-bench run \
   --base-url http://localhost:11434/v1 \
   --model qwen3.6:27b \
+  --api-key-env OPENAI_API_KEY \
   --suite suites/sme-core-v0.1 \
-  --output runs/qwen3.6-27b-core
+  --output runs/core
 ```
-
-API keys are read from the `OPENAI_API_KEY` environment variable (default for local endpoints: `EMPTY`).
 
 ## CLI commands
 
@@ -72,8 +155,9 @@ API keys are read from the `OPENAI_API_KEY` environment variable (default for lo
 - **Attempt Pass Rate:** passed attempts / all attempts (≥85 %, fully correct)
 - **Attempt Partial Rate:** partially passed attempts (65–84 %, mostly correct)
 - **Reliable Pass Rate:** cases that passed in *every* repeat / all cases
-- **Critical Failure:** a critical scorer failed → effective score `0` for rankings
-- **SME Core Score:** mean of category-weighted effective scores × 100
+- **Critical Failure:** a critical scorer failed → effective score `0` for that attempt
+- **SME Core Score:** mean of category-weighted effective scores × 100 (domain quality, no rate penalty)
+- **SME Rank Score:** `SME Core × Reliable Pass × max(0, 1 − 5 × critical_rate) × max(0, 1 − 2 × partial_rate)` — primary leaderboard metric
 - **Language gap:** pass/score difference `en-GB − de-DE` plus pair consistency
 
 ## Task packs

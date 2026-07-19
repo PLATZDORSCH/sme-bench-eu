@@ -30,17 +30,17 @@ def system_prompt_summary(task: BenchmarkTask, *, max_len: int = 200) -> str:
 
 def critical_checks(task: BenchmarkTask, *, lang: Lang = "de") -> list[str]:
     checks: list[str] = []
-    ko = "K.-o." if lang == "de" else "K.O."
+    label_critical = "Kritisch" if lang == "de" else "Critical"
     forbidden = "Verboten" if lang == "de" else "Forbidden"
     for spec in task.scorers:
         if spec.type == "forbidden_terms":
             terms = spec.params.get("terms") or []
             if terms:
-                label = ko if spec.critical else forbidden
+                label = label_critical if spec.critical else forbidden
                 checks.append(f"{label}: {', '.join(str(t) for t in terms)}")
         elif spec.critical:
             detail = _scorer_detail(spec, lang=lang)
-            checks.append(f"{ko}: `{spec.type}`{detail}")
+            checks.append(f"{label_critical}: `{spec.type}`{detail}")
     return checks
 
 

@@ -7,7 +7,13 @@ from datetime import UTC, datetime
 import pytest
 
 from sme_bench.models import AttemptResult, RequestResult
-from sme_bench.statistics import aggregate, language_parity
+from sme_bench.statistics import (
+    CRITICAL_RATE_PENALTY_K,
+    PARTIAL_RATE_PENALTY_K,
+    aggregate,
+    language_parity,
+    sme_rank_score,
+)
 
 
 def test_language_parity_and_aggregate_reliable_pass() -> None:
@@ -66,6 +72,80 @@ def test_language_parity_and_aggregate_reliable_pass() -> None:
     summary = aggregate(attempts, category_weights={"c": 1.0})
     assert summary["overall"]["reliable_pass_rate"] == pytest.approx(0.5)
     assert "sme_core_score" in summary
+    assert "sme_rank_score" in summary
+    overall = summary["overall"]
+    assert summary["sme_rank_score"] == pytest.approx(
+        summary["sme_core_score"]
+        * overall["reliable_pass_rate"]
+        * (1 - CRITICAL_RATE_PENALTY_K * overall["critical_failure_rate"])
+        * (1 - PARTIAL_RATE_PENALTY_K * overall["attempt_partial_rate"])
+    )
+
+
+def test_sme_rank_score_penalty() -> None:
+    assert sme_rank_score(
+        96.5,
+        reliable_pass_rate=1.0,
+        critical_failure_rate=0.0,
+        attempt_partial_rate=0.0,
+    ) == pytest.approx(96.5)
+    assert sme_rank_score(
+        96.5,
+        reliable_pass_rate=0.853,
+        critical_failure_rate=0.0085,
+        attempt_partial_rate=0.068,
+    ) == pytest.approx(
+        96.5
+        * 0.853
+        * (1 - CRITICAL_RATE_PENALTY_K * 0.0085)
+        * (1 - PARTIAL_RATE_PENALTY_K * 0.068)
+    )
+    assert sme_rank_score(
+        90.0,
+        reliable_pass_rate=1.0,
+        critical_failure_rate=0.2,
+        attempt_partial_rate=0.0,
+    ) == pytest.approx(0.0)
+    assert sme_rank_score(
+        90.0,
+        reliable_pass_rate=0.5,
+        critical_failure_rate=0.0,
+        attempt_partial_rate=0.0,
+    ) == pytest.approx(45.0)
+
+
+def test_aggregate_rank_score_with_critical_failures() -> None:
+    attempts = [
+        AttemptResult(
+            task_id="t1",
+            language="de-DE",
+            category="c",
+            task_type="t",
+            difficulty="easy",
+            risk="critical",
+            repeat_index=0,
+            passed=False,
+            critical_failure=True,
+            effective_score=0.0,
+        ),
+        AttemptResult(
+            task_id="t2",
+            language="de-DE",
+            category="c",
+            task_type="t",
+            difficulty="easy",
+            risk="low",
+            repeat_index=0,
+            passed=True,
+            effective_score=1.0,
+        ),
+    ]
+    summary = aggregate(attempts, category_weights={"c": 1.0})
+    assert summary["overall"]["critical_failure_rate"] == pytest.approx(0.5)
+    assert summary["sme_core_score"] == pytest.approx(50.0)
+    assert summary["sme_rank_score"] == pytest.approx(0.0)
+    # reliable_pass_rate = 0 (only one of two tasks fully reliable)
+    assert summary["overall"]["reliable_pass_rate"] == pytest.approx(0.5)
 
 
 def test_generation_tps_fallback_on_buffered_stream() -> None:

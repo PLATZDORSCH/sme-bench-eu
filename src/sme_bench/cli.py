@@ -16,7 +16,8 @@ from rich.table import Table
 from sme_bench import __version__
 from sme_bench.banner import print_startup_banner
 from sme_bench.client import run_doctor
-from sme_bench.config import PricingConfig, RunConfig, load_extra_body
+from sme_bench.config import PricingConfig, RunConfig, apply_enable_thinking, load_extra_body
+from sme_bench.env import load_env_files
 from sme_bench.models import AttemptResult, BenchmarkTask
 from sme_bench.reporters.catalog import write_case_catalog
 from sme_bench.reporters.console import print_summary
@@ -27,8 +28,10 @@ from sme_bench.reporters.markdown import write_summary_reports
 from sme_bench.runner import run_benchmark
 from sme_bench.scorers.base import known_scorer_names
 from sme_bench.scoring import apply_partial_grade, evaluate_attempt
-from sme_bench.statistics import aggregate
+from sme_bench.statistics import aggregate, dedupe_attempts
 from sme_bench.task_loader import load_suite, load_suite_from_metadata
+
+load_env_files()
 
 app = typer.Typer(
     name="sme-bench",
@@ -152,7 +155,24 @@ def run_cmd(
     seed: int = typer.Option(42, "--seed"),
     timeout: float = typer.Option(120.0, "--timeout"),
     retries: int = typer.Option(1, "--retries"),
+    max_tokens_mult: float = typer.Option(
+        1.0,
+        "--max-tokens-mult",
+        help="Scale every task's max_tokens by this factor "
+        "(give reasoning models room to think + answer).",
+    ),
+    max_tokens_min: int | None = typer.Option(
+        None,
+        "--max-tokens-min",
+        help="Raise any task's max_tokens up to at least this floor.",
+    ),
     extra_body_file: Path | None = typer.Option(None, "--extra-body-file"),
+    enable_thinking: bool = typer.Option(
+        False,
+        "--enable-thinking",
+        help="Set chat_template_kwargs.enable_thinking=true (Qwen/vLLM/LiteLLM). "
+        "Pair with --max-tokens-mult / --max-tokens-min so answers are not truncated.",
+    ),
     input_price_per_million: float | None = typer.Option(None, "--input-price-per-million"),
     output_price_per_million: float | None = typer.Option(None, "--output-price-per-million"),
     save_reasoning: bool = typer.Option(False, "--save-reasoning"),
@@ -199,6 +219,12 @@ def run_cmd(
             console.print(f"[red]ERROR[/red] {issue.path}: {issue.message}")
         raise typer.Exit(code=1)
 
+    if enable_thinking and max_tokens_mult == 1.0 and max_tokens_min is None:
+        console.print(
+            "[yellow]Hinweis:[/yellow] --enable-thinking ohne erhöhtes Token-Budget. "
+            "Empfohlen: z. B. --max-tokens-mult 8 oder --max-tokens-min 2048."
+        )
+
     config = RunConfig(
         base_url=base_url,
         model=model,
@@ -214,7 +240,12 @@ def run_cmd(
         seed=seed,
         timeout=timeout,
         retries=retries,
-        extra_body=load_extra_body(extra_body_file),
+        max_tokens_multiplier=max_tokens_mult,
+        max_tokens_floor=max_tokens_min,
+        extra_body=apply_enable_thinking(
+            load_extra_body(extra_body_file),
+            enabled=enable_thinking,
+        ),
         pricing=PricingConfig(
             input_price_per_million=input_price_per_million,
             output_price_per_million=output_price_per_million,
@@ -309,6 +340,7 @@ def report_cmd(
             line = line.strip()
             if line:
                 attempts.append(AttemptResult.model_validate(json.loads(line)))
+    attempts = dedupe_attempts(attempts)
     meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
     weights: dict[str, float] = {}
     tasks_by_id: dict[str, BenchmarkTask] = {}
@@ -338,6 +370,10 @@ def report_cmd(
                 else a
                 for a in attempts
             ]
+            # Persist rescored attempts so attempts.jsonl matches reports
+            with attempts_path.open("w", encoding="utf-8") as handle:
+                for attempt in attempts:
+                    handle.write(attempt.model_dump_json() + "\n")
         else:
             attempts = [
                 apply_partial_grade(a, tasks_by_id[a.task_id])
@@ -405,25 +441,38 @@ def compare_cmd(
             console.print(f"  {m.get('run_id')}: {m.get('suite_hash')}")
         raise typer.Exit(code=1)
 
+    # Primary leaderboard line: Rank Score is the ranking metric.
+    rank_bits = [
+        f"[bold]{m.get('model', m.get('run_id'))}: {s.get('sme_rank_score', 0):.1f}[/bold]"
+        for m, s in zip(metas, summaries, strict=True)
+    ]
+    console.print("SME-Bench Leaderboard · [bold]SME Rank Score[/bold]")
+    console.print("  " + "  ·  ".join(rank_bits))
+    console.print()
+
     table = Table(title="SME-Bench Compare")
     table.add_column("Metric")
     for m in metas:
         table.add_column(str(m.get("model", m.get("run_id"))))
     rows = [
-        ("SME Core Score", "sme_core_score", False),
-        ("Attempt Pass Rate", "attempt_pass_rate", True),
-        ("Reliable Pass Rate", "reliable_pass_rate", True),
-        ("Critical Failures", "critical_failure_rate", True),
+        ("SME Rank Score", "sme_rank_score", False, True),
+        ("SME Core Score", "sme_core_score", False, False),
+        ("Attempt Pass Rate", "attempt_pass_rate", True, False),
+        ("Attempt Partial Rate", "attempt_partial_rate", True, False),
+        ("Reliable Pass Rate", "reliable_pass_rate", True, False),
+        ("Critical Failures", "critical_failure_rate", True, False),
     ]
-    for label, key, is_rate in rows:
+    for label, key, is_rate, bold in rows:
         values = []
         for s in summaries:
-            if key == "sme_core_score":
-                values.append(f"{s.get('sme_core_score', 0):.1f}")
+            if key in {"sme_core_score", "sme_rank_score"}:
+                val = f"{s.get(key, 0):.1f}"
             else:
-                val = s.get("overall", {}).get(key, 0)
-                values.append(f"{val * 100:.1f}%" if is_rate else f"{val:.3f}")
-        table.add_row(label, *values)
+                raw = s.get("overall", {}).get(key, 0)
+                val = f"{raw * 100:.1f}%" if is_rate else f"{raw:.3f}"
+            values.append(f"[bold]{val}[/bold]" if bold else val)
+        row_label = f"[bold]{label}[/bold]" if bold else label
+        table.add_row(row_label, *values)
     console.print(table)
 
 

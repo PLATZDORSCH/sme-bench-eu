@@ -14,8 +14,7 @@ tags:
 - missing
 messages:
 - role: system
-  content: >-
-    From this candidate list, return JSON {"missing_fields":[...]} listing every field that is NOT explicitly stated in the message: delivery_address, budget, colour_preference, quantity, company, contract_term.
+  content: "From this candidate list, return JSON {\"missing_fields\":[...]} listing every field that is NOT explicitly stated in the message: delivery_address, budget, colour_preference, quantity, company, contract_term. quantity = item count / number of units (not area in sqm). Omit fields that are already stated (e.g. quantity or company). Include every candidate field that has no explicit value in the message; an empty missing_fields array means everything in the list is present."
 - role: user
   fixture: fixtures/en-handwerk-anfrage.txt
 generation:

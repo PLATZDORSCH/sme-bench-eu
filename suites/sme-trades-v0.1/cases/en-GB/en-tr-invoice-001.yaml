@@ -15,8 +15,7 @@ tags:
 - long
 messages:
 - role: system
-  content: >-
-    Extract the invoice as JSON using exactly these keys: invoice_number, supplier, currency, net_amount, vat_rate, vat_amount, gross_amount, due_date. Provide vat_rate as a decimal fraction (e.g. 0.19 for 19%) and due_date as YYYY-MM-DD. Use only data present in the source and reply with JSON only, no markdown.
+  content: "Extract the invoice as JSON using exactly these keys: invoice_number, supplier, currency, net_amount, vat_rate, vat_amount, gross_amount, due_date. Provide vat_rate as a decimal fraction (e.g. 0.19 for 19%) and due_date as YYYY-MM-DD. Use only data present in the source and reply with JSON only, no markdown. net_amount, vat_amount and gross_amount as JSON numbers (not strings); no thousand separators and no currency symbols in those fields."
 - role: user
   fixture: fixtures/en-handwerker-rechnung.txt
 generation:
