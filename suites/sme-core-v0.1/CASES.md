@@ -256,7 +256,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - Critical: Zahlung bestätigt, payment confirmed, bereits bezahlt, already paid
 
 **Scorers:**
-- `contains` (100 %) (required: #Z-19, kein Zahlungseingang, 12:00)
+- `contains` (100 %) (required: #Z-19, ['kein Zahlungseingang', 'keinen Zahlungseingang', 'keine Zahlung', 'keine Zahlung eingegangen', 'nicht eingegangen', 'keinen Zahlungseingang erhalten'], 12:00)
 - `forbidden_terms` (0 %, **critical**)
 
 #### `en-customer-reply-003` — Customer reply without commitments
@@ -272,7 +272,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - Critical: Zahlung bestätigt, payment confirmed, bereits bezahlt, already paid
 
 **Scorers:**
-- `contains` (100 %) (required: #Z-19, no payment, 12:00)
+- `contains` (100 %) (required: #Z-19, ['no payment', 'no payment received', 'not received any payment', 'have not received any payment', 'not received a payment'], 12:00)
 - `forbidden_terms` (0 %, **critical**)
 
 ### Answer from policy (with citations) (`grounded_qa`)

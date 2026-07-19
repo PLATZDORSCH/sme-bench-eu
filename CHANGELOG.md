@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Benchmark
+
+- `contains` scorer accepts alternative term groups (any match satisfies the group)
+- Loosened payment-phrasing requirements in `en/de-customer-reply-003`
+- OpenAI client: `max_completion_tokens` for GPT-5/4o/4.1/o-series; omit `temperature` for GPT-5/o-series
+- Ruff SIM103 cleanup in `forbidden_terms`
+
 ## 0.1.0
 
 ### Benchmark

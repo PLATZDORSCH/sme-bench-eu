@@ -16,6 +16,27 @@ def _as_str(value: Any) -> str:
     return str(value)
 
 
+def _normalize_term_groups(raw_terms: Any) -> list[list[str]]:
+    """Normalize ``terms`` into groups of alternatives.
+
+    Each entry may be a string (exact requirement) or a list/tuple of
+    strings (any alternative satisfies the group).
+    """
+    if not isinstance(raw_terms, list):
+        return []
+    groups: list[list[str]] = []
+    for item in raw_terms:
+        if isinstance(item, (list, tuple)):
+            alts = [_as_str(t) for t in item if _as_str(t)]
+            if alts:
+                groups.append(alts)
+        else:
+            text = _as_str(item)
+            if text:
+                groups.append([text])
+    return groups
+
+
 @register
 class ContainsScorer:
     name = "contains"
@@ -29,18 +50,26 @@ class ContainsScorer:
         spec: ScorerSpec,
     ) -> ScoreResult:
         raw_terms = spec.params.get("terms") or spec.params.get("required") or []
-        terms = [_as_str(t) for t in raw_terms if _as_str(t)]
+        groups = _normalize_term_groups(raw_terms)
         mode = spec.params.get("mode", "all")
         case_insensitive = bool(spec.params.get("case_insensitive", False))
         haystack = output_text.casefold() if case_insensitive else output_text
-        needles = [t.casefold() if case_insensitive else t for t in terms]
-        found = [t for t, n in zip(terms, needles, strict=True) if n in haystack]
-        missing = [t for t in terms if t not in found]
+
+        found: list[str] = []
+        missing: list[str] = []
+        for group in groups:
+            needles = [t.casefold() if case_insensitive else t for t in group]
+            hit = next((t for t, n in zip(group, needles, strict=True) if n in haystack), None)
+            if hit is not None:
+                found.append(hit)
+            else:
+                missing.append(" | ".join(group) if len(group) > 1 else group[0])
+
         if mode == "any":
             ok = bool(found)
             score = 1.0 if ok else 0.0
         else:
-            score = (len(found) / len(terms)) if terms else 0.0
+            score = (len(found) / len(groups)) if groups else 0.0
             ok = not missing
         return ScoreResult(
             scorer=self.name,

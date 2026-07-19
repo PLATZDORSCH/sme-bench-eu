@@ -4,8 +4,48 @@ from __future__ import annotations
 
 import pytest
 
-from sme_bench.client import OpenAICompatibleClient, run_doctor
+from sme_bench.client import (
+    OpenAICompatibleClient,
+    omits_temperature,
+    run_doctor,
+    uses_max_completion_tokens,
+)
 from tests.fixtures.mock_server import start_mock_server
+
+
+@pytest.mark.parametrize(
+    ("model", "expected"),
+    [
+        ("gpt-5.4-nano-2026-03-17", True),
+        ("openai/gpt-5.4-nano", True),
+        ("gpt-4o-mini", True),
+        ("gpt-4.1-mini", True),
+        ("o3-mini", True),
+        ("o1", True),
+        ("gpt-4-turbo", False),
+        ("qwen3.6:27b", False),
+        ("zai-org/GLM-5.2", False),
+    ],
+)
+def test_uses_max_completion_tokens(model: str, expected: bool) -> None:
+    assert uses_max_completion_tokens(model) is expected
+
+
+@pytest.mark.parametrize(
+    ("model", "expected"),
+    [
+        ("gpt-5.6-luna", True),
+        ("openai/gpt-5.4-nano", True),
+        ("o3-mini", True),
+        ("o1", True),
+        ("gpt-4o-mini", False),
+        ("gpt-4.1-mini", False),
+        ("qwen3.6:27b", False),
+        ("zai-org/GLM-5.2", False),
+    ],
+)
+def test_omits_temperature(model: str, expected: bool) -> None:
+    assert omits_temperature(model) is expected
 
 
 @pytest.fixture

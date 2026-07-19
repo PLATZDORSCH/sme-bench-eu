@@ -44,6 +44,36 @@ def _reasoning_from_delta(delta: dict[str, Any]) -> str:
     return ""
 
 
+def uses_max_completion_tokens(model: str) -> bool:
+    """Return True for OpenAI models that reject ``max_tokens``.
+
+    Newer chat models (GPT-5, GPT-4.1, GPT-4o, o-series) require
+    ``max_completion_tokens`` instead. Local OpenAI-compatible servers
+    (Ollama, vLLM, …) keep using ``max_tokens``.
+    """
+    name = model.strip().lower().rsplit("/", maxsplit=1)[-1]
+    if name.startswith(("o1", "o3", "o4")):
+        return True
+    if name.startswith(("gpt-5", "gpt-4.1", "gpt-4o", "chatgpt-4o")):
+        return True
+    return False
+
+
+def omits_temperature(model: str) -> bool:
+    """Return True when the API rejects non-default ``temperature``.
+
+    GPT-5 and o-series only allow the default (typically 1). Sending
+    ``temperature: 0`` causes ``invalid_request_error``. Other models
+    keep receiving the suite value (usually 0) for reproducibility.
+    """
+    name = model.strip().lower().rsplit("/", maxsplit=1)[-1]
+    if name.startswith(("o1", "o3", "o4")):
+        return True
+    if name.startswith("gpt-5"):
+        return True
+    return False
+
+
 class OpenAICompatibleClient:
     def __init__(
         self,
@@ -112,14 +142,19 @@ class OpenAICompatibleClient:
         on_first_response: Any | None = None,
         on_first_token: Any | None = None,
     ) -> RequestResult:
+        limit_key = (
+            "max_completion_tokens" if uses_max_completion_tokens(model) else "max_tokens"
+        )
+        skip_temperature = omits_temperature(model)
         payload: dict[str, Any] = {
             "model": model,
             "messages": messages,
-            "max_tokens": max_tokens,
-            "temperature": temperature,
+            limit_key: max_tokens,
             "stream": True,
             "stream_options": {"include_usage": True},
         }
+        if not skip_temperature:
+            payload["temperature"] = temperature
         if seed is not None:
             payload["seed"] = seed
         if response_format == "json":
@@ -128,7 +163,16 @@ class OpenAICompatibleClient:
             for key, value in extra_body.items():
                 if key in {"model", "messages", "stream"}:
                     continue
+                # Remap token-limit aliases so callers never send both fields.
+                if key in {"max_tokens", "max_completion_tokens"}:
+                    payload[limit_key] = value
+                    continue
+                if key == "temperature" and skip_temperature:
+                    continue
                 payload[key] = value
+        payload.pop("max_tokens" if limit_key == "max_completion_tokens" else "max_completion_tokens", None)
+        if skip_temperature:
+            payload.pop("temperature", None)
 
         attempt = 0
         last_result: RequestResult | None = None

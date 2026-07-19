@@ -28,7 +28,12 @@ scorers:
   params:
     terms:
     - '#Z-19'
-    - kein Zahlungseingang
+    - - kein Zahlungseingang
+      - keinen Zahlungseingang
+      - keine Zahlung
+      - keine Zahlung eingegangen
+      - nicht eingegangen
+      - keinen Zahlungseingang erhalten
     - '12:00'
     mode: all
     case_insensitive: true

@@ -174,9 +174,7 @@ def _is_negated(haystack: str, start: int, term_len: int) -> bool:
             return True
 
     suffix = _sentence_suffix(haystack, start + term_len)
-    if _POST_NEGATION.search(suffix):
-        return True
-    return False
+    return bool(_POST_NEGATION.search(suffix))
 
 
 def _find_forbidden_terms(

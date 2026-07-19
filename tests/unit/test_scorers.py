@@ -39,6 +39,43 @@ def test_scorers_exact_contains_regex() -> None:
     assert not passed and score == 0.5
 
     task = make_task(
+        scorers=[
+            ScorerSpec(
+                type="contains",
+                weight=1.0,
+                params={
+                    "terms": [
+                        "#Z-19",
+                        [
+                            "no payment",
+                            "not received any payment",
+                            "no payment received",
+                        ],
+                        "12:00",
+                    ],
+                    "mode": "all",
+                    "case_insensitive": True,
+                },
+            )
+        ]
+    )
+    _, score, _, passed, _, _, _ = evaluate_attempt(
+        task,
+        "We have not received any payment for order #Z-19 as of today at 12:00.",
+    )
+    assert passed and score == 1.0
+    _, score, _, passed, _, _, _ = evaluate_attempt(
+        task,
+        "As of today at 12:00, no payment has been received for order #Z-19.",
+    )
+    assert passed and score == 1.0
+    _, score, _, passed, _, _, _ = evaluate_attempt(
+        task,
+        "Order #Z-19 is open as of 12:00.",
+    )
+    assert not passed and score == pytest.approx(2 / 3)
+
+    task = make_task(
         scorers=[ScorerSpec(type="regex", weight=1.0, params={"patterns": [r"RE-\d+", r"EUR"]})]
     )
     _, _, _, passed, _, _, _ = evaluate_attempt(task, "Invoice RE-12 for 10 EUR")

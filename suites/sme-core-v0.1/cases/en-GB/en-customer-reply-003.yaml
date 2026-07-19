@@ -28,7 +28,11 @@ scorers:
   params:
     terms:
     - '#Z-19'
-    - no payment
+    - - no payment
+      - no payment received
+      - not received any payment
+      - have not received any payment
+      - not received a payment
     - '12:00'
     mode: all
     case_insensitive: true
