@@ -10,7 +10,8 @@ from sme_bench.utils import percentile
 
 # Leaderboard: rank = core × reliable × max(0, 1 − k × rate) for critical & partial
 CRITICAL_RATE_PENALTY_K = 5
-PARTIAL_RATE_PENALTY_K = 2
+# Mild: partials are already below pass; keep as a light tie-breaker only.
+PARTIAL_RATE_PENALTY_K = 0.5
 
 
 def dedupe_attempts(attempts: list[AttemptResult]) -> list[AttemptResult]:

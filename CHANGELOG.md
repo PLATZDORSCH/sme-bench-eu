@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.3.0
+
+### Ranking
+
+- Partial-rate penalty in SME Rank Score reduced from `k=2` to `k=0.5` (milder tie-breaker; critical stays `k=5`)
+- Formula: `Core × Reliable Pass × max(0, 1 − 5 × critical_rate) × max(0, 1 − 0.5 × partial_rate)`
+
 ## 0.2.0
 
 ### Benchmark

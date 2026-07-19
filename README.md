@@ -157,18 +157,18 @@ uv run sme-bench run \
 - **Reliable Pass Rate:** cases that passed in *every* repeat / all cases
 - **Critical Failure:** a critical scorer failed → effective score `0` for that attempt
 - **SME Core Score:** mean of category-weighted effective scores × 100 (domain quality, no rate penalty)
-- **SME Rank Score:** `SME Core × Reliable Pass × max(0, 1 − 5 × critical_rate) × max(0, 1 − 2 × partial_rate)` — primary leaderboard metric
+- **SME Rank Score:** `SME Core × Reliable Pass × max(0, 1 − 5 × critical_rate) × max(0, 1 − 0.5 × partial_rate)` — primary leaderboard metric
 - **Language gap:** pass/score difference `en-GB − de-DE` plus pair consistency
 
 ## Releases and versioning
 
-Current release: **[v0.2.0](https://github.com/PLATZDORSCH/sme-bench-eu/releases/tag/v0.2.0)**.
+Current release: **[v0.3.0](https://github.com/PLATZDORSCH/sme-bench-eu/releases/tag/v0.3.0)**.
 
 Harness bugfixes stay on the same content line (patch). Prompt, case, or score-changing changes get a **new version** so leaderboard runs stay comparable. Details: **[docs/VERSIONING.md](docs/VERSIONING.md)**.
 
 ## Task packs
 
-All packs are **released** (`review_status: approved`). Folder ids stay `*-v0.1`; pack `version` is **0.2.0**.
+All packs are **released** (`review_status: approved`). Folder ids stay `*-v0.1`; pack `version` is **0.2.0** (cases); ranking metric line is **0.3.0**.
 
 | Name | Path | Content | Cases |
 | --- | --- | --- | --- |

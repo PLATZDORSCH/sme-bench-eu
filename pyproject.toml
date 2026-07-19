@@ -1,6 +1,6 @@
 [project]
 name = "sme-bench"
-version = "0.2.0"
+version = "0.3.0"
 description = "Benchmark for language models on realistic SME business tasks (DE/EN)"
 readme = "README.md"
 requires-python = ">=3.11"
