@@ -304,7 +304,7 @@ def _rescore_attempt(attempt: AttemptResult, task: BenchmarkTask) -> AttemptResu
     score_results, weighted, effective, passed, partial, critical, parsed = evaluate_attempt(
         task, answer_text
     )
-    updates: dict = {
+    updates: dict[str, Any] = {
         "parsed_output": parsed,
         "score_results": score_results,
         "weighted_score": weighted,
