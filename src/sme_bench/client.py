@@ -52,11 +52,7 @@ def uses_max_completion_tokens(model: str) -> bool:
     (Ollama, vLLM, …) keep using ``max_tokens``.
     """
     name = model.strip().lower().rsplit("/", maxsplit=1)[-1]
-    if name.startswith(("o1", "o3", "o4")):
-        return True
-    if name.startswith(("gpt-5", "gpt-4.1", "gpt-4o", "chatgpt-4o")):
-        return True
-    return False
+    return name.startswith(("o1", "o3", "o4", "gpt-5", "gpt-4.1", "gpt-4o", "chatgpt-4o"))
 
 
 def omits_temperature(model: str) -> bool:
@@ -67,11 +63,7 @@ def omits_temperature(model: str) -> bool:
     keep receiving the suite value (usually 0) for reproducibility.
     """
     name = model.strip().lower().rsplit("/", maxsplit=1)[-1]
-    if name.startswith(("o1", "o3", "o4")):
-        return True
-    if name.startswith("gpt-5"):
-        return True
-    return False
+    return name.startswith(("o1", "o3", "o4", "gpt-5"))
 
 
 class OpenAICompatibleClient:
