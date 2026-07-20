@@ -8,6 +8,7 @@ import pytest
 
 from sme_bench.utils import (
     extract_json_payload,
+    is_thinking_dump,
     percentile,
     redact_secrets,
     resolve_safe_path,
@@ -89,6 +90,18 @@ def test_extract_json_nested_order_object_not_item_fragment() -> None:
     assert len(data["items"]) == 2
 
 
+def test_extract_json_prefers_answer_over_prompt_anti_example() -> None:
+    """2-key CoT anti-examples must not beat a 1-key final answer (PII cases)."""
+    text = (
+        "Here's a thinking process:\n"
+        'Wrong format is {"type": "name", "value": "..."}.\n'
+        'Final: {"pii_types": ["name", "email", "phone", "iban"]}\n'
+    )
+    assert extract_json_payload(text) == {
+        "pii_types": ["name", "email", "phone", "iban"]
+    }
+
+
 def test_separate_thinking_tags() -> None:
     open_t, close_t = "<" + "think" + ">", "</" + "think" + ">"
     text = f'{open_t}step 1{close_t}\n{{"category": "billing"}}'
@@ -97,10 +110,30 @@ def test_separate_thinking_tags() -> None:
     assert reasoning == "step 1"
 
 
+def test_separate_thinking_qwen35_close_only_prefix() -> None:
+    """Qwen3.5+: open tag in prompt; generation is reasoning + close + answer."""
+    close_t = "</" + "think" + ">"
+    text = f'step-by-step here\n{close_t}\n\n{{"category": "billing"}}'
+    answer, reasoning = separate_thinking_content(text)
+    assert answer == '{"category": "billing"}'
+    assert reasoning == "step-by-step here"
+
+
+def test_separate_thinking_does_not_fish_json_from_think_block() -> None:
+    """When nothing follows the delimiter, do not pull mid-CoT JSON as the answer."""
+    open_t, close_t = "<" + "think" + ">", "</" + "think" + ">"
+    text = f'{open_t}draft {{"type": "name", "value": "..."}} and done{close_t}\n'
+    answer, reasoning = separate_thinking_content(text)
+    assert answer == ""
+    assert reasoning is not None
+    assert "type" in reasoning
+
+
 def test_separate_thinking_plain_prefix_recovers_json() -> None:
     text = (
         "Here's a thinking process:\n\n"
         "1. Analyze\n"
+        'Wrong: {"type": "name", "value": "..."}\n'
         'Output: `{"category": "technical", "priority": "urgent"}`\n'
         "Done."
     )
@@ -114,6 +147,13 @@ def test_separate_thinking_noop_on_clean_json() -> None:
     answer, reasoning = separate_thinking_content(text)
     assert answer == text
     assert reasoning is None
+
+
+def test_is_thinking_dump() -> None:
+    assert is_thinking_dump("Here's a thinking process:\n1. …")
+    close_t = "</" + "think" + ">"
+    assert is_thinking_dump(f"foo {close_t} bar")
+    assert not is_thinking_dump('{"a": 1}')
 
 
 def test_percentile() -> None:

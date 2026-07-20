@@ -125,6 +125,53 @@ def test_case_catalog_and_failures_report(tmp_path: Path) -> None:
     assert "**Modellausgabe:**" in success_text
 
 
+def test_failures_report_labels_mixed_pass_hard_fail_as_unreliable(
+    tmp_path: Path,
+) -> None:
+    """2/3 pass + 1 hard fail → unreliable, not blanket fehlgeschlagen."""
+    task = make_task(id="de-invoice-extraction-001", title="Rechnung")
+
+    def make(repeat: int, *, passed: bool, score: float) -> AttemptResult:
+        return AttemptResult(
+            task_id=task.id,
+            language="de-DE",
+            category="finance_ops",
+            task_type="invoice_extraction",
+            difficulty="normal",
+            risk="medium",
+            repeat_index=repeat,
+            passed=passed,
+            partial=False,
+            effective_score=score,
+            output_text='{"ok": true}' if passed else "",
+        )
+
+    attempts = [
+        make(0, passed=True, score=1.0),
+        make(1, passed=True, score=1.0),
+        make(2, passed=False, score=0.0),
+    ]
+    path = tmp_path / "failures.de.md"
+    write_failures_markdown(
+        path,
+        attempts,
+        model="test-model",
+        suite_id="test",
+        tasks_by_id={task.id: task},
+        lang="de",
+    )
+    text = path.read_text(encoding="utf-8")
+    assert "## Unzuverlässig" in text
+    assert "**unzuverlässig**" in text
+    assert "Fälle unzuverlässig" in text
+    # Case must not appear under the hard-fail section.
+    fail_section = text.split("## Fehlgeschlagen", 1)
+    if len(fail_section) > 1:
+        after_fail = fail_section[1].split("## ", 1)[0]
+        assert "de-invoice-extraction-001" not in after_fail
+    assert "### `de-invoice-extraction-001`" in text.split("## Unzuverlässig", 1)[1]
+
+
 def test_failures_report_dedupes_duplicate_repeats(tmp_path: Path) -> None:
     """Resume can leave duplicate (task_id, repeat_index) rows — report once each."""
     task = make_task(id="de-offer-comparison-002", title="Angebote")

@@ -16,7 +16,14 @@ from rich.table import Table
 from sme_bench import __version__
 from sme_bench.banner import print_startup_banner
 from sme_bench.client import run_doctor
-from sme_bench.config import PricingConfig, RunConfig, apply_enable_thinking, load_extra_body
+from sme_bench.config import (
+    DEFAULT_MAX_TOKENS_FLOOR,
+    DEFAULT_TIMEOUT_SECONDS,
+    PricingConfig,
+    RunConfig,
+    apply_enable_thinking,
+    load_extra_body,
+)
 from sme_bench.env import load_env_files
 from sme_bench.models import AttemptResult, BenchmarkTask
 from sme_bench.reporters.catalog import write_case_catalog
@@ -30,7 +37,7 @@ from sme_bench.scorers.base import known_scorer_names
 from sme_bench.scoring import apply_partial_grade, evaluate_attempt
 from sme_bench.statistics import aggregate, dedupe_attempts
 from sme_bench.task_loader import load_suite, load_suite_from_metadata
-from sme_bench.utils import separate_thinking_content
+from sme_bench.utils import is_thinking_dump, separate_thinking_content
 
 load_env_files()
 
@@ -154,7 +161,11 @@ def run_cmd(
     repeats: int = typer.Option(3, "--repeats"),
     concurrency: int = typer.Option(1, "--concurrency"),
     seed: int = typer.Option(42, "--seed"),
-    timeout: float = typer.Option(120.0, "--timeout"),
+    timeout: float = typer.Option(
+        DEFAULT_TIMEOUT_SECONDS,
+        "--timeout",
+        help=f"Per-request timeout in seconds (default {int(DEFAULT_TIMEOUT_SECONDS)}).",
+    ),
     retries: int = typer.Option(1, "--retries"),
     max_tokens_mult: float = typer.Option(
         1.0,
@@ -162,17 +173,20 @@ def run_cmd(
         help="Scale every task's max_tokens by this factor "
         "(give reasoning models room to think + answer).",
     ),
-    max_tokens_min: int | None = typer.Option(
-        None,
+    max_tokens_min: int = typer.Option(
+        DEFAULT_MAX_TOKENS_FLOOR,
         "--max-tokens-min",
-        help="Raise any task's max_tokens up to at least this floor.",
+        help=(
+            "Raise any task's max_tokens up to at least this floor "
+            f"(default {DEFAULT_MAX_TOKENS_FLOOR}; use 0 to disable). "
+            "Prevents mid-CoT truncation on short suite budgets."
+        ),
     ),
     extra_body_file: Path | None = typer.Option(None, "--extra-body-file"),
     enable_thinking: bool = typer.Option(
         False,
         "--enable-thinking",
-        help="Set chat_template_kwargs.enable_thinking=true (Qwen/vLLM/LiteLLM). "
-        "Pair with --max-tokens-mult / --max-tokens-min so answers are not truncated.",
+        help="Set chat_template_kwargs.enable_thinking=true (Qwen/vLLM/LiteLLM).",
     ),
     input_price_per_million: float | None = typer.Option(None, "--input-price-per-million"),
     output_price_per_million: float | None = typer.Option(None, "--output-price-per-million"),
@@ -220,11 +234,10 @@ def run_cmd(
             console.print(f"[red]ERROR[/red] {issue.path}: {issue.message}")
         raise typer.Exit(code=1)
 
-    if enable_thinking and max_tokens_mult == 1.0 and max_tokens_min is None:
-        console.print(
-            "[yellow]Hinweis:[/yellow] --enable-thinking ohne erhöhtes Token-Budget. "
-            "Empfohlen: z. B. --max-tokens-mult 8 oder --max-tokens-min 2048."
-        )
+    if max_tokens_min < 0:
+        console.print("[red]--max-tokens-min must be >= 0 (0 disables the floor).[/red]")
+        raise typer.Exit(code=1)
+    tokens_floor = None if max_tokens_min == 0 else max_tokens_min
 
     config = RunConfig(
         base_url=base_url,
@@ -242,7 +255,7 @@ def run_cmd(
         timeout=timeout,
         retries=retries,
         max_tokens_multiplier=max_tokens_mult,
-        max_tokens_floor=max_tokens_min,
+        max_tokens_floor=tokens_floor,
         extra_body=apply_enable_thinking(
             load_extra_body(extra_body_file),
             enabled=enable_thinking,
@@ -292,6 +305,22 @@ def catalog_cmd(
     console.print(f"Wrote {len(loaded.tasks)} case docs to {out}")
 
 
+def _rescore_source_text(attempt: AttemptResult) -> str:
+    """Pick the best stored text to re-separate thinking from.
+
+    When a prior buggy recovery left a short anti-example in ``output_text`` but
+    the full CoT dump is still in ``reasoning_text``, re-derive the answer from
+    that dump. Otherwise use ``output_text``.
+    """
+    reasoning = attempt.reasoning_text or ""
+    output = attempt.output_text or ""
+    if is_thinking_dump(reasoning):
+        return reasoning
+    if is_thinking_dump(output):
+        return output
+    return output
+
+
 def _rescore_attempt(attempt: AttemptResult, task: BenchmarkTask) -> AttemptResult:
     """Re-run scorers on a stored model output using the current suite definition.
 
@@ -300,7 +329,9 @@ def _rescore_attempt(attempt: AttemptResult, task: BenchmarkTask) -> AttemptResu
     """
     if attempt.infrastructure_error:
         return attempt
-    answer_text, reasoning = separate_thinking_content(attempt.output_text)
+    source = _rescore_source_text(attempt)
+    answer_text, reasoning = separate_thinking_content(source)
+    # evaluate_attempt also strips thinking; pass the post-split answer directly.
     score_results, weighted, effective, passed, partial, critical, parsed = evaluate_attempt(
         task, answer_text
     )
@@ -314,8 +345,11 @@ def _rescore_attempt(attempt: AttemptResult, task: BenchmarkTask) -> AttemptResu
         "critical_failure": critical,
         "output_text": answer_text,
     }
-    if reasoning and not attempt.reasoning_text:
+    if reasoning:
         updates["reasoning_text"] = reasoning
+    elif is_thinking_dump(source) and not answer_text:
+        # Whole blob was thinking with no post-delimiter answer.
+        updates["reasoning_text"] = source
     return attempt.model_copy(update=updates)
 
 

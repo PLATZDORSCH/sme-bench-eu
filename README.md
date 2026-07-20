@@ -97,6 +97,24 @@ uv run sme-bench run \
   --output runs/glm-5.2
 ```
 
+By default every run uses `--max-tokens-min 8192` and `--timeout 300`. Suite tasks
+often allow only ~150–400 completion tokens; that truncates reasoning mid-CoT
+(gpt-oss, Qwen thinking, Nemotron, …) with “Invalid JSON” and prose left in
+`output_text`. You pay for tokens actually generated — the floor is a ceiling.
+Disable with `--max-tokens-min 0` if you need the raw suite budgets.
+
+Reasoning via `reasoning_effort` (gpt-oss / GPT-5.x style):
+
+```bash
+uv run sme-bench run \
+  --base-url https://api.tokenfactory.nebius.com/v1 \
+  --model openai/gpt-oss-120b \
+  --api-key-env NEBIUS_API_KEY \
+  --extra-body-file examples/extra-body-gpt54-reasoning.json \
+  --save-reasoning \
+  --output runs/gpt-oss-120b-thinking
+```
+
 ### LiteLLM / vLLM
 
 Any OpenAI-compatible proxy (LiteLLM, vLLM, …):
@@ -114,7 +132,9 @@ uv run sme-bench run \
   --output runs/litellm-qwen
 ```
 
-Optional: enable Qwen-style thinking and raise the token budget so answers are not truncated mid-reasoning:
+Optional: enable Qwen-style thinking (`chat_template_kwargs`). Token floor and
+timeout already default as above. Prefer `--save-reasoning` so leaked thinking
+stays inspectable:
 
 ```bash
 uv run sme-bench run \
@@ -122,11 +142,13 @@ uv run sme-bench run \
   --model qwen3.6-35b \
   --api-key-env LITELLM_API_KEY \
   --enable-thinking \
-  --max-tokens-mult 8 \
   --save-reasoning \
   --output runs/litellm-qwen-thinking
 ```
 
+Override only if needed (e.g. `--max-tokens-min 4096` or `--timeout 180`).
+Do not rely on `--max-tokens-mult 8` alone — short tasks still truncated at
+1200–2800 completion tokens in practice without the floor.
 ### Core only
 
 ```bash
@@ -162,13 +184,13 @@ uv run sme-bench run \
 
 ## Releases and versioning
 
-Current release: **[v0.3.0](https://github.com/PLATZDORSCH/sme-bench-eu/releases/tag/v0.3.0)**.
+Current release: **[v0.4.0](https://github.com/PLATZDORSCH/sme-bench-eu/releases/tag/v0.4.0)**.
 
 Harness bugfixes stay on the same content line (patch). Prompt, case, or score-changing changes get a **new version** so leaderboard runs stay comparable. Details: **[docs/VERSIONING.md](docs/VERSIONING.md)**.
 
 ## Test suites
 
-All released test suites have `review_status: approved`. Folder ids stay `*-v0.1`; suite `version` is **0.2.0** (cases); ranking metric line is **0.3.0**.
+All released test suites have `review_status: approved`. Folder ids stay `*-v0.1`; suite `version` is **0.2.0** (cases); harness / Full line is **0.4.0**.
 
 | Name | Path | Content | Cases |
 | --- | --- | --- | --- |

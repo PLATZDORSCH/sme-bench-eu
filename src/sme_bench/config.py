@@ -30,7 +30,7 @@ class RunConfig(BaseModel):
     repeats: int = 3
     concurrency: int = 1
     seed: int = 42
-    timeout: float = 120.0
+    timeout: float = 300.0
     retries: int = 1
     max_tokens_multiplier: float = 1.0
     max_tokens_floor: int | None = None
@@ -112,6 +112,17 @@ def load_extra_body(path: Path | None) -> dict[str, Any]:
         raise ValueError(f"extra_body must not contain auth fields: {auth_keys}")
     _ = overlap
     return data
+
+
+# Safe default completion budget: suite task max_tokens are often 150–400, which
+# truncates reasoning models mid-CoT (gpt-oss, Qwen thinking, Nemotron, …).
+# Billing is usually on tokens actually generated; the floor is only a ceiling.
+DEFAULT_MAX_TOKENS_FLOOR = 8192
+# Headroom for an 8k completion budget at modest tok/s (was 120s CLI default).
+DEFAULT_TIMEOUT_SECONDS = 300.0
+# Back-compat aliases (thinking / enable-thinking docs).
+THINKING_MAX_TOKENS_MIN = DEFAULT_MAX_TOKENS_FLOOR
+THINKING_TIMEOUT_SECONDS = DEFAULT_TIMEOUT_SECONDS
 
 
 def apply_enable_thinking(extra_body: dict[str, Any], *, enabled: bool) -> dict[str, Any]:

@@ -17,11 +17,20 @@ _SECRET_PATTERNS = [
     re.compile(r"sk-[A-Za-z0-9_-]{10,}"),
 ]
 
-# Qwen / vLLM-style redacted thinking blocks leaked into ``content``.
+# Qwen / vLLM thinking delimiters leaked into ``content``.
+# Qwen3.5+: ``<think>`` is often already in the prompt; generation emits
+# ``…reasoning…</think>\n\nanswer``. Older templates emit a full pair.
 _THINK_TAG_RE = re.compile(
     r"<think>([\s\S]*?)</think\s*>",
     re.IGNORECASE,
 )
+_THINK_CLOSE_RE = re.compile(r"</think\s*>", re.IGNORECASE)
+# Some chat templates use redacted_* synonyms.
+_REDACTED_THINK_TAG_RE = re.compile(
+    r"<redacted_thinking>([\s\S]*?)</redacted_thinking\s*>",
+    re.IGNORECASE,
+)
+_REDACTED_THINK_CLOSE_RE = re.compile(r"</redacted_thinking\s*>", re.IGNORECASE)
 # Plain-text CoT dumps (some proxies put thinking in content, not reasoning_*).
 _THINKING_PREFIX_RE = re.compile(
     r"(?is)^\s*(?:"
@@ -116,13 +125,15 @@ def _iter_json_spans(text: str) -> list[tuple[int, int, Any]]:
 
 
 def _last_top_level_json(text: str) -> Any | None:
-    """Best top-level JSON value in *text* (prefer complete objects over fragments).
+    """Best top-level JSON value in *text* (prefer complete answers over fragments).
 
     Nested objects found by scanning every ``{`` are discarded when their span is
     strictly contained in another successful parse. Among remaining top-level
-    dicts we prefer more keys / larger payloads so a late CoT draft like
-    ``{"pii_types": ["name"]}`` does not override an earlier complete answer.
-    Later spans win ties. If there is no dict, the last top-level value is used.
+    dicts we rank by serialized size first (complete answers beat short CoT
+    drafts / prompt anti-examples like ``{"type":"name","value":"..."}``), then
+    by later position. Key count is intentionally not used — a 2-key anti-example
+    must not beat a 1-key final answer. If there is no dict, the last top-level
+    value is used.
     """
     spans = _iter_json_spans(text)
     if not spans:
@@ -137,11 +148,10 @@ def _last_top_level_json(text: str) -> Any | None:
     objects = [item for item in top_level if isinstance(item[2], dict)]
     if objects:
 
-        def _rank(item: tuple[int, int, Any]) -> tuple[int, int, int]:
+        def _rank(item: tuple[int, int, Any]) -> tuple[int, int]:
             start, _end, value = item
             assert isinstance(value, dict)
             return (
-                len(value),
                 len(json.dumps(value, ensure_ascii=False)),
                 start,
             )
@@ -185,47 +195,85 @@ def extract_json_payload(text: str) -> Any:
     raise ValueError("Could not extract valid JSON from model output")
 
 
+def is_thinking_dump(text: str) -> bool:
+    """True when *text* looks like a leaked chain-of-thought dump."""
+    if not text or not text.strip():
+        return False
+    if _THINKING_PREFIX_RE.match(text):
+        return True
+    lower = text.lower()
+    return (
+        "<think>" in lower
+        or "</think>" in lower
+        or "<redacted_thinking>" in lower
+        or "</redacted_thinking>" in lower
+    )
+
+
+def _strip_paired_think_blocks(text: str) -> tuple[str, list[str]]:
+    """Remove paired think/redacted blocks; return ``(remainder, reasoning_chunks)``."""
+    reasoning_parts: list[str] = []
+    remainder = text
+    for pattern in (_THINK_TAG_RE, _REDACTED_THINK_TAG_RE):
+        while True:
+            match = pattern.search(remainder)
+            if not match:
+                break
+            chunk = match.group(1).strip()
+            if chunk:
+                reasoning_parts.append(chunk)
+            remainder = (remainder[: match.start()] + remainder[match.end() :]).strip()
+    return remainder, reasoning_parts
+
+
+def _split_on_think_close(text: str) -> tuple[str, str] | None:
+    """Qwen3.5+ prefix format: reasoning before first close tag, answer after."""
+    for close_re in (_THINK_CLOSE_RE, _REDACTED_THINK_CLOSE_RE):
+        match = close_re.search(text)
+        if match:
+            return text[: match.start()].strip(), text[match.end() :].strip()
+    return None
+
+
 def separate_thinking_content(text: str) -> tuple[str, str | None]:
     """Split leaked chain-of-thought from the scorable answer.
 
     Returns ``(answer, reasoning)``. ``reasoning`` is ``None`` when no thinking
-    markers are present. Handles:
+    markers are present. Prefer delimiter split (like vLLM ``qwen3`` parser /
+    Platzdorsch gateway ``reasoning_content``): the answer is whatever remains
+    *after* the thinking block — never a mid-CoT JSON fragment.
 
-    - ``<think>...</think>`` blocks (answer is the remaining text)
-    - Plain-text dumps starting with ``Here's a thinking process:`` (answer is
-      recovered via :func:`extract_json_payload` when possible; otherwise the
-      original text is left unchanged so free-text tasks are not mangled)
+    Handles:
+
+    - Paired ``<think>...</think>`` / ``<redacted_thinking>...</redacted_thinking>``
+    - Qwen3.5+ close-only generation (``…</think>\\n\\nanswer``)
+    - Plain-text dumps starting with ``Here's a thinking process:`` (last-resort
+      JSON recovery via :func:`extract_json_payload` size ranking, not key count)
     """
     if not text:
         return "", None
 
-    reasoning_parts: list[str] = []
-    remainder = text
-    while True:
-        match = _THINK_TAG_RE.search(remainder)
-        if not match:
-            break
-        chunk = match.group(1).strip()
-        if chunk:
-            reasoning_parts.append(chunk)
-        remainder = (remainder[: match.start()] + remainder[match.end() :]).strip()
+    remainder, reasoning_parts = _strip_paired_think_blocks(text)
+    close_split = _split_on_think_close(remainder)
+    if close_split is not None:
+        before, after = close_split
+        if before:
+            reasoning_parts.append(before)
+        remainder = after
 
     if reasoning_parts:
-        answer = remainder.strip()
         reasoning = "\n\n".join(reasoning_parts)
-        if answer:
-            return answer, reasoning
-        try:
-            recovered = extract_json_payload(reasoning)
-        except ValueError:
-            return text, reasoning
-        return json.dumps(recovered, ensure_ascii=False), reasoning
+        answer = remainder.strip()
+        # Do not fish JSON out of the thinking block when no post-delimiter answer
+        # was emitted — that is what caused anti-example false failures.
+        return answer, reasoning
 
     if _THINKING_PREFIX_RE.match(text):
+        # Prose CoT without Qwen delimiters (proxy leak). Recover best final JSON.
         try:
             recovered = extract_json_payload(text)
         except ValueError:
-            return text, None
+            return text, text
         return json.dumps(recovered, ensure_ascii=False), text
 
     return text, None

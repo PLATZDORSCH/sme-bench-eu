@@ -97,6 +97,24 @@ uv run sme-bench run \
   --output runs/glm-5.2
 ```
 
+Standardmäßig gilt `--max-tokens-min 8192` und `--timeout 300`. Suite-Tasks
+erlauben oft nur ~150–400 Completion-Tokens; Reasoning bricht dann mitten im
+CoT ab (gpt-oss, Qwen Thinking, Nemotron, …) → „Invalid JSON“ und Prosa in
+`output_text`. Abgerechnet wird meist nach erzeugten Tokens — der Floor ist
+nur eine Obergrenze. Mit `--max-tokens-min 0` wieder die rohen Suite-Budgets.
+
+Reasoning über `reasoning_effort` (gpt-oss / GPT-5.x):
+
+```bash
+uv run sme-bench run \
+  --base-url https://api.tokenfactory.nebius.com/v1 \
+  --model openai/gpt-oss-120b \
+  --api-key-env NEBIUS_API_KEY \
+  --extra-body-file examples/extra-body-gpt54-reasoning.json \
+  --save-reasoning \
+  --output runs/gpt-oss-120b-thinking
+```
+
 ### LiteLLM / vLLM
 
 Jeder OpenAI-kompatible Proxy (LiteLLM, vLLM, …):
@@ -114,7 +132,8 @@ uv run sme-bench run \
   --output runs/litellm-qwen
 ```
 
-Optional: Qwen-Style-Thinking einschalten und Token-Budget erhöhen, damit Antworten nicht mitten im Reasoning abgeschnitten werden:
+Optional: Qwen-Style-Thinking (`chat_template_kwargs`). Token-Floor und Timeout
+gelten bereits wie oben. `--save-reasoning` empfohlen:
 
 ```bash
 uv run sme-bench run \
@@ -122,11 +141,13 @@ uv run sme-bench run \
   --model qwen3.6-35b \
   --api-key-env LITELLM_API_KEY \
   --enable-thinking \
-  --max-tokens-mult 8 \
   --save-reasoning \
   --output runs/litellm-qwen-thinking
 ```
 
+Nur bei Bedarf überschreiben (z. B. `--max-tokens-min 4096` oder `--timeout 180`).
+Allein `--max-tokens-mult 8` reicht nicht — ohne Floor wurden kurze Tasks bei
+1200–2800 Completion-Tokens abgeschnitten.
 ### Nur Core
 
 ```bash
@@ -162,13 +183,13 @@ uv run sme-bench run \
 
 ## Releases und Versionierung
 
-Aktuelles Release: **[v0.3.0](https://github.com/PLATZDORSCH/sme-bench-eu/releases/tag/v0.3.0)**.
+Aktuelles Release: **[v0.4.0](https://github.com/PLATZDORSCH/sme-bench-eu/releases/tag/v0.4.0)**.
 
 Harness-Bugfixes bleiben auf derselben Inhaltslinie (Patch). Prompt-, Case- oder score-relevante Änderungen bekommen eine **neue Version**, damit Leaderboard-Runs vergleichbar bleiben. Details: **[docs/VERSIONING.de.md](docs/VERSIONING.de.md)**.
 
 ## Test-Suites
 
-Alle freigegebenen Test-Suites haben `review_status: approved`. Ordner-IDs bleiben `*-v0.1`; Suite-`version` ist **0.2.0** (Cases); Ranking-Metrik-Linie ist **0.3.0**.
+Alle freigegebenen Test-Suites haben `review_status: approved`. Ordner-IDs bleiben `*-v0.1`; Suite-`version` ist **0.2.0** (Cases); Harness- / Full-Linie ist **0.4.0**.
 
 | Name | Pfad | Inhalt | Cases |
 | --- | --- | --- | --- |

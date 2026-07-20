@@ -2,10 +2,14 @@
 
 ## Unreleased
 
+## 0.4.0
+
 ### Docs
 
 - Terminology: **task packs** → **test suites** (README, authoring, versioning, suite READMEs)
 - Example custom suite [`suites/demo-v0.1`](suites/demo-v0.1) (draft, not in SME Full)
+- Default token budget / timeout and gpt-oss `reasoning_effort` example (README EN/DE);
+  mid-CoT truncation symptom documented
 
 ### Benchmark
 
@@ -17,10 +21,13 @@
 
 - Strip leaked chain-of-thought from model `content` (Qwen-style thinking dumps /
   `<think>` blocks) before scoring; store CoT in `reasoning_text` when present
-- `extract_json_payload` tries all fences (prefer `json`), then the richest
-  top-level JSON object — fixes false fails when CoT quotes source text in a fence
-- `report --rescore` rewrites cleaned `output_text` (and fills `reasoning_text`)
-  so existing thinking runs can be re-graded without a full re-run
+- Thinking split prefers post-delimiter answer (no mid-CoT JSON fishing); JSON
+  ranking uses payload size so prompt anti-examples do not win
+- `report --rescore` re-derives answers from stored `reasoning_text` when needed
+- Default `--max-tokens-min 8192` and `--timeout 300` for all runs (disable floor
+  with `--max-tokens-min 0`); avoids truncating reasoning models on short suite budgets
+- Failure reports: mixed Pass + Hard-Fail cases are labelled **unzuverlässig** /
+  **unreliable** (not blanket *fehlgeschlagen*); Reliable Pass / Rank unchanged
 
 ## 0.3.0
 
