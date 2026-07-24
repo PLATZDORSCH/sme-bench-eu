@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite ID** | `sme-financial-v0.1` |
-| **Cases** | 14 (7 DE/EN pairs) |
+| **Cases** | 22 (11 DE/EN pairs) |
 | **Languages** | `de-DE`, `en-GB` |
 | **Role** | Accounting/finance test suite; part of **SME Full** |
 
@@ -19,8 +19,12 @@ Supplier invoices, expenses, VAT policies, payment reminders, and financial roun
 | fi-missing-001 | missing_information |
 | fi-support-001 | support_routing |
 | fi-grounded-001 | grounded_qa |
+| fi-grounded-002 | grounded_qa |
+| fi-grounded-003 | grounded_qa |
 | fi-reply-001 | customer_reply |
+| fi-reply-002 | customer_reply |
 | fi-meeting-001 | meeting_actions |
+| fi-meeting-002 | meeting_actions |
 
 ## Usage
 

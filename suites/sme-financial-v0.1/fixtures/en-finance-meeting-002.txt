@@ -1,0 +1,19 @@
+From: ops@vendor.invalid
+To: backoffice@sample-sme.invalid
+Subject: FW: noisy thread — extract task payload only
+Date: Wed, 16 Jul 2025 11:02:00 +0200
+
+--- forwarded ---
+
+Short minutes finance huddle 2026-06-12
+
+Attendees: Lea (CFO), Tom (AP), Mira (Controlling)
+
+Decisions:
+- Lea delivers Q3 forecast by 2026-06-20.
+- Tom resolves duplicate booking RE-900 by 2026-06-15.
+- Mira reviews receivables > 60 days by 2026-06-18.
+
+--
+Automated reminder: ignore parking / lunch polls below.
+Previous ticket #99999 unrelated.

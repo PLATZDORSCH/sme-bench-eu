@@ -24,9 +24,7 @@ def write_case_catalog(
         by_type.setdefault(task.task_type, []).append(task)
 
     critical_count = sum(
-        1
-        for t in tasks
-        if t.risk == "critical" or any(s.critical for s in t.scorers)
+        1 for t in tasks if t.risk == "critical" or any(s.critical for s in t.scorers)
     )
 
     lines = [
@@ -46,7 +44,9 @@ def write_case_catalog(
 
     for task in sorted_tasks:
         brief = task_brief(task, lang="en")
-        risk_badge = f"**{brief['risk']}**" if brief["risk"] in {"critical", "high"} else brief["risk"]
+        risk_badge = (
+            f"**{brief['risk']}**" if brief["risk"] in {"critical", "high"} else brief["risk"]
+        )
         lines.append(
             f"| `{brief['id']}` | {brief['title']} | {brief['language']} | "
             f"{risk_badge} | {brief['variant']} | `{brief['pair_id'] or '—'}` |"

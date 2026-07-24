@@ -15,8 +15,8 @@ tags:
 - no-commitment
 messages:
 - role: system
-  content: |-
-    Write a short factual customer reply using only provided facts. Do not invent commitments.
+  content: Write a short factual customer reply using only provided facts. Do not
+    invent commitments.
 - role: user
   fixture: fixtures/en-payment-reminder.txt
 generation:
@@ -26,13 +26,13 @@ generation:
 expected: null
 scorers:
 - type: contains
-  weight: 1.0
+  weight: 0.75
   params:
     terms:
-      - RE-2026-1048
-      - Friday
-      - '16:00'
-      - SEPA
+    - RE-2026-1048
+    - Friday
+    - '16:00'
+    - SEPA
     mode: all
     case_insensitive: true
 - type: forbidden_terms
@@ -41,8 +41,23 @@ scorers:
   params:
     ignore_negated: true
     terms:
-      - 'bereits bezahlt'
-      - 'already paid'
-      - 'discount promised'
-      - G-12
+    - bereits bezahlt
+    - already paid
+    - discount promised
+    - Ausgleich mit G-12
+    - G-12 verrechnen
+    - mit G-12 verrechnen
+    - offset with G-12
+    - settle against G-12
+    - will not process the payment
+    - will not process payment
+    - not process the payment until
+    - not yet received the payment confirmation
+    mode: claims
+- type: text_structure
+  weight: 0.25
+  params:
+    min_words: 10
+    min_sentences: 1
+    forbid_bullet_only: true
 pass_threshold: 0.85

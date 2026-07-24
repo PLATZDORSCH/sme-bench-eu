@@ -1,0 +1,60 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: de-ec-reply-002
+pair_id: ec-reply-002
+title: Retoure-Antwort ohne Sofortzusage (noise)
+language: de-DE
+category: customer_service
+task_type: customer_reply
+difficulty: hard
+risk: high
+tags:
+- ecommerce
+- returns
+- long
+- noise-variant
+- pair-reviewed
+- golden-reviewed
+- reference-calibrated
+messages:
+- role: system
+  content: Schreibe eine sachliche Kundenantwort nur mit den angegebenen Richtlinien-Fakten.
+    Keine erfundenen Zusagen.
+- role: user
+  fixture: fixtures/de-retoure-thread-002.txt
+generation:
+  max_tokens: 300
+  temperature: 0
+  response_format: text
+expected: null
+scorers:
+- type: contains
+  weight: 0.75
+  params:
+    terms:
+    - '#W-55021'
+    - '30'
+    - '14'
+    mode: all
+    case_insensitive: true
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    ignore_negated: true
+    terms:
+    - Soforterstattung
+    - Sofortgutschrift zusagen
+    - Sofortgutschrift gewähren
+    - instant credit promised
+    - promise instant credit
+    - bereits erstattet
+    mode: claims
+- type: text_structure
+  weight: 0.25
+  params:
+    min_words: 10
+    min_sentences: 1
+    forbid_bullet_only: true
+pass_threshold: 0.85

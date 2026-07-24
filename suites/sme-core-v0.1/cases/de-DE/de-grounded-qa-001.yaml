@@ -14,7 +14,10 @@ tags:
 - citations
 messages:
 - role: system
-  content: "Antworte nur anhand der Richtlinie. Gib genau ein JSON-Objekt mit nur diesen Schlüsseln zurück: answer (string) und citations (Array von Abschnitts-IDs als Strings ohne Klammern). Beispiel-Form: {\"answer\":\"30 Tage\",\"citations\":[\"SEC-1\"]}. In citations nur Abschnitts-IDs, keinen Policy-Text. Erfinde keine Bedingungen."
+  content: 'Antworte nur anhand der Richtlinie. Gib genau ein JSON-Objekt mit nur
+    diesen Schlüsseln zurück: answer (string) und citations (Array von Abschnitts-IDs
+    als Strings ohne Klammern). Beispiel-Form: {"answer":"30 Tage","citations":["SEC-1"]}.
+    In citations nur Abschnitts-IDs, keinen Policy-Text. Erfinde keine Bedingungen.'
 - role: user
   content: 'Policy:
 
@@ -45,12 +48,16 @@ scorers:
   weight: 0.15
   params:
     schema: schemas/grounded-qa.schema.json
-- type: contains
+- type: json_fields
   weight: 0.45
   params:
-    terms:
-    - '30'
-    mode: all
+    fields:
+    - answer
+    match: contains
+    case_insensitive: true
+    normalize: text
+    field_normalize:
+      answer: text
 - type: citations
   weight: 0.4
   params:
@@ -59,6 +66,9 @@ scorers:
     - SEC-1
     - SEC-2
     - SEC-3
+    exact_set: true
+    require_unique: true
+    max_count: 1
 - type: forbidden_terms
   weight: 0
   critical: true

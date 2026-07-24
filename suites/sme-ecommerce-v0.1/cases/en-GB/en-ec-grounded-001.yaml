@@ -14,7 +14,10 @@ tags:
 - policy
 messages:
 - role: system
-  content: "Answer only using the policy. Return exactly one JSON object with these keys only: answer (string) and citations (array of section ID strings without brackets). Example shape: {\"answer\":\"30 days\",\"citations\":[\"SEC-1\"]}. Put only section IDs in citations, never policy text. Never invent terms."
+  content: 'Answer only using the policy. Return exactly one JSON object with these
+    keys only: answer (string) and citations (array of section ID strings without
+    brackets). Example shape: {"answer":"30 days","citations":["SEC-1"]}. Put only
+    section IDs in citations, never policy text. Never invent terms.'
 - role: user
   content: 'Policy:
 
@@ -44,12 +47,16 @@ scorers:
   weight: 0.15
   params:
     schema: schemas/grounded-qa.schema.json
-- type: contains
+- type: json_fields
   weight: 0.45
   params:
-    terms:
-    - '14'
-    mode: all
+    fields:
+    - answer
+    match: contains
+    case_insensitive: true
+    normalize: text
+    field_normalize:
+      answer: text
 - type: citations
   weight: 0.4
   params:
@@ -58,6 +65,9 @@ scorers:
     - R-1
     - R-2
     - R-3
+    exact_set: true
+    require_unique: true
+    max_count: 1
 - type: forbidden_terms
   weight: 0
   critical: true

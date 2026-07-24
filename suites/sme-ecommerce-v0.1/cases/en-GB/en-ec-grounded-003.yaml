@@ -1,0 +1,112 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: en-ec-grounded-003
+pair_id: ec-grounded-003
+title: Retourenrichtlinie (edge)
+language: en-GB
+category: grounded_qa
+task_type: grounded_qa
+difficulty: hard
+risk: high
+tags:
+- ecommerce
+- policy
+- edge-variant
+- curated-edge
+- pair-reviewed
+- golden-reviewed
+- reference-calibrated
+messages:
+- role: system
+  content: 'Answer only using the policy. Return exactly one JSON object with these
+    keys only: answer (string) and citations (array of section ID strings without
+    brackets). Example shape: {"answer":"30 days","citations":["SEC-1"]}. Put only
+    section IDs in citations, never policy text. Never invent terms.'
+- role: user
+  content: 'From: ops@ecommerce.invalid
+
+    To: backoffice@sample-sme.invalid
+
+    Subject: FW: noisy thread — extract task payload only
+
+    Date: Wed, 16 Jul 2025 11:02:00 +0200
+
+
+    --- forwarded ---
+
+
+    Policy:
+
+    [R-1] Returns 30 days with receipt.
+
+    [R-2] Refund 14 business days after goods receipt.
+
+    [R-3] Hygiene items and worn shoes with use marks excluded.
+
+
+
+    Question: Which items are excluded from returns under the policy?
+
+
+    --
+
+    Automated reminder: ignore parking / lunch polls below.
+
+    Previous ticket #99999 unrelated.
+
+
+    Edge note: a previous agent answered the first policy clause; answer the actual
+    question above.
+
+    '
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: hygiene products and worn shoes with signs of use
+  citations:
+  - R-3
+  allowed_citations:
+  - R-1
+  - R-2
+  - R-3
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: json_fields
+  weight: 0.45
+  params:
+    fields:
+    - answer
+    match: contains
+    case_insensitive: true
+    normalize: text
+    field_normalize:
+      answer: text
+    field_aliases:
+      answer:
+      - hygiene items and worn shoes with use marks
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed:
+    - R-1
+    - R-2
+    - R-3
+    exact_set: true
+    require_unique: true
+    max_count: 1
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - sofort
+    - instant refund
+    - same day
+pass_threshold: 0.85

@@ -14,7 +14,10 @@ tags:
 - process
 messages:
 - role: system
-  content: "Entscheide die Versandbereitschaft. Gib JSON {next_step, ready, missing} zurück. ready=false, wenn ein Pflichtpunkt fehlt. missing MUSS ein Array kurzer Tokens sein (engl. snake_case, z. B. [\"phone\"]), kein einzelner String. next_step ist ein kurzer Aktions-String."
+  content: Entscheide die Versandbereitschaft. Gib JSON {next_step, ready, missing}
+    zurück. ready=false, wenn ein Pflichtpunkt fehlt. missing MUSS ein Array kurzer
+    Tokens sein (engl. snake_case, z. B. ["phone"]), kein einzelner String. next_step
+    ist ein kurzer Aktions-String.
 - role: user
   fixture: fixtures/de-dispatch-check.txt
 generation:
@@ -22,34 +25,40 @@ generation:
   temperature: 0
   response_format: json
 expected:
-  next_step: 'Empfängertelefon erfassen'
+  next_step: Empfängertelefon erfassen
   ready: false
   missing:
-    - phone
+  - phone
 scorers:
 - type: json_schema
-  weight: 0.2
+  weight: 0.15
   params:
     schema: schemas/process-step.schema.json
 - type: json_fields
-  weight: 0.5
+  weight: 0.45
   params:
     fields:
-      - ready
-- type: contains
-  weight: 0.3
-  params:
-    terms:
-      - 'false'
-      - phone
-      - Telefon
-    mode: any
+    - next_step
+    - ready
     case_insensitive: true
+    patterns:
+      next_step: (?=.*(?:\b(?:empf[aä]ngertelefon(?:nummer)?|empf[aä]nger(?:s)?\s+telefon(?:nummer)?|telefon(?:nummer)?\s+(?:des\s+)?empf[aä]ngers?|consignee\s+phone(?:\s+number)?)\b|recipient_?phone|consignee_?phone|(?:_|\b)phone(?:\s+number)?\b))(?=.*(?:\b(?:erfassen|hinzufügen|ergänzen|eintragen|notieren|anfordern|einholen|collect|obtain|get|add|request|record|capture)(?:_|\b))).+
+  must_pass: true
+- type: set_equality
+  weight: 0.4
+  params:
+    field: missing
+    ignore_order: true
+    aliases:
+      phone:
+      - consignee_phone
+      - recipient_phone
+  must_pass: true
 - type: forbidden_terms
   weight: 0
   critical: true
   params:
     terms:
-      - '"ready": true'
-      - '"ready":true'
+    - '"ready": true'
+    - '"ready":true'
 pass_threshold: 0.85

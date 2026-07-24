@@ -14,7 +14,11 @@ tags:
 - order
 messages:
 - role: system
-  content: "Extract the order as JSON: customer (string), currency \"EUR\", items as an array of {sku (string), qty (integer), variant (string; use \"none\" if the item has no variant)}. Ignore rejected coupons. Use the exact sku string as written (including any prefix, e.g. \"SKU-A100\", not \"A100\"). variant as one string (size/colour with \"/\", e.g. \"M/navy\")."
+  content: 'Extract the order as JSON: customer (string), currency "EUR", items as
+    an array of {sku (string), qty (integer), variant (string; use "none" if the item
+    has no variant)}. Ignore rejected coupons. Use the exact sku string as written
+    (including any prefix, e.g. "SKU-A100", not "A100"). variant as one string (size/colour
+    with "/", e.g. "M/navy").'
 - role: user
   fixture: fixtures/en-shop-order.txt
 generation:
@@ -50,6 +54,38 @@ scorers:
     keys:
     - sku
     - qty
+    - variant
+    key_match:
+      sku: exact
+      qty: exact
+      variant: exact
+    key_aliases:
+      variant:
+        none:
+        - keine
+        - Keine
+        - n/a
+        - N/A
+        - '-'
+        - standard
+        - Standard
+        white:
+        - weiß
+        - weiss
+        95/black:
+        - 95/schwarz
+        black:
+        - schwarz
+        clear:
+        - klar
+        L/red:
+        - L/rot
+        XL/black:
+        - XL/schwarz
+        mittel/braun:
+        - braun
+        medium/brown:
+        - brown
 - type: forbidden_terms
   weight: 0
   critical: true

@@ -32,6 +32,7 @@ def write_attempts_csv(path: Path, attempts: list[AttemptResult]) -> None:
         "cost",
         "infrastructure_error",
         "error_type",
+        "finish_reason",
         "retry_count",
     ]
     with path.open("w", encoding="utf-8", newline="") as handle:

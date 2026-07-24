@@ -13,7 +13,7 @@ def print_summary(
     *,
     model: str,
     suite_label: str,
-    version: str = "0.4.0",
+    version: str = "0.6.0",
     console: Console | None = None,
 ) -> None:
     out = console or Console()
@@ -27,6 +27,8 @@ def print_summary(
     out.print(f"Attempt Pass Rate    {overall.get('attempt_pass_rate', 0) * 100:.1f} %")
     out.print(f"Attempt Partial Rate {overall.get('attempt_partial_rate', 0) * 100:.1f} %")
     out.print(f"Reliable Pass Rate   {overall.get('reliable_pass_rate', 0) * 100:.1f} %")
+    out.print(f"Mostly Pass Rate     {overall.get('mostly_pass_rate', 0) * 100:.1f} %")
+    out.print(f"Unreliable Pass Rate {overall.get('unreliable_pass_rate', 0) * 100:.1f} %")
     out.print(f"Critical Failures    {overall.get('critical_failure_rate', 0) * 100:.1f} %")
     out.print(f"Infrastructure       {overall.get('infrastructure_error_rate', 0) * 100:.1f} %")
     tps = overall.get("mean_generation_tps")

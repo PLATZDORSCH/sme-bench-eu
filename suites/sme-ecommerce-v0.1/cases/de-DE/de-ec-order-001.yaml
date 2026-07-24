@@ -14,7 +14,11 @@ tags:
 - order
 messages:
 - role: system
-  content: "Extrahiere die Bestellung als JSON: customer (string), currency \"EUR\", items als Array von {sku (string), qty (integer), variant (string; verwende \"none\", wenn der Artikel keine Variante hat)}. Ignoriere abgelehnte Gutscheine. sku exakt wie geschrieben (inkl. Präfix, z. B. \"SKU-A100\", nicht \"A100\"). variant als ein String (Größe/Farbe mit \"/\", z. B. \"M/navy\")."
+  content: 'Extrahiere die Bestellung als JSON: customer (string), currency "EUR",
+    items als Array von {sku (string), qty (integer), variant (string; verwende "none",
+    wenn der Artikel keine Variante hat)}. Ignoriere abgelehnte Gutscheine. sku exakt
+    wie geschrieben (inkl. Präfix, z. B. "SKU-A100", nicht "A100"). variant als ein
+    String (Größe/Farbe mit "/", z. B. "M/navy").'
 - role: user
   fixture: fixtures/de-shop-order.txt
 generation:
@@ -50,6 +54,38 @@ scorers:
     keys:
     - sku
     - qty
+    - variant
+    key_match:
+      sku: exact
+      qty: exact
+      variant: exact
+    key_aliases:
+      variant:
+        none:
+        - keine
+        - Keine
+        - n/a
+        - N/A
+        - '-'
+        - standard
+        - Standard
+        white:
+        - weiß
+        - weiss
+        95/black:
+        - 95/schwarz
+        black:
+        - schwarz
+        clear:
+        - klar
+        L/red:
+        - L/rot
+        XL/black:
+        - XL/schwarz
+        mittel/braun:
+        - braun
+        medium/brown:
+        - brown
 - type: forbidden_terms
   weight: 0
   critical: true

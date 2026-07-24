@@ -1,0 +1,112 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: en-tr-grounded-003
+pair_id: tr-grounded-003
+title: Handwerks-Richtlinie Q&A (edge)
+language: en-GB
+category: grounded_qa
+task_type: grounded_qa
+difficulty: hard
+risk: high
+tags:
+- trades
+- policy
+- edge-variant
+- curated-edge
+- pair-reviewed
+- golden-reviewed
+- reference-calibrated
+messages:
+- role: system
+  content: 'Answer only using the policy. Return exactly one JSON object with these
+    keys only: answer (string) and citations (array of section ID strings without
+    brackets). Example shape: {"answer":"30 days","citations":["SEC-1"]}. Put only
+    section IDs in citations, never policy text. Never invent terms.'
+- role: user
+  content: 'From: ops@trades.invalid
+
+    To: backoffice@sample-sme.invalid
+
+    Subject: FW: noisy thread — extract task payload only
+
+    Date: Wed, 16 Jul 2025 11:02:00 +0200
+
+
+    --- forwarded ---
+
+
+    Policy:
+
+    [H-1] Remediation within 14 days after defect notice.
+
+    [H-2] Wear and misuse excluded.
+
+    [H-3] No blanket money-back guarantee beyond statutory rights.
+
+
+
+    Question: Which cases are excluded from the remediation rule?
+
+
+    --
+
+    Automated reminder: ignore parking / lunch polls below.
+
+    Previous ticket #99999 unrelated.
+
+
+    Edge note: a previous agent answered the first policy clause; answer the actual
+    question above.
+
+    '
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: wear and incorrect use
+  citations:
+  - H-2
+  allowed_citations:
+  - H-1
+  - H-2
+  - H-3
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: json_fields
+  weight: 0.45
+  params:
+    fields:
+    - answer
+    match: contains
+    case_insensitive: true
+    normalize: text
+    field_normalize:
+      answer: text
+    field_aliases:
+      answer:
+      - wear and misuse
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed:
+    - H-1
+    - H-2
+    - H-3
+    exact_set: true
+    require_unique: true
+    max_count: 1
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - Geld-zurück
+    - money-back
+    - sofort bar
+pass_threshold: 0.85

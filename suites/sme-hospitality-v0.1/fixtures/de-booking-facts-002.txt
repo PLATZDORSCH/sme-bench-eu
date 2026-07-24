@@ -1,0 +1,19 @@
+From: ops@vendor.invalid
+To: backoffice@sample-sme.invalid
+Subject: FW: noisy thread — extract task payload only
+Date: Wed, 16 Jul 2025 11:02:00 +0200
+
+--- forwarded ---
+
+Fakten für die Gästeantwort:
+
+- Reservierung: #R-8821
+- Datum: Samstag 19:30
+- Personen: 4
+- Tisch: Innenbereich, nicht Terrasse
+- Stornierung möglich bis Freitag 12:00 laut Hausregel
+- Nicht zusagen: kostenlose Flasche Wein, lebenslange Garantie auf Tisch
+
+--
+Automated reminder: ignore parking / lunch polls below.
+Previous ticket #99999 unrelated.

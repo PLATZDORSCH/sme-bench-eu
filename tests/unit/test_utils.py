@@ -97,9 +97,7 @@ def test_extract_json_prefers_answer_over_prompt_anti_example() -> None:
         'Wrong format is {"type": "name", "value": "..."}.\n'
         'Final: {"pii_types": ["name", "email", "phone", "iban"]}\n'
     )
-    assert extract_json_payload(text) == {
-        "pii_types": ["name", "email", "phone", "iban"]
-    }
+    assert extract_json_payload(text) == {"pii_types": ["name", "email", "phone", "iban"]}
 
 
 def test_separate_thinking_tags() -> None:
@@ -140,6 +138,13 @@ def test_separate_thinking_plain_prefix_recovers_json() -> None:
     answer, reasoning = separate_thinking_content(text)
     assert reasoning is not None and reasoning.startswith("Here's a thinking")
     assert extract_json_payload(answer) == {"category": "technical", "priority": "urgent"}
+
+
+def test_separate_glm_reasoning_without_final_answer_returns_empty() -> None:
+    text = "The user wants an order extracted. We need to inspect every item first."
+    answer, reasoning = separate_thinking_content(text)
+    assert answer == ""
+    assert reasoning == text
 
 
 def test_separate_thinking_noop_on_clean_json() -> None:

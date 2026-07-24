@@ -1,3 +1,11 @@
+From: noreply@example-vendor.invalid
+To: orders@sample-sme.invalid
+Subject: FW: mixed thread — please process order section only
+Date: Tue, 15 Jul 2025 09:14:22 +0200
+MIME-Version: 1.0
+
+--- forwarded message ---
+
 Hi purchasing,
 
 urgent for project P-19:
@@ -7,3 +15,8 @@ Customer: City Utilities Sampletown
 Currency EUR. Delivery wish week 30.
 
 Side note: parking sign missing — ignore.
+
+--
+Maria Schmidt | Einkauf
+T +49 30 123456-12 (ignore for extraction)
+Sent from my phone — ignore signature promos

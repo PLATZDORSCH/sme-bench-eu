@@ -109,8 +109,8 @@ async def test_doctor(mock_base_url: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_reasoning_only_stream_fallback(mock_base_url: str) -> None:
-    """GLM/Nebius may stream the answer only in reasoning_content."""
+async def test_reasoning_only_stream_is_not_treated_as_output(mock_base_url: str) -> None:
+    """A reasoning-only completion has no scorable final answer."""
     async with OpenAICompatibleClient(base_url=mock_base_url, retries=0) as client:
         result = await client.chat_completion(
             model="mock-model:reasoning-only",
@@ -118,9 +118,10 @@ async def test_reasoning_only_stream_fallback(mock_base_url: str) -> None:
             max_tokens=16,
         )
     assert result.error_type is None
-    assert "pong" in result.output_text.lower()
+    assert result.output_text == ""
     assert result.reasoning_text is not None
     assert "pong" in result.reasoning_text.lower()
+    assert result.finish_reason == "stop"
     assert result.first_token_monotonic is not None
 
 

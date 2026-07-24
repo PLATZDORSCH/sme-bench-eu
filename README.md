@@ -30,7 +30,7 @@ Copy `.env.example` to `.env` and fill in the keys you need. The CLI loads `.env
 cp .env.example .env
 ```
 
-**The default run target is SME Full** (Core + all domain test suites, ~156 cases × repeats).
+**The default run target is SME Full** (Core + all domain test suites, 196 cases × repeats).
 
 ### Ollama
 
@@ -99,9 +99,14 @@ uv run sme-bench run \
 
 By default every run uses `--max-tokens-min 8192` and `--timeout 300`. Suite tasks
 often allow only ~150–400 completion tokens; that truncates reasoning mid-CoT
-(gpt-oss, Qwen thinking, Nemotron, …) with “Invalid JSON” and prose left in
-`output_text`. You pay for tokens actually generated — the floor is a ceiling.
-Disable with `--max-tokens-min 0` if you need the raw suite budgets.
+(gpt-oss, Qwen thinking, Nemotron, …). You pay for tokens actually generated —
+the floor is a ceiling. Disable with `--max-tokens-min 0` if you need the raw
+suite budgets.
+
+When a thinking model exhausts its token budget before emitting a final answer,
+the chain-of-thought is kept in `reasoning_text` for diagnostics and is **not**
+scored or shown as `output_text`. Provider `finish_reason` is stored on each
+attempt (and in `attempts.csv`) when the API reports it.
 
 Reasoning via `reasoning_effort` (gpt-oss / GPT-5.x style):
 
@@ -149,6 +154,7 @@ uv run sme-bench run \
 Override only if needed (e.g. `--max-tokens-min 4096` or `--timeout 180`).
 Do not rely on `--max-tokens-mult 8` alone — short tasks still truncated at
 1200–2800 completion tokens in practice without the floor.
+
 ### Core only
 
 ```bash
@@ -169,38 +175,47 @@ uv run sme-bench run \
 | `sme-bench validate …` | Check suite, fixtures, scorers, pairing |
 | `sme-bench run …` | Run the benchmark (**default: Full**) |
 | `sme-bench catalog …` | Generate `CASES.md` — documentation for all cases |
-| `sme-bench report …` | Rebuild reports from raw data (`summary\|failures\|success`.`de\|en`.md) |
+| `sme-bench report …` | Rebuild reports from raw data (`summary\|failures\|success`.`de\|en`.md); `--rescore` in memory only |
+| `sme-bench regrade SOURCE --output TARGET` | Non-destructive re-score into a new run directory |
+| `sme-bench merge-run --base … --delta … -o …` | Merge a full base run with selective `--task-ids` deltas and rescore |
+| `sme-bench compat-report SOURCE` | Show regrade vs rerun-required tasks |
+| `sme-bench fingerprints --suite …` | Export legacy input-fingerprint manifest |
 | `sme-bench compare …` | Compare multiple runs |
+
+Use `--task-ids id1,id2` on `run` for selective deltas when only some inputs changed.
 
 ## Metrics
 
 - **Attempt Pass Rate:** passed attempts / all attempts (≥85 %, fully correct)
 - **Attempt Partial Rate:** partially passed attempts (65–84 %, mostly correct)
-- **Reliable Pass Rate:** cases that passed in *every* repeat / all cases
+- **Reliable Pass Rate:** cases that passed in *every* repeat (3/3) / all cases
+- **Mostly Pass Rate:** cases that passed 2 of 3 repeats / all cases
+- **Unreliable Pass Rate:** cases that passed 1 of 3 repeats / all cases
+- **Failed Task Rate:** cases with 0 of 3 full passes / all cases
 - **Critical Failure:** a critical scorer failed → effective score `0` for that attempt
 - **SME Core Score:** mean of category-weighted effective scores × 100 (domain quality, no rate penalty)
-- **SME Rank Score:** `SME Core × Reliable Pass × max(0, 1 − 5 × critical_rate) × max(0, 1 − 0.5 × partial_rate)` — primary leaderboard metric
+- **SME Rank Score:** `SME Core × Attempt Pass × max(0, 1 − 5 × critical_rate) × max(0, 1 − 0.5 × partial_rate)` — primary leaderboard metric; successful repeats receive proportional credit
 - **Language gap:** pass/score difference `en-GB − de-DE` plus pair consistency
 
 ## Releases and versioning
 
-Current release: **[v0.4.0](https://github.com/PLATZDORSCH/sme-bench-eu/releases/tag/v0.4.0)**.
+Current release: **v0.7.3** (harness) with SME Full content **0.8.0** (196 DE/EN cases) and scoring-spec **0.5.0**. Its 40 added domain variants passed pair review, deterministic golden checks, and calibration with GPT-5.6 Luna and GLM-5.2 Thinking.
 
 Harness bugfixes stay on the same content line (patch). Prompt, case, or score-changing changes get a **new version** so leaderboard runs stay comparable. Details: **[docs/VERSIONING.md](docs/VERSIONING.md)**.
 
 ## Test suites
 
-All released test suites have `review_status: approved`. Folder ids stay `*-v0.1`; suite `version` is **0.2.0** (cases); harness / Full line is **0.4.0**.
+All cases on a released content line have `review_status: approved`. Folder ids stay `*-v0.1`; the current suite version is **0.8.0**.
 
 | Name | Path | Content | Cases |
 | --- | --- | --- | --- |
-| **SME Full** | *(virtual)* | Standard ranking: Core + all domains | ~156 |
+| **SME Full** | *(virtual)* | Standard ranking: Core + curated domain variants | 196 |
 | **SME Core v0.1** | `suites/sme-core-v0.1` | Core: 12 task types × 3 variants (DE/EN) | 72 |
-| **SME Trades v0.1** | `suites/sme-trades-v0.1` | Trades/construction | 14 |
-| **SME E-Commerce v0.1** | `suites/sme-ecommerce-v0.1` | Shop/retail | 14 |
-| **SME Financial v0.1** | `suites/sme-financial-v0.1` | Accounting/finance | 14 |
-| **SME Hospitality v0.1** | `suites/sme-hospitality-v0.1` | Food service/hotel | 14 |
-| **SME Logistics v0.1** | `suites/sme-logistics-v0.1` | Logistics/warehouse | 14 |
+| **SME Trades v0.1** | `suites/sme-trades-v0.1` | Trades/construction | 22 |
+| **SME E-Commerce v0.1** | `suites/sme-ecommerce-v0.1` | Shop/retail | 22 |
+| **SME Financial v0.1** | `suites/sme-financial-v0.1` | Accounting/finance | 22 |
+| **SME Hospitality v0.1** | `suites/sme-hospitality-v0.1` | Food service/hotel | 24 |
+| **SME Logistics v0.1** | `suites/sme-logistics-v0.1` | Logistics/warehouse | 20 |
 | **SME Chains v0.1** | `suites/sme-chains-v0.1` | Process chains + security/PII | 14 |
 
 Details for each test suite live in `suites/<id>/README.md` (basis for the future website).
@@ -254,7 +269,8 @@ uv run mypy src
 uv run pytest --cov=sme_bench --cov-report=term-missing
 ```
 
-CI runs ruff, mypy, and pytest with coverage (gate ≥76 %) on Python 3.11 and 3.12.
+CI runs ruff, mypy, suite validation, README example-path checks, and pytest with
+coverage (gate ≥76 %) on Python 3.11 and 3.12.
 
 ### Test layout
 

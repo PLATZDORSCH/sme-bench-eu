@@ -36,20 +36,28 @@ def write_summary_markdown(
             suite_id=summary.get("suite_id", ""),
             suite_version=summary.get("suite_version", ""),
         ),
-        t["rank_score"].format(score=float(summary.get("sme_rank_score", 0))),
-        t["core_score"].format(score=float(summary.get("sme_core_score", 0))),
-        t["attempt_pass"].format(value=_pct(overall.get("attempt_pass_rate"))),
-        t["attempt_partial"].format(value=_pct(overall.get("attempt_partial_rate"))),
-        t["reliable_pass"].format(value=_pct(overall.get("reliable_pass_rate"))),
-        t["critical_rate"].format(value=_pct(overall.get("critical_failure_rate"))),
-        t["infra_rate"].format(value=_pct(overall.get("infrastructure_error_rate"))),
-        t["tps"].format(value=_num(overall.get("mean_generation_tps"), 1)),
-        "",
-        t["by_language"],
-        "",
-        t["lang_header"],
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
+    if summary.get("regraded_from"):
+        lines.append(f"- Regraded from: `{summary['regraded_from']}` (inference preserved)")
+    lines.extend(
+        [
+            t["rank_score"].format(score=float(summary.get("sme_rank_score", 0))),
+            t["core_score"].format(score=float(summary.get("sme_core_score", 0))),
+            t["attempt_pass"].format(value=_pct(overall.get("attempt_pass_rate"))),
+            t["attempt_partial"].format(value=_pct(overall.get("attempt_partial_rate"))),
+            t["reliable_pass"].format(value=_pct(overall.get("reliable_pass_rate"))),
+            t["mostly_pass"].format(value=_pct(overall.get("mostly_pass_rate"))),
+            t["unreliable_pass"].format(value=_pct(overall.get("unreliable_pass_rate"))),
+            t["critical_rate"].format(value=_pct(overall.get("critical_failure_rate"))),
+            t["infra_rate"].format(value=_pct(overall.get("infrastructure_error_rate"))),
+            t["tps"].format(value=_num(overall.get("mean_generation_tps"), 1)),
+            "",
+            t["by_language"],
+            "",
+            t["lang_header"],
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+        ]
+    )
     for lang_key, m in (summary.get("by_language") or {}).items():
         lines.append(
             f"| {lang_key} | {_pct(m.get('attempt_pass_rate'))} | {_pct(m.get('reliable_pass_rate'))} | "

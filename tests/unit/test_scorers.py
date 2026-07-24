@@ -213,6 +213,16 @@ def test_forbidden_terms_exclude_fields_truncated_json() -> None:
         ),
         (
             True,
+            "Order #W-55021: I'm unable to promise an instant credit.",
+            False,
+        ),
+        (
+            True,
+            "Order #W-55021: We are unable to guarantee an instant refund.",
+            False,
+        ),
+        (
+            True,
             "Order #W-55021: We can arrange instant credit today.",
             True,
         ),
@@ -228,11 +238,39 @@ def test_forbidden_terms_exclude_fields_truncated_json() -> None:
             "Order #W-55021: Instant credit is available. Shipping is not included.",
             True,
         ),
+        # A negation in a previous sentence must not suppress a later promise.
+        (
+            True,
+            "Order #W-55021: We do not offer refunds. We promise instant credit today.",
+            True,
+        ),
+        # Double negation expresses a real possibility, not a refusal.
+        (
+            True,
+            "Order #W-55021: It is not excluded that we offer instant credit today.",
+            True,
+        ),
+        (
+            True,
+            "Bestellung #W-55021: Es ist nicht ausgeschlossen, dass wir "
+            "eine Sofortgutschrift gewähren.",
+            True,
+        ),
+        # Negated parenthetical enumeration must not flag listed refusals.
+        (
+            True,
+            "Bestellung #W-55021: Es werden keine weiteren Zusagen "
+            "(Skonto oder Sofortgutschrift) eingereicht.",
+            False,
+        ),
+        (
+            True,
+            "Order #W-55021: Do not invent early-payment discount or Sofortgutschrift.",
+            False,
+        ),
     ],
 )
-def test_forbidden_terms_negation(
-    ignore_negated: bool, output: str, expect_critical: bool
-) -> None:
+def test_forbidden_terms_negation(ignore_negated: bool, output: str, expect_critical: bool) -> None:
     params: dict[str, object] = {"terms": ["instant credit", "Sofortgutschrift"]}
     if ignore_negated:
         params["ignore_negated"] = True
@@ -387,9 +425,7 @@ def test_set_equality_alias_as_substring() -> None:
         ],
         generation=GenerationConfig(response_format="json"),
     )
-    _, _, _, passed, _, _, _ = evaluate_attempt(
-        task, '{"missing":"Validierte Lieferadresse"}'
-    )
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, '{"missing":"Validierte Lieferadresse"}')
     assert passed
 
 
@@ -494,3 +530,282 @@ def test_set_equality_and_citations(output: str, expected_pass: bool) -> None:
         )
     _, _, _, passed, _, _, _ = evaluate_attempt(task, output)
     assert passed is expected_pass
+
+
+def test_contains_field_scope_and_word_boundaries() -> None:
+    task = make_task(
+        scorers=[
+            ScorerSpec(
+                type="contains",
+                weight=1.0,
+                params={
+                    "field": "answer",
+                    "terms": ["30"],
+                    "word_boundaries": True,
+                },
+            )
+        ],
+        generation=GenerationConfig(response_format="json"),
+    )
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, '{"answer":"130 days","citations":["SEC-1"]}')
+    assert not passed
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, '{"answer":"30 days","citations":["SEC-1"]}')
+    assert passed
+
+
+def test_citations_exact_set_rejects_extra() -> None:
+    task = make_task(
+        expected={"citations": ["SEC-1"], "allowed_citations": ["SEC-1", "SEC-2"]},
+        scorers=[
+            ScorerSpec(
+                type="citations",
+                weight=1.0,
+                params={
+                    "field": "citations",
+                    "allowed": ["SEC-1", "SEC-2"],
+                    "exact_set": True,
+                    "require_unique": True,
+                },
+            )
+        ],
+        generation=GenerationConfig(response_format="json"),
+    )
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, '{"citations":["SEC-1","SEC-2"]}')
+    assert not passed
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, '{"citations":["SEC-1"]}')
+    assert passed
+
+
+def test_citations_exact_empty_set_rejects_any_citation() -> None:
+    task = make_task(
+        expected={"citations": [], "allowed_citations": ["SEC-1"]},
+        scorers=[
+            ScorerSpec(
+                type="citations",
+                weight=1.0,
+                params={
+                    "field": "citations",
+                    "allowed": ["SEC-1"],
+                    "exact_set": True,
+                    "require_nonempty": False,
+                },
+            )
+        ],
+        generation=GenerationConfig(response_format="json"),
+    )
+    results, _, _, passed, _, _, _ = evaluate_attempt(task, '{"citations":[]}')
+    assert passed and results[0].score == 1.0
+    results, _, _, passed, _, _, _ = evaluate_attempt(task, '{"citations":["SEC-1"]}')
+    assert not passed and results[0].score == 0.0
+
+
+def test_json_fields_iban_normalization() -> None:
+    task = make_task(
+        expected={"iban_used": "DE11 2222 3333 4444 5555 66"},
+        scorers=[
+            ScorerSpec(
+                type="json_fields",
+                weight=1.0,
+                params={
+                    "fields": ["iban_used"],
+                    "field_normalize": {"iban_used": "iban"},
+                },
+            )
+        ],
+        generation=GenerationConfig(response_format="json"),
+    )
+    _, _, _, passed, _, _, _ = evaluate_attempt(
+        task, '{"iban_used":"DE11222233334444555566","action":"use_invoice_iban","safe":true}'
+    )
+    assert passed
+
+
+def test_json_fields_terminal_punctuation_normalization() -> None:
+    task = make_task(
+        expected={"price": "29.90 EUR"},
+        scorers=[
+            ScorerSpec(
+                type="json_fields",
+                weight=1.0,
+                params={
+                    "fields": ["price"],
+                    "field_normalize": {"price": "terminal_punctuation"},
+                },
+            )
+        ],
+        generation=GenerationConfig(response_format="json"),
+    )
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, '{"price":"29.90 EUR."}')
+    assert passed
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, '{"price":"29.95 EUR."}')
+    assert not passed
+
+
+def test_json_fields_uses_only_explicit_field_aliases() -> None:
+    task = make_task(
+        expected={"answer": "wear and incorrect use"},
+        scorers=[
+            ScorerSpec(
+                type="json_fields",
+                weight=1.0,
+                params={
+                    "fields": ["answer"],
+                    "match": "contains",
+                    "case_insensitive": True,
+                    "normalize": "text",
+                    "field_aliases": {"answer": ["wear and misuse"]},
+                },
+            )
+        ],
+        generation=GenerationConfig(response_format="json"),
+    )
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, '{"answer":"Wear and misuse are excluded"}')
+    assert passed
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, '{"answer":"all damage is excluded"}')
+    assert not passed
+
+
+def test_text_structure_rejects_keyword_stuffing() -> None:
+    task = make_task(
+        scorers=[
+            ScorerSpec(
+                type="text_structure",
+                weight=1.0,
+                params={"min_words": 8, "min_sentences": 2, "forbid_bullet_only": True},
+            )
+        ],
+        generation=GenerationConfig(response_format="text"),
+    )
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, "- alpha\n- beta\n- gamma")
+    assert not passed
+    _, _, _, passed, _, _, _ = evaluate_attempt(
+        task,
+        "Your order #A-441 is delayed. The carrier expects delivery Friday by 16:00.",
+    )
+    assert passed
+
+
+def test_set_equality_key_match_pairs_meeting_actions() -> None:
+    task = make_task(
+        expected={
+            "actions": [
+                {"owner": "Lea", "task": "send the quote", "due": "2026-07-20"},
+                {"owner": "Omar", "task": "update stock", "due": "2026-07-18"},
+            ]
+        },
+        scorers=[
+            ScorerSpec(
+                type="set_equality",
+                weight=1.0,
+                params={
+                    "field": "actions",
+                    "keys": ["owner", "task", "due"],
+                    "key_match": {"task": "substring", "owner": "exact", "due": "exact"},
+                },
+            )
+        ],
+        generation=GenerationConfig(response_format="json"),
+    )
+    payload = json.dumps(
+        {
+            "actions": [
+                {"owner": "Lea", "task": "Lea will send the quote", "due": "2026-07-20"},
+                {"owner": "Omar", "task": "update stock levels", "due": "2026-07-18"},
+            ]
+        }
+    )
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, payload)
+    assert passed
+
+
+@pytest.mark.parametrize(
+    ("actual_task", "expected_pass"),
+    [
+        ("Zugangscode zum Keller", True),
+        ("bestätigt den Zugangscode zum Keller", True),
+        ("Zugangscode Keller", True),
+        ("Zugangscode Parkplatz", False),
+        ("Kellercode senden", False),
+    ],
+)
+def test_set_equality_token_subset_ignores_filler_words(
+    actual_task: str,
+    expected_pass: bool,
+) -> None:
+    task = make_task(
+        expected={
+            "actions": [
+                {"owner": "Berger", "task": "Zugangscode Keller", "due": "2026-06-18"},
+            ]
+        },
+        scorers=[
+            ScorerSpec(
+                type="set_equality",
+                weight=1.0,
+                params={
+                    "field": "actions",
+                    "keys": ["owner", "task", "due"],
+                    "key_match": {"task": "token_subset", "owner": "exact", "due": "exact"},
+                    "key_aliases": {
+                        "task": {
+                            "Zugangscode Keller": [
+                                "Zugangscode Keller senden",
+                                "bestätigt den Zugangscode zum Keller",
+                            ]
+                        }
+                    },
+                },
+            )
+        ],
+        generation=GenerationConfig(response_format="json"),
+    )
+    payload = json.dumps(
+        {
+            "actions": [
+                {"owner": "Berger", "task": actual_task, "due": "2026-06-18"},
+            ]
+        }
+    )
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, payload)
+    assert passed is expected_pass
+
+
+def test_set_equality_token_subset_accepts_english_third_person() -> None:
+    task = make_task(
+        expected={
+            "actions": [
+                {"owner": "Lea", "task": "send quote", "due": "2026-07-20"},
+                {"owner": "Omar", "task": "update stock", "due": "2026-07-18"},
+            ]
+        },
+        scorers=[
+            ScorerSpec(
+                type="set_equality",
+                weight=1.0,
+                params={
+                    "field": "actions",
+                    "keys": ["owner", "task", "due"],
+                    "key_match": {"task": "token_subset", "owner": "exact", "due": "exact"},
+                },
+            )
+        ],
+        generation=GenerationConfig(response_format="json"),
+    )
+    output = json.dumps(
+        {
+            "actions": [
+                {
+                    "owner": "Lea",
+                    "task": "sends the quote to the customer",
+                    "due": "2026-07-20",
+                },
+                {
+                    "owner": "Omar",
+                    "task": "updates stock levels",
+                    "due": "2026-07-18",
+                },
+            ]
+        }
+    )
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, output)
+    assert passed

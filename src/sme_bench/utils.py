@@ -37,6 +37,8 @@ _THINKING_PREFIX_RE = re.compile(
     r"here'?s\s+a\s+thinking\s+process\s*:"
     r"|thinking\s+process\s*:"
     r"|let\s+me\s+think\s+(?:step\s+by\s+step\s+)?:?"
+    r"|the\s+user\s+(?:wants|is\s+asking|has\s+asked)\b"
+    r"|we\s+need\s+to\b"
     r")"
 )
 
@@ -168,9 +170,7 @@ def extract_json_payload(text: str) -> Any:
 
     # Prefer ```json fences, then other fences; fall through on parse errors so a
     # quoted source fence in chain-of-thought does not block a later JSON fence.
-    fence_matches = list(
-        re.finditer(r"```(?:json)?\s*([\s\S]*?)\s*```", stripped, re.IGNORECASE)
-    )
+    fence_matches = list(re.finditer(r"```(?:json)?\s*([\s\S]*?)\s*```", stripped, re.IGNORECASE))
     fence_matches.sort(
         key=lambda m: (0 if m.group(0).lstrip("`").lower().startswith("json") else 1, m.start())
     )
@@ -273,7 +273,7 @@ def separate_thinking_content(text: str) -> tuple[str, str | None]:
         try:
             recovered = extract_json_payload(text)
         except ValueError:
-            return text, text
+            return "", text
         return json.dumps(recovered, ensure_ascii=False), text
 
     return text, None

@@ -17,8 +17,9 @@ from rich.console import Console
 
 from sme_bench import __version__
 from sme_bench.client import OpenAICompatibleClient
-from sme_bench.config import RunConfig
+from sme_bench.config import SCORING_SPEC_VERSION, RunConfig
 from sme_bench.dashboard import RunDashboard, use_dashboard
+from sme_bench.fingerprints import build_task_fingerprints
 from sme_bench.models import AttemptResult, BenchmarkTask
 from sme_bench.pricing import estimate_cost
 from sme_bench.progress import ProgressEmitter
@@ -88,6 +89,7 @@ async def run_benchmark(config: RunConfig, suite: LoadedSuite) -> Path:
         categories=config.categories,
         difficulty=config.difficulty,
         tags=config.tags,
+        task_ids=config.task_ids,
     )
     if not tasks:
         raise ValueError("No tasks matched the given filters")
@@ -124,6 +126,7 @@ async def run_benchmark(config: RunConfig, suite: LoadedSuite) -> Path:
             "categories": config.categories,
             "difficulty": config.difficulty,
             "tags": config.tags,
+            "task_ids": config.task_ids,
         },
         "repeats": config.repeats,
         "concurrency": config.concurrency,
@@ -136,6 +139,8 @@ async def run_benchmark(config: RunConfig, suite: LoadedSuite) -> Path:
         "pricing": config.pricing.model_dump(),
         "save_reasoning": config.save_reasoning,
         "status": "running",
+        "task_fingerprints": build_task_fingerprints(tasks),
+        "scoring_spec_version": SCORING_SPEC_VERSION,
     }
     write_metadata(run_dir, meta)
 
@@ -257,6 +262,7 @@ async def run_benchmark(config: RunConfig, suite: LoadedSuite) -> Path:
                         infrastructure_error=True,
                         error_type=req.error_type,
                         error_message=redact_secrets(req.error_message or ""),
+                        finish_reason=req.finish_reason,
                         retry_count=max(0, req.attempts - 1),
                         ttfr=req.ttfr,
                         ttft=req.ttft,
@@ -277,8 +283,8 @@ async def run_benchmark(config: RunConfig, suite: LoadedSuite) -> Path:
                     )
                     return attempt
 
-                score_results, weighted, effective, passed, partial, critical, parsed = evaluate_attempt(
-                    task, req.output_text
+                score_results, weighted, effective, passed, partial, critical, parsed = (
+                    evaluate_attempt(task, req.output_text)
                 )
                 cost = estimate_cost(
                     prompt_tokens=req.prompt_tokens,
@@ -310,6 +316,7 @@ async def run_benchmark(config: RunConfig, suite: LoadedSuite) -> Path:
                     prompt_tokens=req.prompt_tokens,
                     completion_tokens=req.completion_tokens,
                     cost=cost,
+                    finish_reason=req.finish_reason,
                     retry_count=max(0, req.attempts - 1),
                     started_at=req.started_at,
                     completed_at=req.completed_at,
@@ -460,6 +467,7 @@ async def run_benchmark(config: RunConfig, suite: LoadedSuite) -> Path:
         meta["status"] = "completed"
         await progress.emit("run_completed", run_id, status="completed")
     meta["completed_at"] = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+    meta["task_fingerprints"] = build_task_fingerprints(tasks)
     write_metadata(run_dir, meta)
     progress.close()
     return run_dir

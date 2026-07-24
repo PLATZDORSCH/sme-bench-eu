@@ -1,0 +1,20 @@
+From: ops@vendor.invalid
+To: backoffice@sample-sme.invalid
+Subject: FW: noisy thread — extract task payload only
+Date: Wed, 16 Jul 2025 11:02:00 +0200
+
+--- forwarded ---
+
+Checkout export (some HTML leftovers):
+
+Customer: Levin Fashion House
+SKU list:
+- 2 × SHIRT-221 (colour navy, size M)
+- 1 × BELT-09 (black, length 95)
+
+Currency EUR. Coupon SUMMER was rejected — do not apply.
+Ship to East store.
+
+--
+Automated reminder: ignore parking / lunch polls below.
+Previous ticket #99999 unrelated.

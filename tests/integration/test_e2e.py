@@ -195,16 +195,13 @@ def test_list_cmd() -> None:
         (
             "broken_yaml",
             lambda suite_dir: (suite_dir / "cases/de-DE/bad.yaml").write_text(
-                "schema_version: '1.0'\n"
-                "id: [unclosed\n",
+                "schema_version: '1.0'\nid: [unclosed\n",
                 encoding="utf-8",
             ),
         ),
     ],
 )
-def test_validate_invalid_suite_exits_nonzero(
-    tmp_path: Path, name: str, setup: object
-) -> None:
+def test_validate_invalid_suite_exits_nonzero(tmp_path: Path, name: str, setup: object) -> None:
     suite_dir = tmp_path / f"invalid-{name}"
     shutil.copytree(SUITE, suite_dir)
     setup(suite_dir)  # type: ignore[operator]
@@ -288,9 +285,7 @@ def test_compare_cmd(mock_base_url: str, tmp_path: Path) -> None:
     assert mismatch.exit_code == 1
     assert "Suite hashes differ" in mismatch.output
 
-    allowed = RUNNER.invoke(
-        app, ["compare", str(run_a), str(run_b), "--allow-suite-mismatch"]
-    )
+    allowed = RUNNER.invoke(app, ["compare", str(run_a), str(run_b), "--allow-suite-mismatch"])
     assert allowed.exit_code == 0, allowed.output
 
 

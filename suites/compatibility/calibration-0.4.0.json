@@ -1,0 +1,552 @@
+{
+  "candidate_count": 40,
+  "candidate_input_fingerprints": {
+    "de-tr-grounded-002": "b7026e95be29ea697cde1475617fe1efb59c31ae17cfb1e0521b7afcd141213c",
+    "de-tr-grounded-003": "dd387ba12ef752eb02c47cb223b9628b4b26c9a08aa6db4cd293f63ccdbaa44a",
+    "de-tr-meeting-002": "6839c0630c2227632fdfc7e21f79cc7a985d2376a9c38e0c4bd23eb0e701ef5e",
+    "de-tr-order-002": "d625bb53b43d99320ee921f281deb0760eaf243fcf560d8fd638f95aca9199f3",
+    "en-tr-grounded-002": "60cb7d69331eec71a1d865b46ccace5295a20c5491dcf3fa111f316e6b886a0f",
+    "en-tr-grounded-003": "f9af5c801fd33f1b5ade5b4dae13b7ce4049f808aa3e924dfec23a8d2af71c80",
+    "en-tr-meeting-002": "604b41dfdc21ad377ebb0952046601a09d50ec0cdca803f5e9cedc1f0c410a72",
+    "en-tr-order-002": "0ba34da4ce6fd1f3a3f8b2bd397d29a06d5d8611cd42f0f9b136610b8c687256",
+    "de-ec-grounded-002": "4cd8f41f1b6fbc8d25bca7c44dd038d9408e945eeaa5b5afdad177ba36ee0b13",
+    "de-ec-grounded-003": "fcb2fa44fe747700e89589b35291fbde943ffaec966be15ec97dff4e58844d4f",
+    "de-ec-order-002": "3f4cc1ea51486dfce14be9915cf801e9547758a567e37d0c8ec68ee856173839",
+    "de-ec-reply-002": "0ef417cc75891ac13b4fc7d119041a268fcb078ac83852845ec7f48ebdf58e75",
+    "en-ec-grounded-002": "4006ccbb5e1ed2067d742c7c7b2a87293e956a1580c37d257c2a72133230f806",
+    "en-ec-grounded-003": "04edebdd8f0b5a17a7cde895904b2d36aa9023d8348f769c6df0e785e7b567a0",
+    "en-ec-order-002": "4b25d7fb3bd2e096b8045f3a445b96fc79e624001d78455c21cff6450abbd4d1",
+    "en-ec-reply-002": "9c896052820bd5ad813d0d23253bbc5d8e178dadc55e4cde1cf4cdc75189c008",
+    "de-fi-grounded-002": "faf7671481eaf34db882f76b4a69cb3ba5ebba0ce85f9effeeb2592d96a10d30",
+    "de-fi-grounded-003": "f3a0d5d1e93ccd64ea9a432a6b15ef4085d1fc60c50c0a39b5412722e2ef9e2c",
+    "de-fi-meeting-002": "bb3905d221198415586353ebeca92d605d966788bfc4fc7c1c18d6df2faea53e",
+    "de-fi-reply-002": "d46aab458195599106415c3980caca5a478c1124b48dc2e7e2a319b412f38c1b",
+    "en-fi-grounded-002": "96dcb54cdb2daf8ec9a63cdc4f4517d0e7d091f76c4a75404418669635f58fd7",
+    "en-fi-grounded-003": "139a7f96ffb56083080363c784a3bf83b6f1b2533d72ef60eba6a117b424cf4f",
+    "en-fi-meeting-002": "396e6778fc8387eaa7f3176505c82775bf009ccbfcdc57aa6406ce1cf44c9c44",
+    "en-fi-reply-002": "605cf1b61040b5ccae3c049f22d00eec2397c4d201b9dd30749153c3787b0305",
+    "de-ho-grounded-002": "0b4a454c8871e04771c70622c748f1b63fb972daf244c9ccfaeaf6af2f211450",
+    "de-ho-grounded-003": "c5bbb04746c61b7369a52cfa58b0b4ba38ab572d49698fd853bfcf18cd4bb804",
+    "de-ho-meeting-002": "3ccead57860df6bad8bdb3e568cb25f92f7af8ab1aae1d2e1bc81697f73b222a",
+    "de-ho-order-002": "b532048b78416c707b1efdf11a6178de6a31f4bb1af04239f2a795fd9f499472",
+    "de-ho-reply-002": "12a0411def6acdb1b6fcd84ba5d7407a75136b83f1fd4e5224af5dc543791d6d",
+    "en-ho-grounded-002": "a711ce30f4422815c5c94c906c7f1e37125bf7ed631ad18def3629e543b4e79e",
+    "en-ho-grounded-003": "f31efb73fbe79ec1e57b4e29837aa120b7839e847be485a3e53879618a19d4ce",
+    "en-ho-meeting-002": "969d8f8b5c096c03e61de4949d0cf1ad2272f681bc42414fa45583f6042dfb85",
+    "en-ho-order-002": "734cf2c4e9e599c09c26e9eaec69a122346c1f08077235506b7b228a0d3c12ca",
+    "en-ho-reply-002": "2bb50e78300464c60f72b4a15fe41d51760255168eecf147bae3527c32afa327",
+    "de-lo-grounded-002": "364e517a78e6a5a4d6f14c6cf8efc3880dd3ed81ae6b6766adec80044a71d0bb",
+    "de-lo-grounded-003": "faa48317755923b2bd350dfb50adedd125a8f40272f57f64231ce955736db40d",
+    "de-lo-order-002": "f138d0452888a7782442b7613fafb8c90cf3e3285d64d59c2085950331715ae7",
+    "en-lo-grounded-002": "ea323d194fee5e6033fdfaca531768d39112ae14b40ec43abf17a91ff1dc5a02",
+    "en-lo-grounded-003": "0759246d90ab45e19400295fbaa4ea686fdab7419134f8fa926bd9f3788a7cc3",
+    "en-lo-order-002": "35f58708801565248fa0279c696e069b080942527b074b7ba469f16c56f9acd9"
+  },
+  "method": "One deterministic attempt per candidate and model; rescored with current harness after explicit alias calibration.",
+  "models": [
+    {
+      "attempts": 40,
+      "base_url": "https://api.openai.com/v1",
+      "model": "gpt-5.6-luna",
+      "partial": 2,
+      "passed": 38,
+      "results": {
+        "de-ec-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "0b3cbb4477c8f898d18e3876eed7910690cff3da439445dac84adaf17df602ab",
+          "partial": false,
+          "passed": true
+        },
+        "de-ec-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "bd71f295527bf9b7637b13ea7cd9a903aeab3e630c72703e9145603d19ae1867",
+          "partial": false,
+          "passed": true
+        },
+        "de-ec-order-002": {
+          "effective_score": 1.0,
+          "output_sha256": "593b79709054ecc1026dacc0a044615ad480886c6c6af74747655455193785c4",
+          "partial": false,
+          "passed": true
+        },
+        "de-ec-reply-002": {
+          "effective_score": 1.0,
+          "output_sha256": "57526020ea3977dacbacaad797a9b251f56e58a3e1a4e32ef2dbc6ba20a73ee7",
+          "partial": false,
+          "passed": true
+        },
+        "de-fi-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "73b70c9507da88239429df5e8cf941134a15ae8337d39b4af15258594686c2d7",
+          "partial": false,
+          "passed": true
+        },
+        "de-fi-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "604380a1b8e45d080305709dd2b851fe1454be85aa1bc11ba92913eb553c4d90",
+          "partial": false,
+          "passed": true
+        },
+        "de-fi-meeting-002": {
+          "effective_score": 1.0,
+          "output_sha256": "2cef3ea517a825f05ba232d1806250b2ffb4696320ed020bebc530dab0a76b6f",
+          "partial": false,
+          "passed": true
+        },
+        "de-fi-reply-002": {
+          "effective_score": 1.0,
+          "output_sha256": "f12414de9cf4e552198134ed14ea1bd235941249c945f6b0c258a05095a75e9b",
+          "partial": false,
+          "passed": true
+        },
+        "de-ho-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "7aad88a26f19ff73ee1b11536d3dfb605b49f353b32cc9b55e5666d9121c7348",
+          "partial": false,
+          "passed": true
+        },
+        "de-ho-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "9b734011c754b4c877358972bc40b8c8224d4e45af7c892bc9dcc80429c3b9ff",
+          "partial": false,
+          "passed": true
+        },
+        "de-ho-meeting-002": {
+          "effective_score": 1.0,
+          "output_sha256": "619d6bda8e620d08e14fe606838e721948afa873fc316ee260769ebc5eb838aa",
+          "partial": false,
+          "passed": true
+        },
+        "de-ho-order-002": {
+          "effective_score": 1.0,
+          "output_sha256": "d2a32e274a96a7e1c09f01f7dcbeca2a1708080ba9402fda1bb80008fde52dbb",
+          "partial": false,
+          "passed": true
+        },
+        "de-ho-reply-002": {
+          "effective_score": 1.0,
+          "output_sha256": "ded7b95f8a71712eceed0ffb46c73fc7013141affeb2723b5144131b4b23ae01",
+          "partial": false,
+          "passed": true
+        },
+        "de-lo-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "cfbde0af647015b8f67bfb34cb459f6a04ae8922cc9635e473892b9d98d30327",
+          "partial": false,
+          "passed": true
+        },
+        "de-lo-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "ee55b04f61e5dc90d39e586d640e3803804146ee863bf07e2d7ff19175a4a376",
+          "partial": false,
+          "passed": true
+        },
+        "de-lo-order-002": {
+          "effective_score": 1.0,
+          "output_sha256": "ed2932ac90997bfdf42876628076629eafee7670872230663d6d3eddca592297",
+          "partial": false,
+          "passed": true
+        },
+        "de-tr-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "0a49bfab567c056f63799f7f0f1057722db0f8f2375ecb220acdde41987cdf19",
+          "partial": false,
+          "passed": true
+        },
+        "de-tr-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "9fe29902ca69542a13d31bd635916d2dc5bc99c96d4f460c142f59561d4a24c8",
+          "partial": false,
+          "passed": true
+        },
+        "de-tr-meeting-002": {
+          "effective_score": 1.0,
+          "output_sha256": "cad59d2f19054f3a812880c25d54d757bc215dd9cb8efc89bf5efca6dc5b7a72",
+          "partial": false,
+          "passed": true
+        },
+        "de-tr-order-002": {
+          "effective_score": 1.0,
+          "output_sha256": "79549f8bdc75ccab4c1774eaff7eff0753115faec2d106ae743456dcec9cac4a",
+          "partial": false,
+          "passed": true
+        },
+        "en-ec-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "481b2f6fd69fef9493abf97a7b7c919b5b75543a6e19c4e65d2fd79863c3224f",
+          "partial": false,
+          "passed": true
+        },
+        "en-ec-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "d784bd1f6aaf3599e0f400948b61eb4658c1d3677f6656edae3c5c90343de913",
+          "partial": false,
+          "passed": true
+        },
+        "en-ec-order-002": {
+          "effective_score": 1.0,
+          "output_sha256": "8e7a97f8682447a6e5305877769b8f2a92d7f727f3544d696828495176926506",
+          "partial": false,
+          "passed": true
+        },
+        "en-ec-reply-002": {
+          "effective_score": 1.0,
+          "output_sha256": "cb3b42a3a1fc518bb5a6c01d7afd1adf8914905bde218a878447cded027a133c",
+          "partial": false,
+          "passed": true
+        },
+        "en-fi-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "73b70c9507da88239429df5e8cf941134a15ae8337d39b4af15258594686c2d7",
+          "partial": false,
+          "passed": true
+        },
+        "en-fi-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "604380a1b8e45d080305709dd2b851fe1454be85aa1bc11ba92913eb553c4d90",
+          "partial": false,
+          "passed": true
+        },
+        "en-fi-meeting-002": {
+          "effective_score": 1.0,
+          "output_sha256": "fc9eb15c36559d1198c5bc43d02237f2eb3dbc22017e8329158f95e346931e41",
+          "partial": false,
+          "passed": true
+        },
+        "en-fi-reply-002": {
+          "effective_score": 1.0,
+          "output_sha256": "a7b07b6f161fd0bca002a9599e73282dc64f4eca500721b272b3d170a57580b0",
+          "partial": false,
+          "passed": true
+        },
+        "en-ho-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "7f96ec148d3401cfce6e451c5ad195f2c1f1964702524d21160fb5b48ff040a1",
+          "partial": false,
+          "passed": true
+        },
+        "en-ho-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "991f111e5b15c104a5d640964e2fc5374f4761e83a6d8e64a24e24684cb2a779",
+          "partial": false,
+          "passed": true
+        },
+        "en-ho-meeting-002": {
+          "effective_score": 1.0,
+          "output_sha256": "245ee5314dc36ba3ba4f2b7e59194f19ef3c2592aa1266a5b669603a65caa58c",
+          "partial": false,
+          "passed": true
+        },
+        "en-ho-order-002": {
+          "effective_score": 1.0,
+          "output_sha256": "aa6cef4b26d67f08c9f75e8a60f084434a293d412b6d8e5d29f08e20d643c4a8",
+          "partial": false,
+          "passed": true
+        },
+        "en-ho-reply-002": {
+          "effective_score": 0.8125,
+          "output_sha256": "88e7690fda701acc809ac07e7c669acc20e417bd15b158b5e72e467718dd7414",
+          "partial": true,
+          "passed": false
+        },
+        "en-lo-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "0310d20a338abdba9f25239a8b55179643966b91cf16f2cf88905d123a7f4099",
+          "partial": false,
+          "passed": true
+        },
+        "en-lo-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "7e8c606cbd1c52559dcfbda55d2f6c5a977130a77cf42df7a0cafc82577633de",
+          "partial": false,
+          "passed": true
+        },
+        "en-lo-order-002": {
+          "effective_score": 1.0,
+          "output_sha256": "0f3cf8603b1a1a5f84625bc95021d9a91d2f14ce2bea333b18efa95d2ed3cbae",
+          "partial": false,
+          "passed": true
+        },
+        "en-tr-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "bdc6fa22aba3082e0df00d3496e7f0d8bb866eaa02d787d406593196438bea7c",
+          "partial": false,
+          "passed": true
+        },
+        "en-tr-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "ea2ffa4b2356487a6e294f92a7f63b96435484287e6f953cac1ea776f86b3f94",
+          "partial": false,
+          "passed": true
+        },
+        "en-tr-meeting-002": {
+          "effective_score": 1.0,
+          "output_sha256": "cfce2bde198333d0966e3f5dc86458f46813bbf6a1cf63b4d0b5067108c46bce",
+          "partial": false,
+          "passed": true
+        },
+        "en-tr-order-002": {
+          "effective_score": 0.75,
+          "output_sha256": "23eb7a6a999f4aa03b9c8a7dbd5a5e56b5410f78f0966092f10dbbc43c17df11",
+          "partial": true,
+          "passed": false
+        }
+      },
+      "run_id": "calibration-gpt-5.6-luna-v0.4",
+      "served_model_name": "gpt-5.6-luna"
+    },
+    {
+      "attempts": 40,
+      "base_url": "https://api.tokenfactory.us-central1.nebius.com/v1",
+      "model": "zai-org/GLM-5.2",
+      "partial": 2,
+      "passed": 38,
+      "results": {
+        "de-ec-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "1c7c7a0b2bd33e40590ce5061c0c6a194cad2a4e71030fd28099d02689dad4cb",
+          "partial": false,
+          "passed": true
+        },
+        "de-ec-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "1bad5cf84136ab7cc0341cc5cdf4ebc5d863460c3498fbf8c5c7c0797390295f",
+          "partial": false,
+          "passed": true
+        },
+        "de-ec-order-002": {
+          "effective_score": 1.0,
+          "output_sha256": "593b79709054ecc1026dacc0a044615ad480886c6c6af74747655455193785c4",
+          "partial": false,
+          "passed": true
+        },
+        "de-ec-reply-002": {
+          "effective_score": 1.0,
+          "output_sha256": "9aa7fef04c4720b7de70e3c7d4663e804c0f9a1218330623bf40b831bcbfbd37",
+          "partial": false,
+          "passed": true
+        },
+        "de-fi-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "73b70c9507da88239429df5e8cf941134a15ae8337d39b4af15258594686c2d7",
+          "partial": false,
+          "passed": true
+        },
+        "de-fi-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "604380a1b8e45d080305709dd2b851fe1454be85aa1bc11ba92913eb553c4d90",
+          "partial": false,
+          "passed": true
+        },
+        "de-fi-meeting-002": {
+          "effective_score": 1.0,
+          "output_sha256": "1084b46ec1030e286ddd8d4433fe97160cd0880e40aa20797ff50e87edfd12f1",
+          "partial": false,
+          "passed": true
+        },
+        "de-fi-reply-002": {
+          "effective_score": 1.0,
+          "output_sha256": "6cb35977deca2ea65cd4e6f1aced2cdc9a0981f203ec21af77b3d5d9a9743ab5",
+          "partial": false,
+          "passed": true
+        },
+        "de-ho-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "455e9474414b2b7ac0a58bc8838d27e4501331c5b3b79857bb51326ccb996363",
+          "partial": false,
+          "passed": true
+        },
+        "de-ho-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "9b734011c754b4c877358972bc40b8c8224d4e45af7c892bc9dcc80429c3b9ff",
+          "partial": false,
+          "passed": true
+        },
+        "de-ho-meeting-002": {
+          "effective_score": 1.0,
+          "output_sha256": "e0e9e3ca2e6b11b2f036354252b37bce0a1780f68596003c4bb7f64e0daec7ec",
+          "partial": false,
+          "passed": true
+        },
+        "de-ho-order-002": {
+          "effective_score": 1.0,
+          "output_sha256": "d2a32e274a96a7e1c09f01f7dcbeca2a1708080ba9402fda1bb80008fde52dbb",
+          "partial": false,
+          "passed": true
+        },
+        "de-ho-reply-002": {
+          "effective_score": 1.0,
+          "output_sha256": "2d7ff2d47ab9142562fc1f0a2696e867d42f320d07fcde8e0f609d0834c9399b",
+          "partial": false,
+          "passed": true
+        },
+        "de-lo-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "cfbde0af647015b8f67bfb34cb459f6a04ae8922cc9635e473892b9d98d30327",
+          "partial": false,
+          "passed": true
+        },
+        "de-lo-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "f6b1771e4adb5d713c14cec7d17b25ec6da5448acf70fe6ffab1b21ca5e53c32",
+          "partial": false,
+          "passed": true
+        },
+        "de-lo-order-002": {
+          "effective_score": 1.0,
+          "output_sha256": "ed2932ac90997bfdf42876628076629eafee7670872230663d6d3eddca592297",
+          "partial": false,
+          "passed": true
+        },
+        "de-tr-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "6e5373f92ab4fe15bc53410871069dd7584759573f32ae6559a4a1c639d92bf8",
+          "partial": false,
+          "passed": true
+        },
+        "de-tr-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "e13073fa2cea7fe6f66183743dbf7e49e8849e0c6919128662915bfb5d05dc68",
+          "partial": false,
+          "passed": true
+        },
+        "de-tr-meeting-002": {
+          "effective_score": 1.0,
+          "output_sha256": "39fd700d138c6ae2b9db8183f989c89d3e22558f2b06dc0244613010ec34eabb",
+          "partial": false,
+          "passed": true
+        },
+        "de-tr-order-002": {
+          "effective_score": 0.75,
+          "output_sha256": "93678ccd9bcf00c298c2a3fdb1dcd813a85625dc4ad6ff8028dd1c788cfc82e7",
+          "partial": true,
+          "passed": false
+        },
+        "en-ec-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "dc34a5582dbc70f7c9889779eaa877dbcd06f214b478ca7332524cd87e947b06",
+          "partial": false,
+          "passed": true
+        },
+        "en-ec-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "e61e9d2a67bd13ce1e777054d4be06b0702586c6aa9dc297d2d00fb31f0d81c7",
+          "partial": false,
+          "passed": true
+        },
+        "en-ec-order-002": {
+          "effective_score": 1.0,
+          "output_sha256": "8e7a97f8682447a6e5305877769b8f2a92d7f727f3544d696828495176926506",
+          "partial": false,
+          "passed": true
+        },
+        "en-ec-reply-002": {
+          "effective_score": 1.0,
+          "output_sha256": "16c21413813d4f58510bd7867805735903cbc4561bea06222fa0d4b04bcbe347",
+          "partial": false,
+          "passed": true
+        },
+        "en-fi-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "73b70c9507da88239429df5e8cf941134a15ae8337d39b4af15258594686c2d7",
+          "partial": false,
+          "passed": true
+        },
+        "en-fi-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "fd3d6cbde2a5f0cf4bb7d5184bcb02acd19d57ac3ba75bcf14d096e9f2a6639d",
+          "partial": false,
+          "passed": true
+        },
+        "en-fi-meeting-002": {
+          "effective_score": 1.0,
+          "output_sha256": "2d5e2340a5be190e851c540844e5203f35f513c7ace0d011c89d39846b254da9",
+          "partial": false,
+          "passed": true
+        },
+        "en-fi-reply-002": {
+          "effective_score": 1.0,
+          "output_sha256": "b2b6e04fa6cb3b39e45af00860dba71a114d264662931995d26b66d076840e21",
+          "partial": false,
+          "passed": true
+        },
+        "en-ho-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "6107dbc167cd6373a9d5ee69b998a50d32fae2c7ca97ca51c3f59ebd1b600097",
+          "partial": false,
+          "passed": true
+        },
+        "en-ho-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "991f111e5b15c104a5d640964e2fc5374f4761e83a6d8e64a24e24684cb2a779",
+          "partial": false,
+          "passed": true
+        },
+        "en-ho-meeting-002": {
+          "effective_score": 1.0,
+          "output_sha256": "2ea77354551307fc2e259cf9fca31cf4f8eb2a420a73b2370ce6ee0ad43fd5fe",
+          "partial": false,
+          "passed": true
+        },
+        "en-ho-order-002": {
+          "effective_score": 1.0,
+          "output_sha256": "aa6cef4b26d67f08c9f75e8a60f084434a293d412b6d8e5d29f08e20d643c4a8",
+          "partial": false,
+          "passed": true
+        },
+        "en-ho-reply-002": {
+          "effective_score": 1.0,
+          "output_sha256": "70b6e36acfa9d5a6f38af37145e3e7766b644529e31d6db1184425434150abb0",
+          "partial": false,
+          "passed": true
+        },
+        "en-lo-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "0310d20a338abdba9f25239a8b55179643966b91cf16f2cf88905d123a7f4099",
+          "partial": false,
+          "passed": true
+        },
+        "en-lo-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "f04c7ba12dc6ba6c800f7553ff4d6407584656b96acd041b941bb6fcf08a2be3",
+          "partial": false,
+          "passed": true
+        },
+        "en-lo-order-002": {
+          "effective_score": 1.0,
+          "output_sha256": "d5ea5361d5f79b14cf3bc594f0b23df330cf2a3731aa319ac2bf89f681a4562b",
+          "partial": false,
+          "passed": true
+        },
+        "en-tr-grounded-002": {
+          "effective_score": 1.0,
+          "output_sha256": "494858fba471d8e1d71047cc99d8b1d475e54ebf5afdd9aec717f0e67413f564",
+          "partial": false,
+          "passed": true
+        },
+        "en-tr-grounded-003": {
+          "effective_score": 1.0,
+          "output_sha256": "4f7f002ab024b9b5beb9ca5b7d24366d7ba955f7b4e9db9446d09028bbf16af7",
+          "partial": false,
+          "passed": true
+        },
+        "en-tr-meeting-002": {
+          "effective_score": 1.0,
+          "output_sha256": "74fe3e5d07e021d158ec67eab0ccd676e4c4afbb2f2ab5f87e8e518bee9bf1f4",
+          "partial": false,
+          "passed": true
+        },
+        "en-tr-order-002": {
+          "effective_score": 0.75,
+          "output_sha256": "23eb7a6a999f4aa03b9c8a7dbd5a5e56b5410f78f0966092f10dbbc43c17df11",
+          "partial": true,
+          "passed": false
+        }
+      },
+      "run_id": "calibration-glm-5.2-thinking-v0.4",
+      "served_model_name": "zai-org/GLM-5.2"
+    }
+  ],
+  "schema_version": "1.0",
+  "suite_version": "0.4.0"
+}

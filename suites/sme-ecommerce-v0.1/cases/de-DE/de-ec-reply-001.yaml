@@ -15,7 +15,8 @@ tags:
 - long
 messages:
 - role: system
-  content: "Schreibe eine sachliche Kundenantwort nur mit den angegebenen Richtlinien-Fakten. Keine erfundenen Zusagen."
+  content: Schreibe eine sachliche Kundenantwort nur mit den angegebenen Richtlinien-Fakten.
+    Keine erfundenen Zusagen.
 - role: user
   fixture: fixtures/de-retoure-thread.txt
 generation:
@@ -25,7 +26,7 @@ generation:
 expected: null
 scorers:
 - type: contains
-  weight: 1.0
+  weight: 0.75
   params:
     terms:
     - '#W-55021'
@@ -40,6 +41,16 @@ scorers:
     ignore_negated: true
     terms:
     - Soforterstattung
-    - Sofortgutschrift
+    - Sofortgutschrift zusagen
+    - Sofortgutschrift gewähren
+    - instant credit promised
+    - promise instant credit
     - bereits erstattet
+    mode: claims
+- type: text_structure
+  weight: 0.25
+  params:
+    min_words: 10
+    min_sentences: 1
+    forbid_bullet_only: true
 pass_threshold: 0.85

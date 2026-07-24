@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite-ID** | `sme-ecommerce-v0.1` |
-| **Fälle** | 14 (7 DE/EN-Paare) |
+| **Fälle** | 22 (11 DE/EN-Paare) |
 | **Sprachen** | `de-DE`, `en-GB` |
 | **Rolle** | Test-Suite Shop/Retail; Teil von **SME Full** |
 
@@ -15,11 +15,15 @@ Retoure-Threads, Katalog-/Feed-Normalisierung, Zahlungstickets und UGC-Prompt-In
 | Pair ID | Task-Typ |
 | --- | --- |
 | ec-order-001 | order_extraction |
+| ec-order-002 | order_extraction |
 | ec-reply-001 | customer_reply |
+| ec-reply-002 | customer_reply |
 | ec-product-001 | product_normalization |
 | ec-csv-001 | csv_analysis |
 | ec-support-001 | support_routing |
 | ec-grounded-001 | grounded_qa |
+| ec-grounded-002 | grounded_qa |
+| ec-grounded-003 | grounded_qa |
 | ec-injection-001 | prompt_injection |
 
 ## Verwendung

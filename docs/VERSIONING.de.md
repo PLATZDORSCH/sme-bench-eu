@@ -3,8 +3,8 @@
 SME-Bench folgt [Semantic Versioning](https://semver.org/lang/de/) und veröffentlicht
 [GitHub Releases](https://github.com/PLATZDORSCH/sme-bench-eu/releases).
 
-Es gibt **zwei Versionslinien**. Beide stehen in der Run-`metadata.json`
-(`sme_bench_version`, `suite_version` / Member-Suite-Versionen).
+Es gibt **drei Versionslinien**. Alle stehen in der Run-`metadata.json`
+(`sme_bench_version`, `suite_version` / Member-Suite-Versionen, `scoring_spec_version`).
 
 ## 1. Tool (Harness) — `pyproject.toml` → `sme_bench_version`
 
@@ -28,17 +28,39 @@ Ordner nur bei größerem Test-Suite-Redesign umbenennen.
 | Änderung | Aktion |
 | --- | --- |
 | Nur Tippfehler in Docs / README | Kein Suite-Bump |
-| Prompt, Fixture, Expected, Gewichte, Suite-Zusammensetzung oder score-relevantes Scorer-Verhalten | Suite-`version` + Package-Release anheben (z. B. **0.2.0**); bei Wiederverwendung alter Attempts `--rescore` dokumentieren |
-| Scorer-Fix, der Noten bei gleicher Modell-Ausgabe ändert | Wie oben; Runs unterschiedlicher Inhaltsversionen nicht stillschweigend vergleichen |
+| Prompt, Fixture, Expected, Gewichte, Suite-Zusammensetzung oder score-relevantes Scorer-Verhalten | Suite-`version` + Package-Release anheben (z. B. **0.8.0** / Harness **0.7.3**); bei unveränderten Inputs `sme-bench regrade`; für partielle Neuausführung `merge-run` |
+| Scorer-Fix, der Noten bei gleicher Modell-Ausgabe ändert | Wie oben; **`regrade`** gegenüber In-Place-`--rescore` bevorzugen; Leaderboard nach `suite_version` filtern |
 
-**Gleiche Inhaltsversion = vergleichbare Runs.** Leaderboard-Zeilen unterschiedlicher Inhaltsversionen nicht ohne Kennzeichnung mischen.
+**Gleiche Inhaltsversion = vergleichbare Runs.** Leaderboard-Zeilen unterschiedlicher Inhaltsversionen nicht ohne Kennzeichnung mischen. Regraded Runs kopieren die Inference eines früheren Runs und wenden nur das Scoring neu an; sie tragen `regraded_from` in der Metadata und bleiben an den Quell-Inference-Run gebunden.
+
+## 3. Scoring-Spezifikation — `scoring_spec_version`
+
+Fingerprint, wie Scores für eine Inhaltslinie berechnet werden (Gewichte, Must-Pass-Gates, Matcher-Semantik). Steht in der Run-Metadata als `scoring_spec_version` (aktuell: **0.5.0**).
+
+| Änderung | Aktion |
+| --- | --- |
+| Nur Docs / Harness-Packaging | Kein Scoring-Spec-Bump |
+| Score-relevante Scorer- oder Aggregationsänderung bei unveränderten Modell-Inputs | `scoring_spec_version` mit Content-/Harness-Release anheben; bestehende Runs bleiben **regrade-fähig**, solange die Inputs unverändert sind |
+
+Kompatibilitäts-Manifeste unter [`suites/compatibility/`](../suites/compatibility/) halten fest, welche Tasks regrade-sicher sind und welche ein frisches Inference-Delta brauchen, z. B. [`regrade-0.8.0-baseline.json`](../suites/compatibility/regrade-0.8.0-baseline.json).
+
+### Regrade versus Rerun
+
+| Situation | Befehl |
+| --- | --- |
+| Gleiche Modell-Inputs; nur Scoring/Spec geändert | `sme-bench regrade SOURCE --output TARGET` |
+| Teilmenge der Task-Inputs geändert | `sme-bench run … --task-ids …`, danach `sme-bench merge-run --base … --delta … -o …` |
+| Prüfen, welcher Pfad für welche Tasks gilt | `sme-bench compat-report SOURCE` |
+| Input-Fingerprints für Manifeste exportieren | `sme-bench fingerprints --suite …` |
+
+Für veröffentlichte Vergleiche **`regrade`** gegenüber In-Place-`report --rescore` bevorzugen: Regrade schreibt ein neues Run-Verzeichnis und erhält den Quell-Inference-Run.
 
 ## GitHub Releases
 
 1. [`CHANGELOG.md`](../CHANGELOG.md) aktualisieren: Einträge von **Unreleased** in die neue Versionssektion verschieben.
 2. `version` in `pyproject.toml` anheben, wenn sich Tool oder veröffentlichte Benchmark-Linie ändert.
 3. Auf `main` committen, dann Tag `vX.Y.Z` (annotated) und GitHub Release von diesem Tag anlegen.
-4. In den Release Notes angeben, ob sich **Tool**, **Benchmark-Inhalt** oder **beides** geändert hat.
+4. In den Release Notes angeben, ob sich **Tool**, **Benchmark-Inhalt**, **Scoring-Spec** oder eine Kombination geändert hat.
 
 ### Faustregel (0.x)
 

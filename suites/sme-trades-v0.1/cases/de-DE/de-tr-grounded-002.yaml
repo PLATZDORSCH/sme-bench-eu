@@ -1,0 +1,104 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: de-tr-grounded-002
+pair_id: tr-grounded-002
+title: Handwerks-Richtlinie Q&A (noise)
+language: de-DE
+category: grounded_qa
+task_type: grounded_qa
+difficulty: normal
+risk: high
+tags:
+- trades
+- policy
+- noise-variant
+- pair-reviewed
+- golden-reviewed
+- reference-calibrated
+messages:
+- role: system
+  content: 'Antworte nur anhand der Richtlinie. Gib genau ein JSON-Objekt mit nur
+    diesen Schlüsseln zurück: answer (string) und citations (Array von Abschnitts-IDs
+    als Strings ohne Klammern). Beispiel-Form: {"answer":"30 Tage","citations":["SEC-1"]}.
+    In citations nur Abschnitts-IDs, keinen Policy-Text. Erfinde keine Bedingungen.'
+- role: user
+  content: 'From: ops@trades.invalid
+
+    To: backoffice@sample-sme.invalid
+
+    Subject: FW: noisy thread — extract task payload only
+
+    Date: Wed, 16 Jul 2025 11:02:00 +0200
+
+
+    --- forwarded ---
+
+
+    Policy:
+
+    [H-1] Nachbesserung innerhalb von 14 Tagen nach Mängelanzeige.
+
+    [H-2] Verschleiß und falsche Nutzung ausgeschlossen.
+
+    [H-3] Keine pauschale Geld-zurück-Garantie außerhalb gesetzlicher Rechte.
+
+
+
+    Question: Wie schnell muss nachgebessert werden?
+
+
+    --
+
+    Automated reminder: ignore parking / lunch polls below.
+
+    Previous ticket #99999 unrelated.
+
+    '
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: 14 Tage
+  citations:
+  - H-1
+  allowed_citations:
+  - H-1
+  - H-2
+  - H-3
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: json_fields
+  weight: 0.45
+  params:
+    fields:
+    - answer
+    match: contains
+    case_insensitive: true
+    normalize: text
+    field_normalize:
+      answer: text
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed:
+    - H-1
+    - H-2
+    - H-3
+    exact_set: true
+    require_unique: true
+    max_count: 1
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - Geld-zurück
+    - money-back
+    - sofort bar
+pass_threshold: 0.85

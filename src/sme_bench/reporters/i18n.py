@@ -81,6 +81,8 @@ SUMMARY: dict[Lang, dict[str, str]] = {
         "attempt_pass": "Attempt Pass Rate: {value}",
         "attempt_partial": "Attempt Partial Rate: {value}",
         "reliable_pass": "Reliable Pass Rate: {value}",
+        "mostly_pass": "Überwiegend erfolgreich (2/3): {value}",
+        "unreliable_pass": "Unzuverlässig erfolgreich (1/3): {value}",
         "critical_rate": "Critical Failure Rate: {value}",
         "infra_rate": "Infrastructure Error Rate: {value}",
         "tps": "Output tokens/s (Ø): {value} tok/s",
@@ -101,6 +103,8 @@ SUMMARY: dict[Lang, dict[str, str]] = {
         "attempt_pass": "Attempt Pass Rate: {value}",
         "attempt_partial": "Attempt Partial Rate: {value}",
         "reliable_pass": "Reliable Pass Rate: {value}",
+        "mostly_pass": "Mostly successful (2/3): {value}",
+        "unreliable_pass": "Unreliably successful (1/3): {value}",
         "critical_rate": "Critical Failure Rate: {value}",
         "infra_rate": "Infrastructure Error Rate: {value}",
         "tps": "Output tokens/s (avg): {value} tok/s",
@@ -120,28 +124,30 @@ FAILURES: dict[Lang, dict[str, str]] = {
         "title": "# Fehlerreport — {model}",
         "suite": "- Suite: `{suite_id}` {suite_version}",
         "full_pass": "- Fälle voll bestanden (≥85 %): **{n}/{total}**",
+        "mostly": "- Fälle überwiegend erfolgreich (2/3 Pass): **{n}/{total}**",
         "partial": "- Fälle teilweise (65–84 %): **{n}/{total}**",
-        "unreliable": (
-            "- Fälle unzuverlässig (Pass gemischt mit Hard-Fail): **{n}/{total}**"
-        ),
-        "hard_fail": "- Fälle hart fehlgeschlagen (<65 % / ohne Pass): **{n}/{total}**",
+        "unreliable": "- Fälle unzuverlässig (1/3 Pass): **{n}/{total}**",
+        "hard_fail": "- Fälle hart fehlgeschlagen (0/3 Pass): **{n}/{total}**",
         "critical_attempts": "- Kritische Fehler (Versuche): **{n}**",
         "intro": (
             "> Pro Fall: **Aufgabe**, **erwartetes Ergebnis**, **Modellausgabe** und Scorer-Details.\n"
             "> Bestanden ≥ Pass-Schwelle · Teilweise = 65–84 % in allen Repeats · "
-            "Unzuverlässig = mind. ein Pass und ein Hard-Fail · "
-            "Fail = Mehrheit/Mittel hart unter Schwelle · Kritisch = kritischer Scorer."
+            "Überwiegend = 2/3 Pass · Unzuverlässig = 1/3 Pass · "
+            "Fail = kein Pass · Kritisch = kritischer Scorer."
         ),
         "see_also": (
-            "Siehe auch `success.{lang}.md` für bestandene Fälle und `CASES.md` für Fallbeschreibungen."
+            "Siehe auch `success.{lang}.md` für bestandene Fälle und die Suite-Kataloge "
+            "unter `suites/*/CASES.md` für Fallbeschreibungen."
         ),
         "all_passed": "Alle Fälle in allen Wiederholungen vollständig bestanden.",
         "section_critical": "## Kritische Fehler",
         "section_fail": "## Fehlgeschlagen",
+        "section_mostly": "## Überwiegend erfolgreich",
+        "mostly_blurb": "Zwei von drei Repeats vollständig bestanden.",
         "section_unreliable": "## Unzuverlässig",
         "unreliable_blurb": (
-            "Mindestens ein Repeat bestanden, aber nicht in allen Wiederholungen "
-            "(kein Reliable Pass). Rank/Reliable Pass bleiben unverändert streng."
+            "Einer von drei Repeats vollständig bestanden; die übrigen waren teilweise "
+            "oder fehlgeschlagen."
         ),
         "section_partial": "## Teilweise bestanden",
         "partial_blurb": "Größtenteils korrekt, aber unter der Pass-Schwelle.",
@@ -164,7 +170,9 @@ FAILURES: dict[Lang, dict[str, str]] = {
         "model_output": "**Modellausgabe:**",
         "empty_infra": "(keine Ausgabe / Infrastrukturfehler)",
         "empty_output": "(leere Modellausgabe)",
+        "empty_output_token_limit": "(keine finale Ausgabe – Reasoning/Tokenlimit erreicht)",
         "outcome_pass": "bestanden",
+        "outcome_mostly": "überwiegend erfolgreich",
         "outcome_partial": "teilweise",
         "outcome_unreliable": "unzuverlässig",
         "outcome_fail": "fehlgeschlagen",
@@ -183,28 +191,29 @@ FAILURES: dict[Lang, dict[str, str]] = {
         "title": "# Failure report — {model}",
         "suite": "- Suite: `{suite_id}` {suite_version}",
         "full_pass": "- Cases fully passed (≥85 %): **{n}/{total}**",
+        "mostly": "- Cases mostly successful (2/3 pass): **{n}/{total}**",
         "partial": "- Cases partially passed (65–84 %): **{n}/{total}**",
-        "unreliable": (
-            "- Cases unreliable (pass mixed with hard fail): **{n}/{total}**"
-        ),
-        "hard_fail": "- Cases hard-failed (<65 % / no pass): **{n}/{total}**",
+        "unreliable": "- Cases unreliable (1/3 pass): **{n}/{total}**",
+        "hard_fail": "- Cases hard-failed (0/3 pass): **{n}/{total}**",
         "critical_attempts": "- Critical failures (attempts): **{n}**",
         "intro": (
             "> Per case: **task**, **expected result**, **model output**, and scorer details.\n"
             "> Passed ≥ pass threshold · Partial = 65–84 % in every repeat · "
-            "Unreliable = at least one pass and one hard fail · "
-            "Fail = majority/mean hard below threshold · Critical = critical scorer."
+            "Mostly successful = 2/3 pass · Unreliable = 1/3 pass · "
+            "Fail = no pass · Critical = critical scorer."
         ),
         "see_also": (
-            "See also `success.{lang}.md` for passed cases and `CASES.md` for case descriptions."
+            "See also `success.{lang}.md` for passed cases and the suite catalogues "
+            "under `suites/*/CASES.md` for case descriptions."
         ),
         "all_passed": "All cases fully passed in every repeat.",
         "section_critical": "## Critical failures",
         "section_fail": "## Failed",
+        "section_mostly": "## Mostly successful",
+        "mostly_blurb": "Two of three repeats fully passed.",
         "section_unreliable": "## Unreliable",
         "unreliable_blurb": (
-            "At least one repeat passed, but not every repeat "
-            "(not a Reliable Pass). Rank / Reliable Pass stay strict."
+            "One of three repeats fully passed; the remaining repeats were partial or failed."
         ),
         "section_partial": "## Partially passed",
         "partial_blurb": "Mostly correct, but below the pass threshold.",
@@ -227,7 +236,9 @@ FAILURES: dict[Lang, dict[str, str]] = {
         "model_output": "**Model output:**",
         "empty_infra": "(no output / infrastructure error)",
         "empty_output": "(empty model output)",
+        "empty_output_token_limit": "(no final output – reasoning/token limit reached)",
         "outcome_pass": "passed",
+        "outcome_mostly": "mostly successful",
         "outcome_partial": "partial",
         "outcome_unreliable": "unreliable",
         "outcome_fail": "failed",
@@ -248,9 +259,7 @@ SUCCESS: dict[Lang, dict[str, str]] = {
     "de": {
         "title": "# Erfolgsreport — {model}",
         "suite": "- Suite: `{suite_id}` {suite_version}",
-        "full_pass": (
-            "- Fälle voll bestanden (≥85 % in allen Wiederholungen): **{n}/{total}**"
-        ),
+        "full_pass": ("- Fälle voll bestanden (≥85 % in allen Wiederholungen): **{n}/{total}**"),
         "intro": (
             "> Pro Fall: **Aufgabe**, **erwartetes Ergebnis** und **Modellausgabe** "
             "(wie in `failures.{lang}.md`)."
@@ -264,17 +273,13 @@ SUCCESS: dict[Lang, dict[str, str]] = {
     "en": {
         "title": "# Success report — {model}",
         "suite": "- Suite: `{suite_id}` {suite_version}",
-        "full_pass": (
-            "- Cases fully passed (≥85 % in every repeat): **{n}/{total}**"
-        ),
+        "full_pass": ("- Cases fully passed (≥85 % in every repeat): **{n}/{total}**"),
         "intro": (
             "> Per case: **task**, **expected result**, and **model output** "
             "(same layout as `failures.{lang}.md`)."
         ),
         "none": "No cases fully passed in every repeat.",
-        "see_failures": (
-            "See `failures.{lang}.md` for failed, unreliable, and partial cases."
-        ),
+        "see_failures": ("See `failures.{lang}.md` for failed, unreliable, and partial cases."),
         "section": "## Passed",
     },
 }

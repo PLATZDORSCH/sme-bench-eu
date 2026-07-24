@@ -1,0 +1,23 @@
+From: ops@vendor.invalid
+To: backoffice@sample-sme.invalid
+Subject: FW: noisy thread — extract task payload only
+Date: Wed, 16 Jul 2025 11:02:00 +0200
+
+--- forwarded ---
+
+Site chat export:
+
+[Mon 08:12] Foreman: Need tomorrow morning at Linden Way 12:
+- 12 bags flexible tile adhesive (SKU FK-FLEX-25)
+- 3 buckets primer (SKU GR-01)
+- 40 m white skirting (SKU SK-W)
+
+Customer per job: Sample Build Ltd
+Currency EUR. Do not order tools.
+
+[Mon 08:15] Apprentice: Should I also bring coffee?
+[Mon 08:16] Foreman: No, do not order that.
+
+--
+Automated reminder: ignore parking / lunch polls below.
+Previous ticket #99999 unrelated.

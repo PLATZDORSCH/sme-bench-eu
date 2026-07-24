@@ -14,6 +14,8 @@ dist/
 .venv/
 venv/
 ENV/
+node_modules/
+.pnpm-store/
 
 # uv / packaging
 # uv.lock is committed on purpose for reproducible installs.
@@ -36,6 +38,9 @@ htmlcov/
 
 # Runtime outputs
 runs/
+.work/
+
+# Local-only website (leaderboard UI; not published with the Python package)
 website/
 
 # Environment / secrets

@@ -24,7 +24,7 @@ generation:
 expected: null
 scorers:
 - type: contains
-  weight: 1.0
+  weight: 0.75
   params:
     terms:
     - '#Z-19'
@@ -46,4 +46,11 @@ scorers:
     - payment confirmed
     - bereits bezahlt
     - already paid
+    mode: claims
+- type: text_structure
+  weight: 0.25
+  params:
+    min_words: 10
+    min_sentences: 1
+    forbid_bullet_only: true
 pass_threshold: 0.85

@@ -71,44 +71,76 @@ def test_language_parity_and_aggregate_reliable_pass() -> None:
     assert parity["language_gap_pass_rate"] == pytest.approx(0.5)
     summary = aggregate(attempts, category_weights={"c": 1.0})
     assert summary["overall"]["reliable_pass_rate"] == pytest.approx(0.5)
+    assert summary["overall"]["mostly_pass_rate"] == pytest.approx(0.0)
+    assert summary["overall"]["unreliable_pass_rate"] == pytest.approx(0.5)
+    assert summary["overall"]["failed_task_rate"] == pytest.approx(0.0)
     assert "sme_core_score" in summary
     assert "sme_rank_score" in summary
     overall = summary["overall"]
     assert summary["sme_rank_score"] == pytest.approx(
         summary["sme_core_score"]
-        * overall["reliable_pass_rate"]
+        * overall["attempt_pass_rate"]
         * (1 - CRITICAL_RATE_PENALTY_K * overall["critical_failure_rate"])
         * (1 - PARTIAL_RATE_PENALTY_K * overall["attempt_partial_rate"])
     )
 
 
+def test_repeat_pass_buckets_distinguish_three_two_one_and_zero_passes() -> None:
+    attempts: list[AttemptResult] = []
+    for task_id, pass_count in {
+        "reliable": 3,
+        "mostly": 2,
+        "unreliable": 1,
+        "failed": 0,
+    }.items():
+        for repeat_index in range(3):
+            passed = repeat_index < pass_count
+            attempts.append(
+                AttemptResult(
+                    task_id=task_id,
+                    language="de-DE",
+                    category="c",
+                    task_type="t",
+                    difficulty="easy",
+                    risk="low",
+                    repeat_index=repeat_index,
+                    passed=passed,
+                    effective_score=1.0 if passed else 0.0,
+                )
+            )
+
+    overall = aggregate(attempts)["overall"]
+    assert overall["reliable_pass_rate"] == pytest.approx(0.25)
+    assert overall["mostly_pass_rate"] == pytest.approx(0.25)
+    assert overall["unreliable_pass_rate"] == pytest.approx(0.25)
+    assert overall["failed_task_rate"] == pytest.approx(0.25)
+    assert overall["attempt_pass_rate"] == pytest.approx(0.5)
+
+
 def test_sme_rank_score_penalty() -> None:
     assert sme_rank_score(
         96.5,
-        reliable_pass_rate=1.0,
+        repeat_pass_rate=1.0,
         critical_failure_rate=0.0,
         attempt_partial_rate=0.0,
     ) == pytest.approx(96.5)
     assert sme_rank_score(
         96.5,
-        reliable_pass_rate=0.853,
+        repeat_pass_rate=0.853,
         critical_failure_rate=0.0085,
         attempt_partial_rate=0.068,
     ) == pytest.approx(
-        96.5
-        * 0.853
-        * (1 - CRITICAL_RATE_PENALTY_K * 0.0085)
-        * (1 - PARTIAL_RATE_PENALTY_K * 0.068)
+        96.5 * 0.853 * (1 - CRITICAL_RATE_PENALTY_K * 0.0085) * (1 - PARTIAL_RATE_PENALTY_K * 0.068)
     )
     assert sme_rank_score(
         90.0,
-        reliable_pass_rate=1.0,
+        repeat_pass_rate=1.0,
         critical_failure_rate=0.2,
         attempt_partial_rate=0.0,
     ) == pytest.approx(0.0)
     assert sme_rank_score(
         90.0,
-        reliable_pass_rate=0.5,
+        repeat_pass_rate=0.5,
         critical_failure_rate=0.0,
         attempt_partial_rate=0.0,
     ) == pytest.approx(45.0)

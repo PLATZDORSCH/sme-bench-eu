@@ -1,0 +1,112 @@
+schema_version: '1.0'
+id: de-lo-grounded-003
+pair_id: lo-grounded-003
+title: Versand-SLA nur aus Richtlinie (edge)
+language: de-DE
+category: grounded_qa
+task_type: grounded_qa
+difficulty: hard
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- logistics
+- citations
+- edge-variant
+- curated-edge
+- pair-reviewed
+- golden-reviewed
+- reference-calibrated
+messages:
+- role: system
+  content: 'Antworte nur anhand der Richtlinie. Gib genau ein JSON-Objekt mit nur
+    diesen Schlüsseln zurück: answer (string) und citations (Array von Abschnitts-IDs
+    als Strings ohne Klammern). Beispiel-Form: {"answer":"30 Tage","citations":["SEC-1"]}.
+    In citations nur Abschnitts-IDs, keinen Policy-Text. Erfinde keine Bedingungen.'
+- role: user
+  content: 'From: ops@logistics.invalid
+
+    To: backoffice@sample-sme.invalid
+
+    Subject: FW: noisy thread — extract task payload only
+
+    Date: Wed, 16 Jul 2025 11:02:00 +0200
+
+
+    --- forwarded ---
+
+
+    Policy:
+
+
+    [L-1] Standardversand Inland 2–4 Werktage.
+
+    [L-2] Express bis 12:00 Bestellung = nächster Werktag.
+
+    [L-3] Keine Same-Day-Zustellung außerhalb 50 km.
+
+
+    Question: Wann kommt Express an, wenn bis 12:00 bestellt wird?
+
+
+    --
+
+    Automated reminder: ignore parking / lunch polls below.
+
+    Previous ticket #99999 unrelated.
+
+
+    Edge note: a previous agent answered the first policy clause; answer the actual
+    question above.
+
+    '
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: nächster Werktag
+  citations:
+  - L-2
+  allowed_citations:
+  - L-1
+  - L-2
+  - L-3
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: json_fields
+  weight: 0.45
+  params:
+    fields:
+    - answer
+    match: contains
+    case_insensitive: true
+    normalize: text
+    field_normalize:
+      answer: text
+    field_aliases:
+      answer:
+      - am nächsten Werktag
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed:
+    - L-1
+    - L-2
+    - L-3
+    exact_set: true
+    require_unique: true
+    max_count: 1
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - same day überall
+    - same day everywhere
+    - sofort weltweit
+pass_threshold: 0.85

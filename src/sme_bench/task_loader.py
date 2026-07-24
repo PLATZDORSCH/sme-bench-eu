@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -9,7 +11,9 @@ from typing import Any
 import yaml
 from pydantic import ValidationError
 
+from sme_bench.fingerprints import task_input_fingerprint
 from sme_bench.models import BenchmarkTask, Message, SuiteManifest
+from sme_bench.scorer_specs import validate_scorer_spec
 from sme_bench.utils import (
     compute_suite_hash,
     resolve_safe_path,
@@ -92,9 +96,7 @@ def load_full_benchmark(
     for suite_id in ids:
         suite_dir = _resolve_suite_dir(root, suite_id)
         if not suite_dir.is_dir():
-            issues.append(
-                ValidationIssue(str(suite_dir), f"Suite directory not found: {suite_id}")
-            )
+            issues.append(ValidationIssue(str(suite_dir), f"Suite directory not found: {suite_id}"))
             continue
         loaded = load_suite(
             suite_dir,
@@ -141,10 +143,10 @@ def load_full_benchmark(
         schema_version="1.0",
         id="sme-full",
         name="SME Full Benchmark",
-        version="0.4.0",
+        version="0.8.0",
         description=(
             "Standard ranking pack: Core + Trades, E-Commerce, Financial, "
-            "Hospitality, Logistics, Chains (~156 cases)"
+            "Hospitality, Logistics, Chains (196 DE/EN cases; curated noise/edge expansion)"
         ),
         languages=["de-DE", "en-GB"],
         default_repeats=3,
@@ -157,6 +159,9 @@ def load_full_benchmark(
             "member_suites": [m["id"] for m in members],
         },
     )
+    # Cross-suite audits (fingerprints / variants) after merge
+    _check_fingerprint_uniqueness(tasks, issues)
+    _check_variant_message_divergence(tasks, issues)
     return LoadedSuite(
         directory=root,
         manifest=manifest,
@@ -191,6 +196,196 @@ def _resolve_messages(suite_dir: Path, task: BenchmarkTask, source: Path) -> Ben
         else:
             resolved.append(msg)
     return task.model_copy(update={"messages": resolved})
+
+
+def _scorer_identity(scorer: Any) -> str:
+    """Canonical full scorer identity used only for exact duplicate detection."""
+    payload = {
+        "type": scorer.type,
+        "weight": scorer.weight,
+        "critical": scorer.critical,
+        "must_pass": scorer.must_pass,
+        "params": scorer.params or {},
+    }
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str)
+
+
+def _check_scorer_integrity(task: BenchmarkTask, rel: str, issues: list[ValidationIssue]) -> None:
+    seen: set[str] = set()
+    for scorer in task.scorers:
+        key = _scorer_identity(scorer)
+        if key in seen:
+            issues.append(
+                ValidationIssue(
+                    rel,
+                    f"Duplicate scorer specification: type={scorer.type!r}",
+                )
+            )
+        seen.add(key)
+        for svi in validate_scorer_spec(scorer, path=rel, strict=True):
+            issues.append(ValidationIssue(svi.path, svi.message, severity=svi.severity))
+
+    positive = [s.weight for s in task.scorers if s.weight > 0]
+    if positive:
+        total = sum(positive)
+        if abs(total - 1.0) > 1e-6:
+            issues.append(
+                ValidationIssue(
+                    rel,
+                    f"Positive scorer weights must sum to 1.0, got {total:.6f}",
+                )
+            )
+
+
+def _check_variant_review_gate(
+    task: BenchmarkTask,
+    rel: str,
+    issues: list[ValidationIssue],
+) -> None:
+    variant_tags = {"noise-variant", "edge-variant"}
+    if not variant_tags.intersection(task.tags) or task.review_status != "approved":
+        return
+    required = {"pair-reviewed", "golden-reviewed", "reference-calibrated"}
+    missing = sorted(required - set(task.tags))
+    if missing:
+        issues.append(
+            ValidationIssue(
+                rel,
+                "Approved generated variant is missing review evidence tags: "
+                f"{missing}; keep it draft until review/calibration is complete",
+            )
+        )
+
+
+def _variant_family(task_id: str) -> tuple[str, str] | None:
+    """Return (stem, variant) for ids ending in -001/-002/-003."""
+    match = re.search(r"^(.*)-(\d{3})$", task_id)
+    if not match:
+        return None
+    return match.group(1), match.group(2)
+
+
+def _check_fingerprint_uniqueness(
+    tasks: list[BenchmarkTask],
+    issues: list[ValidationIssue],
+) -> None:
+    by_fp: dict[str, list[str]] = {}
+    for task in tasks:
+        # Explicit repeat declaration opts out of uniqueness (future-proof).
+        if "intentional-repeat" in (task.tags or []):
+            continue
+        fp = task_input_fingerprint(task)
+        by_fp.setdefault(fp, []).append(task.id)
+    for fp, ids in by_fp.items():
+        if len(ids) > 1:
+            issues.append(
+                ValidationIssue(
+                    ids[0],
+                    "Identical input fingerprint across task ids "
+                    f"{sorted(ids)} (fp={fp[:12]}…); declare tag "
+                    "'intentional-repeat' only for true repeats",
+                )
+            )
+
+
+def _check_variant_message_divergence(
+    tasks: list[BenchmarkTask],
+    issues: list[ValidationIssue],
+) -> None:
+    families: dict[str, dict[str, BenchmarkTask]] = {}
+    for task in tasks:
+        family = _variant_family(task.id)
+        if not family:
+            continue
+        stem, variant = family
+        # Scope by language so DE/EN pairs don't collide
+        key = f"{task.language}::{stem}"
+        families.setdefault(key, {})[variant] = task
+    for key, variants in families.items():
+        if len(variants) < 2:
+            continue
+        messages: dict[str, str] = {}
+        for variant, task in variants.items():
+            blob = "\n".join(f"{m.role}:{m.content or ''}" for m in task.messages)
+            messages[variant] = blob
+        # Any two variants with identical resolved messages → error
+        seen: dict[str, str] = {}
+        for variant, blob in messages.items():
+            if blob in seen:
+                issues.append(
+                    ValidationIssue(
+                        key,
+                        f"Variants {seen[blob]} and {variant} have identical resolved messages",
+                    )
+                )
+            else:
+                seen[blob] = variant
+
+
+def _check_shared_fixtures(
+    tasks: list[BenchmarkTask],
+    issues: list[ValidationIssue],
+) -> None:
+    """Flag when distinct variant ids unintentionally share the same fixture path."""
+    by_fixture: dict[str, list[str]] = {}
+    for task in tasks:
+        for msg in task.messages:
+            # After resolve, fixture is None and content is inlined; use raw if present
+            fixture = getattr(msg, "fixture", None)
+            if not fixture:
+                continue
+            by_fixture.setdefault(str(fixture), []).append(task.id)
+    for fixture, ids in by_fixture.items():
+        families = {_variant_family(i) for i in ids}
+        stems = {f[0] for f in families if f}
+        variants = {f[1] for f in families if f}
+        if len(stems) == 1 and len(variants) > 1:
+            issues.append(
+                ValidationIssue(
+                    fixture,
+                    f"Fixture shared across variants {sorted(ids)}; each variant needs its own path",
+                )
+            )
+
+
+def _check_pair_expected_and_risk(
+    tasks: list[BenchmarkTask],
+    issues: list[ValidationIssue],
+) -> None:
+    by_pair: dict[str, list[BenchmarkTask]] = {}
+    for task in tasks:
+        if task.pair_id:
+            by_pair.setdefault(task.pair_id, []).append(task)
+    for pair_id, pair_tasks in by_pair.items():
+        languages = [t.language for t in pair_tasks]
+        if len(pair_tasks) != 2 or set(languages) != {"de-DE", "en-GB"}:
+            issues.append(
+                ValidationIssue(
+                    pair_id,
+                    f"pair_id '{pair_id}' must contain exactly one de-DE and one en-GB task; "
+                    f"got {languages}",
+                )
+            )
+        risks = {t.risk for t in pair_tasks}
+        if len(risks) > 1:
+            issues.append(
+                ValidationIssue(
+                    pair_id,
+                    f"pair_id '{pair_id}' has inconsistent risk levels: {sorted(risks)}",
+                )
+            )
+        # Expected top-level keys should match when both are objects
+        object_expected = [t for t in pair_tasks if isinstance(t.expected, dict)]
+        if len(object_expected) >= 2:
+            key_sets = [frozenset(t.expected.keys()) for t in object_expected]
+            if len({frozenset(k) for k in key_sets}) > 1:
+                issues.append(
+                    ValidationIssue(
+                        pair_id,
+                        f"pair_id '{pair_id}' has inconsistent expected field coverage: "
+                        f"{[sorted(k) for k in key_sets]}",
+                    )
+                )
 
 
 def _check_pair_consistency(tasks: list[BenchmarkTask], issues: list[ValidationIssue]) -> None:
@@ -238,6 +433,7 @@ def _check_pair_consistency(tasks: list[BenchmarkTask], issues: list[ValidationI
                     ),
                 )
             )
+    _check_pair_expected_and_risk(tasks, issues)
 
 
 def load_suite(
@@ -275,6 +471,7 @@ def load_suite(
         return LoadedSuite(suite_dir, empty, [], "", issues)
 
     tasks: list[BenchmarkTask] = []
+    unresolved_tasks: list[BenchmarkTask] = []
     seen_ids: set[str] = set()
     case_files = _discover_case_files(suite_dir, manifest.case_globs)
 
@@ -311,6 +508,8 @@ def load_suite(
             for scorer in task.scorers:
                 if scorer.type not in known_scorers:
                     issues.append(ValidationIssue(rel, f"Unknown scorer type: {scorer.type}"))
+        _check_scorer_integrity(task, rel, issues)
+        _check_variant_review_gate(task, rel, issues)
 
         # Validate fixture paths exist and stay inside suite
         try:
@@ -328,13 +527,18 @@ def load_suite(
                         scorer.params["schema"] = str(schema_path)
                         scorer.params["_suite_dir"] = str(suite_dir)
 
+            unresolved = task
             if resolve_fixtures:
                 task = _resolve_messages(suite_dir, task, case_path)
             tasks.append(task)
+            unresolved_tasks.append(unresolved)
         except ValueError as exc:
             issues.append(ValidationIssue(rel, str(exc)))
 
     _check_pair_consistency(tasks, issues)
+    _check_fingerprint_uniqueness(tasks, issues)
+    _check_variant_message_divergence(tasks, issues)
+    _check_shared_fixtures(unresolved_tasks, issues)
     suite_hash = compute_suite_hash(suite_dir, [t.id for t in tasks]) if tasks else ""
     return LoadedSuite(suite_dir, manifest, tasks, suite_hash, issues)
 
@@ -346,8 +550,20 @@ def filter_tasks(
     categories: list[str] | None = None,
     difficulty: list[str] | None = None,
     tags: list[str] | None = None,
+    task_ids: list[str] | None = None,
 ) -> list[BenchmarkTask]:
     result = tasks
+    if task_ids:
+        id_set = set(task_ids)
+        unknown = sorted(id_set - {t.id for t in tasks})
+        if unknown:
+            preview = ", ".join(unknown[:10])
+            suffix = f" (+{len(unknown) - 10} more)" if len(unknown) > 10 else ""
+            raise ValueError(f"Unknown task id(s): {preview}{suffix}")
+        duplicates = sorted({tid for tid in task_ids if task_ids.count(tid) > 1})
+        if duplicates:
+            raise ValueError(f"Duplicate task id(s): {', '.join(duplicates)}")
+        result = [t for t in result if t.id in id_set]
     if languages:
         lang_set = set(languages)
         result = [t for t in result if t.language in lang_set]

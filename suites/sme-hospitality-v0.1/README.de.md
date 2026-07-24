@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite-ID** | `sme-hospitality-v0.1` |
-| **Fälle** | 14 (7 DE/EN-Paare) |
+| **Fälle** | 24 (12 DE/EN-Paare) |
 | **Sprachen** | `de-DE`, `en-GB` |
 | **Rolle** | Test-Suite Gastro/Hotel; Teil von **SME Full** |
 
@@ -15,12 +15,17 @@ Catering-Bestellungen, Reservierungen, Gästetickets, F&B-Umsatz und Hausregeln.
 | Pair ID | Task-Typ |
 | --- | --- |
 | ho-order-001 | order_extraction |
+| ho-order-002 | order_extraction |
 | ho-reply-001 | customer_reply |
+| ho-reply-002 | customer_reply |
 | ho-missing-001 | missing_information |
 | ho-support-001 | support_routing |
 | ho-csv-001 | csv_analysis |
 | ho-grounded-001 | grounded_qa |
+| ho-grounded-002 | grounded_qa |
+| ho-grounded-003 | grounded_qa |
 | ho-meeting-001 | meeting_actions |
+| ho-meeting-002 | meeting_actions |
 
 ## Verwendung
 

@@ -60,12 +60,15 @@ def evaluate_attempt(
         )
 
     critical_failure = any(r.critical_failure for r in results)
-    passed = weighted >= task.pass_threshold and not critical_failure
-    partial = (
-        not critical_failure
-        and not passed
-        and weighted >= task.partial_threshold
+    # ``must_pass`` scorers may still contribute partial credit, but a failed
+    # must_pass scorer blocks a full weighted pass (schema points must not
+    # override a wrong required field; adjacent_credit stays partial-only).
+    must_pass_failed = any(
+        spec.must_pass and not result.passed
+        for spec, result in zip(task.scorers, results, strict=True)
     )
+    passed = weighted >= task.pass_threshold and not critical_failure and not must_pass_failed
+    partial = not critical_failure and not passed and weighted >= task.partial_threshold
     effective = 0.0 if critical_failure else weighted
     return results, weighted, effective, passed, partial, critical_failure, parsed
 

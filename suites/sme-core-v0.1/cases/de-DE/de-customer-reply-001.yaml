@@ -14,7 +14,8 @@ tags:
 - no-commitment
 messages:
 - role: system
-  content: "Schreibe eine kurze, sachliche Kundenantwort nur mit den angegebenen Fakten. Erfinde keine Zusagen."
+  content: Schreibe eine kurze, sachliche Kundenantwort nur mit den angegebenen Fakten.
+    Erfinde keine Zusagen.
 - role: user
   fixture: fixtures/reply/de-delay.txt
 generation:
@@ -24,7 +25,7 @@ generation:
 expected: null
 scorers:
 - type: contains
-  weight: 1.0
+  weight: 0.75
   params:
     terms:
     - '#A-441'
@@ -42,4 +43,11 @@ scorers:
     - Entschädigung zugesagt
     - Zahlung bestätigt
     - bereits bezahlt
+    mode: claims
+- type: text_structure
+  weight: 0.25
+  params:
+    min_words: 10
+    min_sentences: 1
+    forbid_bullet_only: true
 pass_threshold: 0.85

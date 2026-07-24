@@ -11,6 +11,8 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from sme_bench.utils import normalize_base_url
 
+SCORING_SPEC_VERSION = "0.5.0"
+
 
 class PricingConfig(BaseModel):
     input_price_per_million: float | None = None
@@ -27,6 +29,7 @@ class RunConfig(BaseModel):
     categories: list[str] | None = None
     difficulty: list[str] | None = None
     tags: list[str] | None = None
+    task_ids: list[str] | None = None
     repeats: int = 3
     concurrency: int = 1
     seed: int = 42

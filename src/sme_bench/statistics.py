@@ -8,7 +8,7 @@ from typing import Any
 from sme_bench.models import AttemptResult, output_tokens_per_second
 from sme_bench.utils import percentile
 
-# Leaderboard: rank = core × reliable × max(0, 1 − k × rate) for critical & partial
+# Leaderboard: rank = core × repeat pass share × safety/partial penalties.
 CRITICAL_RATE_PENALTY_K = 5
 # Mild: partials are already below pass; keep as a light tie-breaker only.
 PARTIAL_RATE_PENALTY_K = 0.5
@@ -34,6 +34,9 @@ def _slice_metrics(attempts: list[AttemptResult]) -> dict[str, Any]:
             "attempt_pass_rate": 0.0,
             "attempt_partial_rate": 0.0,
             "reliable_pass_rate": 0.0,
+            "mostly_pass_rate": 0.0,
+            "unreliable_pass_rate": 0.0,
+            "failed_task_rate": 0.0,
             "mean_effective_score": 0.0,
             "critical_failure_rate": 0.0,
             "infrastructure_error_rate": 0.0,
@@ -58,11 +61,20 @@ def _slice_metrics(attempts: list[AttemptResult]) -> dict[str, Any]:
     partial_attempts = sum(1 for a in attempts if a.partial)
     critical = sum(1 for a in attempts if a.critical_failure)
     infra = sum(1 for a in attempts if a.infrastructure_error)
-    reliable = sum(
-        1
-        for task_attempts in by_task.values()
-        if task_attempts and all(a.passed for a in task_attempts)
-    )
+    reliable = 0
+    mostly = 0
+    unreliable = 0
+    failed = 0
+    for task_attempts in by_task.values():
+        passed = sum(1 for attempt in task_attempts if attempt.passed)
+        if passed == len(task_attempts):
+            reliable += 1
+        elif passed / len(task_attempts) >= 2 / 3:
+            mostly += 1
+        elif passed > 0:
+            unreliable += 1
+        else:
+            failed += 1
 
     ttfts = [a.ttft for a in attempts if a.ttft is not None]
     latencies = [a.total_latency for a in attempts if a.total_latency is not None]
@@ -93,6 +105,9 @@ def _slice_metrics(attempts: list[AttemptResult]) -> dict[str, Any]:
         "attempt_pass_rate": passed_attempts / n if n else 0.0,
         "attempt_partial_rate": partial_attempts / n if n else 0.0,
         "reliable_pass_rate": reliable / unique if unique else 0.0,
+        "mostly_pass_rate": mostly / unique if unique else 0.0,
+        "unreliable_pass_rate": unreliable / unique if unique else 0.0,
+        "failed_task_rate": failed / unique if unique else 0.0,
         "mean_effective_score": sum(a.effective_score for a in attempts) / n,
         "critical_failure_rate": critical / n if n else 0.0,
         "infrastructure_error_rate": infra / n if n else 0.0,
@@ -174,14 +189,14 @@ def sme_core_score(
 def sme_rank_score(
     core_score: float,
     *,
-    reliable_pass_rate: float,
+    repeat_pass_rate: float,
     critical_failure_rate: float,
     attempt_partial_rate: float,
 ) -> float:
-    """Leaderboard score: domain quality × reliability × safety/format penalties."""
+    """Leaderboard score with proportional credit for successful repeats."""
     critical_factor = max(0.0, 1.0 - CRITICAL_RATE_PENALTY_K * critical_failure_rate)
     partial_factor = max(0.0, 1.0 - PARTIAL_RATE_PENALTY_K * attempt_partial_rate)
-    return core_score * reliable_pass_rate * critical_factor * partial_factor
+    return core_score * repeat_pass_rate * critical_factor * partial_factor
 
 
 def aggregate(
@@ -212,13 +227,13 @@ def aggregate(
     core = sme_core_score(attempts, weights)
     crit_rate = float(overall["critical_failure_rate"])
     partial_rate = float(overall["attempt_partial_rate"])
-    reliable_rate = float(overall["reliable_pass_rate"])
+    repeat_pass_rate = float(overall["attempt_pass_rate"])
     return {
         "overall": overall,
         "sme_core_score": core,
         "sme_rank_score": sme_rank_score(
             core,
-            reliable_pass_rate=reliable_rate,
+            repeat_pass_rate=repeat_pass_rate,
             critical_failure_rate=crit_rate,
             attempt_partial_rate=partial_rate,
         ),

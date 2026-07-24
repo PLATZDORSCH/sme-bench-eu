@@ -58,5 +58,6 @@ scorers:
     - medium
     - high
     - urgent
-    adjacent_credit: 0.5
+    adjacent_credit: 0.4
+  must_pass: true
 pass_threshold: 0.85

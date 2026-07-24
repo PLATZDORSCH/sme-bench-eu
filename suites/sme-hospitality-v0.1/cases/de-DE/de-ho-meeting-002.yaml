@@ -1,0 +1,179 @@
+schema_version: '1.0'
+id: de-ho-meeting-002
+pair_id: ho-meeting-002
+title: Maßnahmen aus Vorservice (noise)
+language: de-DE
+category: meeting_operations
+task_type: meeting_actions
+difficulty: normal
+risk: medium
+review_status: approved
+data_classification: synthetic
+tags:
+- hospitality
+- meeting
+- noise-variant
+- pair-reviewed
+- golden-reviewed
+- reference-calibrated
+messages:
+- role: system
+  content: Extrahiere JSON {"actions":[{"owner","task","due"}]} mit due als YYYY-MM-DD.
+    Nur ausdrücklich genannte Entscheidungen.
+- role: user
+  fixture: fixtures/de-pre-shift-002.txt
+generation:
+  max_tokens: 300
+  temperature: 0
+  response_format: json
+expected:
+  actions:
+  - owner: Nora
+    task: Allergenliste
+    due: 2026-07-10
+  - owner: Kai
+    task: Terrasse
+    due: 2026-07-10
+  - owner: Mira
+    task: Weinkarte Q3
+    due: 2026-07-12
+scorers:
+- type: json_schema
+  weight: 0.2
+  params:
+    schema: schemas/meeting-actions.schema.json
+- type: set_equality
+  weight: 0.8
+  params:
+    field: actions
+    ignore_order: true
+    keys:
+    - owner
+    - task
+    - due
+    key_match:
+      task: token_subset
+      owner: exact
+      due: exact
+    key_aliases:
+      task:
+        Angebot senden:
+        - Angebot schicken
+        - Angebot mailen
+        - Angebot an den Kunden schicken
+        - quote senden
+        Lagerbestand aktualisieren:
+        - Lager aktualisieren
+        - Bestand aktualisieren
+        send quote:
+        - send the quote
+        - email the quote
+        - email quote
+        update stock:
+        - update inventory
+        - update stock levels
+        - stock update
+        Zollpapiere:
+        - Zollpapiere vorbereiten
+        - Zolldokumente vorbereiten
+        customs papers:
+        - prepare customs papers
+        - prepare customs documents
+        Stückliste:
+        - Stückliste erstellen
+        - BOM erstellen
+        BOM:
+        - prepare BOM
+        - create BOM
+        - bill of materials
+        Zeichnung senden:
+        - Zeichnung schicken
+        - Zeichnung versenden
+        - Schicken Zeichnung zum Kunden
+        - Zeichnung zum Kunden schicken
+        - Zeichnung an den Kunden schicken
+        send drawing:
+        - send the drawing
+        - email drawing
+        - email the drawing
+        Forecast Q3:
+        - Q3-Forecast
+        - Forecast Q3 liefern
+        - Q3-Forecast liefern
+        - liefert Forecast Q3
+        Q3 forecast:
+        - Q3 forecast delivery
+        - deliver Q3 forecast
+        - delivers Q3 forecast
+        - Deliver Q3 forecast by 2026-06-20
+        Doppelbuchung RE-900:
+        - Doppelbuchung RE-900 klären
+        - RE-900 Doppelbuchung klären
+        - klärt Doppelbuchung RE-900
+        duplicate booking RE-900:
+        - clarify duplicate booking RE-900
+        - resolve duplicate booking RE-900
+        - resolves duplicate booking RE-900
+        - Resolve duplicate booking RE-900 by 2026-06-15
+        Debitoren > 60 Tage:
+        - offene Debitoren > 60 Tage prüfen
+        - Debitoren über 60 Tage prüfen
+        - offene Debitoren über 60 Tage prüfen
+        - prüft offene Debitoren > 60 Tage
+        receivables > 60 days:
+        - review receivables > 60 days
+        - check receivables over 60 days
+        - reviews receivables > 60 days
+        - Review receivables > 60 days by 2026-06-18
+        Allergenliste:
+        - Allergenliste erstellen
+        - Allergenliste aktualisieren
+        allergen sheet:
+        - prepare allergen sheet
+        - update allergen sheet
+        Terrasse:
+        - Terrasse vorbereiten
+        - Terrasse prüfen
+        - Terrasse eindecken
+        terrace:
+        - prepare terrace
+        - check terrace
+        - set terrace
+        Weinkarte Q3:
+        - Weinkarte Q3 erstellen
+        - Q3-Weinkarte erstellen
+        - Weinkarte Q3 freigeben
+        Q3 wine list:
+        - prepare Q3 wine list
+        - create Q3 wine list
+        - release Q3 wine list
+        Stückliste Armaturen:
+        - Stückliste Armaturen erstellen
+        - Armaturen-Stückliste erstellen
+        - aktualisierte Stückliste Armaturen liefern
+        - Aktualisierte Stückliste der Armaturen liefern
+        - liefert die aktualisierte Stückliste Armaturen
+        tap BOM:
+        - prepare tap BOM
+        - create tap BOM
+        - deliver updated tap BOM
+        - delivers updated tap BOM
+        Zugangscode Keller:
+        - Zugangscode Keller senden
+        - Keller-Zugangscode senden
+        - Zugangscode zum Keller bestätigen
+        - bestätigt den Zugangscode zum Keller
+        basement access code:
+        - send basement access code
+        - provide basement access code
+        - confirm basement access code
+        - confirms basement access code
+      owner:
+        Nora:
+        - Chef Nora
+        Kai:
+        - Service Lead Kai
+        - Service lead Kai
+        Mira:
+        - Bar Mira
+pass_threshold: 0.85

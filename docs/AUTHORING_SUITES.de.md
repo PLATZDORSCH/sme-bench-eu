@@ -139,6 +139,7 @@ Ausführliche Beispiele (Classification, JSON Schema, `set_equality`, `citations
 - type: <name>
   weight: 0.5          # Anteil am gewichteten Score; 0 = reine Prüfung / oft mit critical
   critical: false      # bei Fail → critical_failure, effektiver Score 0
+  must_pass: false     # bei Fail → blockiert vollen Pass (Partial bleibt erlaubt)
   params: { … }
 ```
 

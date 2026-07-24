@@ -14,7 +14,13 @@ tags:
 - support
 messages:
 - role: system
-  content: "Klassifiziere das Support-Ticket. Gib JSON mit category (eines von [billing,shipping,technical,other]) und priority (eines von [low,medium,high,urgent]) zurück. Prioritätsrubrik: urgent = geschäftskritischer Ausfall, Sicherheitsvorfall oder Same-Day-/rechtliche Frist; high = erheblicher finanzieller oder prozessblockierender Impact mit Handlungsbedarf innerhalb von Tagen; medium = begrenzter Impact, keine enge Frist; low = geringfügig, kosmetisch oder informativ."
+  content: 'Klassifiziere das Support-Ticket. Gib JSON mit category (eines von [billing,shipping,technical,other])
+    und priority (eines von [low,medium,high,urgent]) zurück. Prioritätsrubrik: urgent
+    = geschäftskritischer Ausfall, Sicherheitsvorfall, Same-Day-/rechtliche Frist
+    oder jede ausdrückliche Bitte um Hilfe/Klärung noch heute; high = erheblicher
+    finanzieller oder prozessblockierender Impact mit Handlungsbedarf innerhalb von
+    Tagen (ohne Same-Day-Frist); medium = begrenzter Impact, keine enge Frist; low
+    = geringfügig, kosmetisch oder informativ.'
 - role: user
   fixture: fixtures/de-guest-ticket.txt
 generation:
@@ -35,24 +41,25 @@ scorers:
     field: category
     expected: technical
     allowed:
-      - billing
-      - shipping
-      - technical
-      - other
+    - billing
+    - shipping
+    - technical
+    - other
 - type: classification
   weight: 0.3
   params:
     field: priority
     expected: urgent
     allowed:
-      - low
-      - medium
-      - high
-      - urgent
+    - low
+    - medium
+    - high
+    - urgent
     scale:
-      - low
-      - medium
-      - high
-      - urgent
-    adjacent_credit: 0.5
+    - low
+    - medium
+    - high
+    - urgent
+    adjacent_credit: 0.4
+  must_pass: true
 pass_threshold: 0.85

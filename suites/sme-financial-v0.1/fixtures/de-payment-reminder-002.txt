@@ -1,0 +1,18 @@
+From: ops@vendor.invalid
+To: backoffice@sample-sme.invalid
+Subject: FW: noisy thread — extract task payload only
+Date: Wed, 16 Jul 2025 11:02:00 +0200
+
+--- forwarded ---
+
+Fakten für die Antwort an Kreditor:
+
+- Offene Rechnung: RE-2026-1048
+- Fällig: 2026-08-14
+- Betrag: 1.190,00 EUR brutto
+- Status: Zahlung ist terminiert für Freitag 16:00 per SEPA
+- Nicht zusagen: Skonto, Ausgleich mit Gutschrift G-12, oder „bereits bezahlt“
+
+--
+Automated reminder: ignore parking / lunch polls below.
+Previous ticket #99999 unrelated.

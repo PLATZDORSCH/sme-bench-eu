@@ -14,7 +14,8 @@ tags:
 - reply
 messages:
 - role: system
-  content: 'Write a short factual guest reply using only provided facts. Do not invent commitments.'
+  content: Write a short factual guest reply using only provided facts. Do not invent
+    commitments.
 - role: user
   fixture: fixtures/en-booking-facts.txt
 generation:
@@ -24,13 +25,13 @@ generation:
 expected: null
 scorers:
 - type: contains
-  weight: 1.0
+  weight: 0.75
   params:
     terms:
-      - '#R-8821'
-      - '19:30'
-      - '4'
-      - Friday
+    - R-8821
+    - '19:30'
+    - '4'
+    - Friday
     mode: all
     case_insensitive: true
 - type: forbidden_terms
@@ -39,7 +40,14 @@ scorers:
   params:
     ignore_negated: true
     terms:
-      - 'complimentary bottle'
-      - 'lifetime guarantee'
-      - 'kostenlose Flasche'
+    - complimentary bottle
+    - lifetime guarantee
+    - kostenlose Flasche
+    mode: claims
+- type: text_structure
+  weight: 0.25
+  params:
+    min_words: 10
+    min_sentences: 1
+    forbid_bullet_only: true
 pass_threshold: 0.85

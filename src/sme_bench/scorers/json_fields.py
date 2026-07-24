@@ -2,11 +2,144 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from sme_bench.models import BenchmarkTask, ScoreResult, ScorerSpec
 from sme_bench.scorers.base import register
 from sme_bench.utils import extract_json_payload, get_by_path
+
+_DASH_RE = re.compile(r"[\u2010-\u2015\u2212\-]+")
+_PERCENT_RE = re.compile(r"^(\d+(?:[.,]\d+)?)\s*%$")
+_NUMBER_RE = re.compile(r"^(\d+(?:[.,]\d+)?)$")
+
+
+def _normalize_iban(value: str) -> str:
+    return re.sub(r"\s+", "", value).upper()
+
+
+def _normalize_whitespace(value: str) -> str:
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def _normalize_text(value: str) -> str:
+    """Controlled text normalize: whitespace + unicode dashes → ASCII hyphen."""
+    text = _normalize_whitespace(value)
+    text = _DASH_RE.sub("-", text)
+    return text
+
+
+def _normalize_percent(value: Any) -> Any:
+    """Treat ``19``, ``19%``, ``19 %`` as equivalent percent tokens."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        if float(value).is_integer():
+            return f"{int(value)}%"
+        return f"{value}%"
+    if not isinstance(value, str):
+        return value
+    text = _normalize_whitespace(value)
+    m = _PERCENT_RE.match(text)
+    if m:
+        num = m.group(1).replace(",", ".")
+        if num.endswith(".0"):
+            num = num[:-2]
+        return f"{num}%"
+    m = _NUMBER_RE.match(text)
+    if m:
+        num = m.group(1).replace(",", ".")
+        if num.endswith(".0"):
+            num = num[:-2]
+        return f"{num}%"
+    return text
+
+
+def _normalize_range(value: Any) -> Any:
+    """Normalize numeric ranges like ``3–5`` / ``3 - 5`` / ``3 5`` → ``3-5``."""
+    if not isinstance(value, str):
+        return value
+    text = _normalize_text(value)
+    text = re.sub(r"(\d+)\s*-\s*(\d+)", r"\1-\2", text)
+    text = re.sub(r"(\d+)\s+(\d+)", r"\1-\2", text)
+    return text
+
+
+def _normalize_terminal_punctuation(value: Any) -> Any:
+    """Ignore sentence punctuation accidentally attached to an extracted value."""
+    if not isinstance(value, str):
+        return value
+    return _normalize_text(value).rstrip(".,;:!?")
+
+
+def _normalize_value(value: Any, *, mode: str | None) -> Any:
+    if mode is None:
+        return value
+    if mode == "iban":
+        return _normalize_iban(value) if isinstance(value, str) else value
+    if mode == "whitespace":
+        return _normalize_whitespace(value) if isinstance(value, str) else value
+    if mode == "text":
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            return _normalize_text(str(value))
+        return _normalize_text(value) if isinstance(value, str) else value
+    if mode == "percent":
+        return _normalize_percent(value)
+    if mode == "range":
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            return str(value)
+        return _normalize_range(value)
+    if mode == "terminal_punctuation":
+        return _normalize_terminal_punctuation(value)
+    return value
+
+
+def _values_match(
+    actual: Any,
+    expected: Any,
+    *,
+    match_mode: str,
+    case_insensitive: bool,
+) -> bool:
+    if match_mode == "contains":
+        if isinstance(actual, (int, float)) and not isinstance(actual, bool):
+            actual = str(actual)
+        if isinstance(expected, (int, float)) and not isinstance(expected, bool):
+            expected = str(expected)
+        if isinstance(actual, str) and isinstance(expected, str):
+            cmp_actual = actual.casefold() if case_insensitive else actual
+            cmp_expected = expected.casefold() if case_insensitive else expected
+            return cmp_expected in cmp_actual
+        return bool(actual == expected)
+    if case_insensitive and isinstance(actual, str) and isinstance(expected, str):
+        return actual.casefold() == expected.casefold()
+    # Numeric/string equivalence for plain numbers
+    if isinstance(actual, str) and isinstance(expected, (int, float)) and not isinstance(
+        expected, bool
+    ):
+        try:
+            return float(actual.replace(",", ".").rstrip("%")) == float(expected)
+        except ValueError:
+            pass
+    if isinstance(expected, str) and isinstance(actual, (int, float)) and not isinstance(
+        actual, bool
+    ):
+        try:
+            return float(expected.replace(",", ".").rstrip("%")) == float(actual)
+        except ValueError:
+            pass
+    return bool(actual == expected)
+
+
+def _normalize_for_field(value: Any, *, path: str, mode: str | None) -> Any:
+    normalized = _normalize_value(value, mode=mode)
+    if mode in {"text", None} and path == "answer":
+        normalized = _normalize_range(normalized)
+        if isinstance(normalized, str):
+            normalized = _normalize_text(normalized)
+    elif mode == "percent":
+        normalized = _normalize_percent(normalized)
+    return normalized
 
 
 @register
@@ -49,6 +182,11 @@ class JsonFieldsScorer:
 
         case_insensitive = bool(spec.params.get("case_insensitive", False))
         match_mode = str(spec.params.get("match", "exact"))
+        global_normalize = spec.params.get("normalize")
+        field_normalize = spec.params.get("field_normalize") or {}
+        field_aliases = spec.params.get("field_aliases") or {}
+        patterns = spec.params.get("patterns") or {}
+
         matched: list[str] = []
         mismatched: dict[str, Any] = {}
 
@@ -60,16 +198,31 @@ class JsonFieldsScorer:
                 mismatched[path] = {"error": "missing"}
                 continue
 
-            if match_mode == "contains" and isinstance(actual_val, str) and isinstance(
-                expected_val, str
-            ):
-                cmp_actual = actual_val.casefold() if case_insensitive else actual_val
-                cmp_expected = expected_val.casefold() if case_insensitive else expected_val
-                ok = cmp_expected in cmp_actual
-            elif case_insensitive and isinstance(actual_val, str) and isinstance(expected_val, str):
-                ok = actual_val.casefold() == expected_val.casefold()
+            normalize_mode = field_normalize.get(path, global_normalize)
+            actual_cmp = _normalize_for_field(actual_val, path=path, mode=normalize_mode)
+            candidates = [expected_val]
+            aliases = field_aliases.get(path)
+            if isinstance(aliases, list):
+                candidates.extend(aliases)
+            expected_candidates = [
+                _normalize_for_field(candidate, path=path, mode=normalize_mode)
+                for candidate in candidates
+            ]
+
+            pattern = patterns.get(path)
+            if isinstance(pattern, str) and isinstance(actual_cmp, str):
+                flags = re.IGNORECASE if case_insensitive else 0
+                ok = re.search(pattern, actual_cmp, flags=flags) is not None
             else:
-                ok = actual_val == expected_val
+                ok = any(
+                    _values_match(
+                        actual_cmp,
+                        candidate,
+                        match_mode=match_mode,
+                        case_insensitive=case_insensitive,
+                    )
+                    for candidate in expected_candidates
+                )
             if ok:
                 matched.append(path)
             else:

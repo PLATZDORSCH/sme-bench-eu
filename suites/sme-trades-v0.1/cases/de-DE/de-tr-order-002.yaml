@@ -1,0 +1,107 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: de-tr-order-002
+pair_id: tr-order-002
+title: Material aus Baustellenchat (noise)
+language: de-DE
+category: sales_operations
+task_type: order_extraction
+difficulty: hard
+risk: medium
+tags:
+- trades
+- order
+- chat
+- noise-variant
+- pair-reviewed
+- golden-reviewed
+- reference-calibrated
+messages:
+- role: system
+  content: 'Extrahiere die Bestellung als JSON: customer (string), currency "EUR",
+    items als Array von {sku (string), qty (integer), variant (string; verwende "none",
+    wenn der Artikel keine Variante hat)}. Ignoriere Witze und Chat, der keine Bestellung
+    ist. sku ist der Artikelcode ohne das Label „SKU“ (z. B. "FK-FLEX-25", nicht "SKU
+    FK-FLEX-25"). variant als ein String (Größe/Farbe mit "/", z. B. "M/navy").'
+- role: user
+  fixture: fixtures/de-material-bestellung-002.txt
+generation:
+  max_tokens: 350
+  temperature: 0
+  response_format: json
+expected:
+  customer: Musterbau GmbH
+  currency: EUR
+  items:
+  - sku: FK-FLEX-25
+    qty: 12
+    variant: none
+  - sku: GR-01
+    qty: 3
+    variant: none
+  - sku: SK-W
+    qty: 40
+    variant: white
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/order-output.schema.json
+- type: json_fields
+  weight: 0.35
+  params:
+    fields:
+    - customer
+    - currency
+- type: set_equality
+  weight: 0.5
+  params:
+    field: items
+    ignore_order: true
+    keys:
+    - sku
+    - qty
+    - variant
+    key_match:
+      sku: exact
+      qty: exact
+      variant: exact
+    key_aliases:
+      variant:
+        none:
+        - keine
+        - Keine
+        - n/a
+        - N/A
+        - '-'
+        - standard
+        - Standard
+        white:
+        - weiß
+        - weiss
+        95/black:
+        - 95/schwarz
+        black:
+        - schwarz
+        clear:
+        - klar
+        L/red:
+        - L/rot
+        XL/black:
+        - XL/schwarz
+        mittel/braun:
+        - braun
+        medium/brown:
+        - brown
+      sku:
+        FK-FLEX-25:
+        - SKU FK-FLEX-25
+        - SKU-FK-FLEX-25
+        GR-01:
+        - SKU GR-01
+        - SKU-GR-01
+        SK-W:
+        - SKU SK-W
+        - SKU-SK-W
+pass_threshold: 0.85

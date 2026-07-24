@@ -134,9 +134,7 @@ class OpenAICompatibleClient:
         on_first_response: Any | None = None,
         on_first_token: Any | None = None,
     ) -> RequestResult:
-        limit_key = (
-            "max_completion_tokens" if uses_max_completion_tokens(model) else "max_tokens"
-        )
+        limit_key = "max_completion_tokens" if uses_max_completion_tokens(model) else "max_tokens"
         skip_temperature = omits_temperature(model)
         payload: dict[str, Any] = {
             "model": model,
@@ -162,7 +160,9 @@ class OpenAICompatibleClient:
                 if key == "temperature" and skip_temperature:
                     continue
                 payload[key] = value
-        payload.pop("max_tokens" if limit_key == "max_completion_tokens" else "max_completion_tokens", None)
+        payload.pop(
+            "max_tokens" if limit_key == "max_completion_tokens" else "max_completion_tokens", None
+        )
         if skip_temperature:
             payload.pop("temperature", None)
 
@@ -290,12 +290,19 @@ class OpenAICompatibleClient:
                     f"{reasoning_text}\n\n{embedded}".strip() if reasoning_text else embedded
                 )
             content_text = answer
-        # Some GLM/Nebius deployments put the visible answer only in
-        # reasoning_* while delta.content stays empty/null.
         if content_text:
             result.output_text = content_text
         elif reasoning_text:
-            result.output_text = reasoning_text
+            # Reasoning-only completions are not final answers. This commonly
+            # happens when a thinking model exhausts its token budget before
+            # emitting delta.content. Keep the trace for diagnostics but never
+            # score or report it as the model's answer.
+            answer, embedded = separate_thinking_content(reasoning_text)
+            if embedded is not None and answer.strip() and answer.strip() != reasoning_text.strip():
+                result.output_text = answer
+                reasoning_text = embedded
+            else:
+                result.output_text = ""
         else:
             result.output_text = ""
         if reasoning_text:

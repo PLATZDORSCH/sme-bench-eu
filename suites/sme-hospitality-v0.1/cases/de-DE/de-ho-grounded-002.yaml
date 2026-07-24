@@ -1,0 +1,105 @@
+schema_version: '1.0'
+id: de-ho-grounded-002
+pair_id: ho-grounded-002
+title: Stornofrist nur aus Hausregel (noise)
+language: de-DE
+category: grounded_qa
+task_type: grounded_qa
+difficulty: normal
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- hospitality
+- citations
+- noise-variant
+- pair-reviewed
+- golden-reviewed
+- reference-calibrated
+messages:
+- role: system
+  content: 'Antworte nur anhand der Richtlinie. Gib genau ein JSON-Objekt mit nur
+    diesen Schlüsseln zurück: answer (string) und citations (Array von Abschnitts-IDs
+    als Strings ohne Klammern). Beispiel-Form: {"answer":"30 Tage","citations":["SEC-1"]}.
+    In citations nur Abschnitts-IDs, keinen Policy-Text. Erfinde keine Bedingungen.'
+- role: user
+  content: 'From: ops@hospitality.invalid
+
+    To: backoffice@sample-sme.invalid
+
+    Subject: FW: noisy thread — extract task payload only
+
+    Date: Wed, 16 Jul 2025 11:02:00 +0200
+
+
+    --- forwarded ---
+
+
+    Policy:
+
+
+    [H-1] Tischreservierung stornierbar bis 12:00 am Vortag.
+
+    [H-2] Bei No-Show berechnen wir 25 EUR pro Person.
+
+    [H-3] Keine kostenlose Umbuchung am selben Tag nach 16:00.
+
+
+    Question: Bis wann kann ich eine Tischreservierung stornieren? Reply as JSON with
+    answer and citations (section IDs without brackets).
+
+
+    --
+
+    Automated reminder: ignore parking / lunch polls below.
+
+    Previous ticket #99999 unrelated.
+
+    '
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: '12:00'
+  citations:
+  - H-1
+  allowed_citations:
+  - H-1
+  - H-2
+  - H-3
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: json_fields
+  weight: 0.45
+  params:
+    fields:
+    - answer
+    match: contains
+    case_insensitive: true
+    normalize: text
+    field_normalize:
+      answer: text
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed:
+    - H-1
+    - H-2
+    - H-3
+    exact_set: true
+    require_unique: true
+    max_count: 1
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - kostenlos jederzeit
+    - free anytime
+    - lifetime
+pass_threshold: 0.85

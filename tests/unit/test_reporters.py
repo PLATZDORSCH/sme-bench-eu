@@ -24,7 +24,9 @@ def test_case_catalog_and_failures_report(tmp_path: Path) -> None:
         title="PII erkennen",
         risk="critical",
         scorers=[
-            ScorerSpec(type="set_equality", weight=0.8, critical=True, params={"field": "pii_types"}),
+            ScorerSpec(
+                type="set_equality", weight=0.8, critical=True, params={"field": "pii_types"}
+            ),
             ScorerSpec(
                 type="forbidden_terms",
                 weight=0,
@@ -128,7 +130,7 @@ def test_case_catalog_and_failures_report(tmp_path: Path) -> None:
 def test_failures_report_labels_mixed_pass_hard_fail_as_unreliable(
     tmp_path: Path,
 ) -> None:
-    """2/3 pass + 1 hard fail → unreliable, not blanket fehlgeschlagen."""
+    """1/3 pass + 2 hard fails → unreliable, not blanket fehlgeschlagen."""
     task = make_task(id="de-invoice-extraction-001", title="Rechnung")
 
     def make(repeat: int, *, passed: bool, score: float) -> AttemptResult:
@@ -148,7 +150,7 @@ def test_failures_report_labels_mixed_pass_hard_fail_as_unreliable(
 
     attempts = [
         make(0, passed=True, score=1.0),
-        make(1, passed=True, score=1.0),
+        make(1, passed=False, score=0.0),
         make(2, passed=False, score=0.0),
     ]
     path = tmp_path / "failures.de.md"
@@ -170,6 +172,38 @@ def test_failures_report_labels_mixed_pass_hard_fail_as_unreliable(
         after_fail = fail_section[1].split("## ", 1)[0]
         assert "de-invoice-extraction-001" not in after_fail
     assert "### `de-invoice-extraction-001`" in text.split("## Unzuverlässig", 1)[1]
+
+
+def test_failures_report_labels_two_of_three_as_mostly_successful(tmp_path: Path) -> None:
+    task = make_task(id="de-invoice-extraction-001", title="Rechnung")
+    attempts = [
+        AttemptResult(
+            task_id=task.id,
+            language="de-DE",
+            category="finance_ops",
+            task_type="invoice_extraction",
+            difficulty="normal",
+            risk="medium",
+            repeat_index=repeat,
+            passed=repeat < 2,
+            effective_score=1.0 if repeat < 2 else 0.0,
+            output_text='{"ok": true}' if repeat < 2 else "",
+        )
+        for repeat in range(3)
+    ]
+    path = tmp_path / "failures.de.md"
+    write_failures_markdown(
+        path,
+        attempts,
+        model="test-model",
+        suite_id="test",
+        tasks_by_id={task.id: task},
+        lang="de",
+    )
+    text = path.read_text(encoding="utf-8")
+    assert "## Überwiegend erfolgreich" in text
+    assert "**überwiegend erfolgreich**" in text
+    assert "2/3 pass" in text
 
 
 def test_failures_report_dedupes_duplicate_repeats(tmp_path: Path) -> None:

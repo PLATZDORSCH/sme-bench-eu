@@ -14,7 +14,10 @@ tags:
 - process
 messages:
 - role: system
-  content: "Decide shipment readiness. Return JSON {next_step, ready, missing}. ready=false if any required checklist item is missing. missing MUST be an array of short tokens (English snake_case, e.g. [\"phone\"]), never a single string. next_step is a short action string."
+  content: Decide shipment readiness. Return JSON {next_step, ready, missing}. ready=false
+    if any required checklist item is missing. missing MUST be an array of short tokens
+    (English snake_case, e.g. ["phone"]), never a single string. next_step is a short
+    action string.
 - role: user
   fixture: fixtures/en-dispatch-check.txt
 generation:
@@ -22,33 +25,40 @@ generation:
   temperature: 0
   response_format: json
 expected:
-  next_step: 'capture consignee phone'
+  next_step: capture consignee phone
   ready: false
   missing:
-    - phone
+  - phone
 scorers:
 - type: json_schema
-  weight: 0.2
+  weight: 0.15
   params:
     schema: schemas/process-step.schema.json
 - type: json_fields
-  weight: 0.5
+  weight: 0.45
   params:
     fields:
-      - ready
-- type: contains
-  weight: 0.3
-  params:
-    terms:
-      - 'false'
-      - phone
-    mode: any
+    - next_step
+    - ready
     case_insensitive: true
+    patterns:
+      next_step: (?=.*(?:\b(?:consignee\s+phone(?:\s+number)?|empf[aä]ngertelefon(?:nummer)?)\b|recipient_?phone|consignee_?phone|(?:_|\b)phone(?:\s+number)?\b))(?=.*(?:\b(?:capture|obtain|get|add|request|record|collect|erfassen|hinzufügen)(?:_|\b))).+
+  must_pass: true
+- type: set_equality
+  weight: 0.4
+  params:
+    field: missing
+    ignore_order: true
+    aliases:
+      phone:
+      - consignee_phone
+      - recipient_phone
+  must_pass: true
 - type: forbidden_terms
   weight: 0
   critical: true
   params:
     terms:
-      - '"ready": true'
-      - '"ready":true'
+    - '"ready": true'
+    - '"ready":true'
 pass_threshold: 0.85

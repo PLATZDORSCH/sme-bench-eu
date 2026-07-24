@@ -52,6 +52,7 @@ def _ensure_scorers_loaded() -> None:
         numeric,
         regex,
         set_equality,
+        text_structure,
     )
 
     _LOADED = True

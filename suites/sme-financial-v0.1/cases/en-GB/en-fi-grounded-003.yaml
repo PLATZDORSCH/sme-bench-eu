@@ -1,0 +1,114 @@
+schema_version: '1.0'
+id: en-fi-grounded-003
+pair_id: fi-grounded-003
+title: VAT rate from policy only (edge)
+language: en-GB
+category: grounded_qa
+task_type: grounded_qa
+difficulty: hard
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- financial
+- vat
+- citations
+- edge-variant
+- curated-edge
+- pair-reviewed
+- golden-reviewed
+- reference-calibrated
+messages:
+- role: system
+  content: 'Answer only using the policy. Return exactly one JSON object with these
+    keys only: answer (string) and citations (array of section ID strings without
+    brackets). Example shape: {"answer":"30 days","citations":["SEC-1"]}. Put only
+    section IDs in citations, never policy text. Never invent terms.'
+- role: user
+  content: 'From: ops@financial.invalid
+
+    To: backoffice@sample-sme.invalid
+
+    Subject: FW: noisy thread — extract task payload only
+
+    Date: Wed, 16 Jul 2025 11:02:00 +0200
+
+
+    --- forwarded ---
+
+
+    Policy:
+
+
+    [V-1] Standard rate 19% for goods and services.
+
+    [V-2] Reduced rate 7% only for books and selected print products.
+
+    [V-3] No blanket tax exemption without written confirmation from the tax authority.
+
+    [V-4] Credit notes must use the same VAT rate as the original invoice.
+
+
+    Question: Which VAT rate applies to books under the policy?
+
+
+    --
+
+    Automated reminder: ignore parking / lunch polls below.
+
+    Previous ticket #99999 unrelated.
+
+
+    Edge note: a previous agent answered the first policy clause; answer the actual
+    question above.
+
+    '
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: 7%
+  citations:
+  - V-2
+  allowed_citations:
+  - V-1
+  - V-2
+  - V-3
+  - V-4
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: json_fields
+  weight: 0.45
+  params:
+    fields:
+    - answer
+    match: contains
+    case_insensitive: true
+    normalize: percent
+    field_normalize:
+      answer: percent
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed:
+    - V-1
+    - V-2
+    - V-3
+    - V-4
+    exact_set: true
+    require_unique: true
+    max_count: 1
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - 0%
+    - steuerfrei pauschal
+    - tax-free blanket
+pass_threshold: 0.85

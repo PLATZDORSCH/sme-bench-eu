@@ -1,0 +1,104 @@
+schema_version: '1.0'
+review_status: approved
+data_classification: synthetic
+id: en-ec-order-002
+pair_id: ec-order-002
+title: Checkout-Export Bestellung (noise)
+language: en-GB
+category: sales_operations
+task_type: order_extraction
+difficulty: hard
+risk: medium
+tags:
+- ecommerce
+- order
+- noise-variant
+- pair-reviewed
+- golden-reviewed
+- reference-calibrated
+messages:
+- role: system
+  content: 'Extract the order as JSON: customer (string), currency "EUR", items as
+    an array of {sku (string), qty (integer), variant (string; use "none" if the item
+    has no variant)}. Ignore rejected coupons. Use the exact sku string as written
+    (including any prefix, e.g. "SKU-A100", not "A100"). variant as one string (size/colour
+    with "/", e.g. "M/navy").'
+- role: user
+  fixture: fixtures/en-shop-order-002.txt
+generation:
+  max_tokens: 350
+  temperature: 0
+  response_format: json
+expected:
+  customer: Levin Fashion House
+  currency: EUR
+  items:
+  - sku: SHIRT-221
+    qty: 2
+    variant: M/navy
+  - sku: BELT-09
+    qty: 1
+    variant: 95/black
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/order-output.schema.json
+- type: json_fields
+  weight: 0.35
+  params:
+    fields:
+    - customer
+    - currency
+- type: set_equality
+  weight: 0.5
+  params:
+    field: items
+    ignore_order: true
+    keys:
+    - sku
+    - qty
+    - variant
+    key_match:
+      sku: exact
+      qty: exact
+      variant: exact
+    key_aliases:
+      variant:
+        none:
+        - keine
+        - Keine
+        - n/a
+        - N/A
+        - '-'
+        - standard
+        - Standard
+        white:
+        - weiß
+        - weiss
+        95/black:
+        - 95/schwarz
+        black:
+        - schwarz
+        clear:
+        - klar
+        L/red:
+        - L/rot
+        XL/black:
+        - XL/schwarz
+        mittel/braun:
+        - braun
+        medium/brown:
+        - brown
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    fields:
+    - customer
+    - currency
+    - items
+    terms:
+    - SUMMER angewendet
+    - coupon applied
+pass_threshold: 0.85

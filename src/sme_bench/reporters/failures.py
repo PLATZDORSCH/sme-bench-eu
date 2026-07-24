@@ -12,7 +12,7 @@ from sme_bench.reporters.i18n import FAILURES, REPORT_LANGS, SUCCESS, Lang, repo
 from sme_bench.reporters.task_docs import task_brief
 from sme_bench.statistics import dedupe_attempts
 
-OutcomeKind = Literal["pass", "partial", "unreliable", "fail", "critical"]
+OutcomeKind = Literal["pass", "mostly", "partial", "unreliable", "fail", "critical"]
 
 
 def _truncate(text: str, limit: int = 4000) -> str:
@@ -71,9 +71,7 @@ def _task_aggregate(attempts: list[AttemptResult]) -> dict[str, Any]:
     critical = sum(1 for a in attempts if a.critical_failure)
     infra = sum(1 for a in attempts if a.infrastructure_error)
     hard_fail = sum(
-        1
-        for a in attempts
-        if not a.passed and not a.partial and not a.infrastructure_error
+        1 for a in attempts if not a.passed and not a.partial and not a.infrastructure_error
     )
     scores = [a.effective_score for a in attempts]
     n = len(attempts)
@@ -93,23 +91,20 @@ def _task_aggregate(attempts: list[AttemptResult]) -> dict[str, Any]:
 def _task_outcome(agg: dict[str, Any]) -> OutcomeKind:
     """Classify a case across repeats for failure/success reports.
 
-    Reliable Pass / Partial semantics are unchanged (all repeats pass, or all
-    are pass-or-partial). Mixed cases with at least one full pass and one hard
-    fail are labelled *unreliable* when the mean score is still decent or
-    passes outnumber hard fails — not as a blanket hard fail.
+    Outcome labels follow the full-pass repeat buckets used in the summary:
+    3/3 pass, 2/3 mostly successful, 1/3 unreliable, and 0/3 either partial
+    (all repeats partial) or failed. Critical outcomes retain precedence.
     """
     if agg["reliable_pass"]:
         return "pass"
     if agg["critical"] > 0:
         return "critical"
+    if agg["passed"] / agg["attempts"] >= 2 / 3:
+        return "mostly"
+    if agg["passed"] > 0:
+        return "unreliable"
     if agg["reliable_partial"]:
         return "partial"
-    if (
-        agg["passed"] > 0
-        and agg["hard_fail"] > 0
-        and (agg["mean_score"] >= 0.65 or agg["passed"] > agg["hard_fail"])
-    ):
-        return "unreliable"
     return "fail"
 
 
@@ -193,7 +188,10 @@ def _model_output_block(attempt: AttemptResult, *, lang: Lang) -> list[str]:
     if not text and attempt.infrastructure_error:
         text = attempt.error_message or t["empty_infra"]
     if not text:
-        text = t["empty_output"]
+        if attempt.finish_reason in {"length", "max_tokens"} or attempt.reasoning_text:
+            text = t["empty_output_token_limit"]
+        else:
+            text = t["empty_output"]
     return [
         t["model_output"],
         "",
@@ -215,6 +213,7 @@ def _group_attempts(
     grouped: dict[OutcomeKind, list[tuple[str, dict[str, Any], list[AttemptResult]]]] = {
         "critical": [],
         "fail": [],
+        "mostly": [],
         "unreliable": [],
         "partial": [],
         "pass": [],
@@ -249,6 +248,7 @@ def write_failures_markdown(
         "",
         t["suite"].format(suite_id=suite_id, suite_version=suite_version).rstrip(),
         t["full_pass"].format(n=reliable_pass, total=total_tasks),
+        t["mostly"].format(n=len(grouped["mostly"]), total=total_tasks),
         t["partial"].format(n=reliable_partial, total=total_tasks),
         t["unreliable"].format(n=len(grouped["unreliable"]), total=total_tasks),
         t["hard_fail"].format(n=len(grouped["fail"]), total=total_tasks),
@@ -263,6 +263,7 @@ def write_failures_markdown(
     if (
         not grouped["critical"]
         and not grouped["fail"]
+        and not grouped["mostly"]
         and not grouped["unreliable"]
         and not grouped["partial"]
     ):
@@ -274,9 +275,7 @@ def write_failures_markdown(
         lines.extend([t["section_critical"], ""])
         for task_id, agg, task_attempts in sorted(grouped["critical"], key=lambda x: x[0]):
             lines.extend(
-                _outcome_block(
-                    task_id, agg, task_attempts, tasks_by_id, mode="failure", lang=lang
-                )
+                _outcome_block(task_id, agg, task_attempts, tasks_by_id, mode="failure", lang=lang)
             )
             lines.append("")
 
@@ -284,21 +283,23 @@ def write_failures_markdown(
         lines.extend([t["section_fail"], ""])
         for task_id, agg, task_attempts in sorted(grouped["fail"], key=lambda x: x[0]):
             lines.extend(
-                _outcome_block(
-                    task_id, agg, task_attempts, tasks_by_id, mode="failure", lang=lang
-                )
+                _outcome_block(task_id, agg, task_attempts, tasks_by_id, mode="failure", lang=lang)
             )
             lines.append("")
 
     if grouped["unreliable"]:
         lines.extend([t["section_unreliable"], "", t["unreliable_blurb"], ""])
-        for task_id, agg, task_attempts in sorted(
-            grouped["unreliable"], key=lambda x: x[0]
-        ):
+        for task_id, agg, task_attempts in sorted(grouped["unreliable"], key=lambda x: x[0]):
             lines.extend(
-                _outcome_block(
-                    task_id, agg, task_attempts, tasks_by_id, mode="failure", lang=lang
-                )
+                _outcome_block(task_id, agg, task_attempts, tasks_by_id, mode="failure", lang=lang)
+            )
+            lines.append("")
+
+    if grouped["mostly"]:
+        lines.extend([t["section_mostly"], "", t["mostly_blurb"], ""])
+        for task_id, agg, task_attempts in sorted(grouped["mostly"], key=lambda x: x[0]):
+            lines.extend(
+                _outcome_block(task_id, agg, task_attempts, tasks_by_id, mode="failure", lang=lang)
             )
             lines.append("")
 
@@ -306,9 +307,7 @@ def write_failures_markdown(
         lines.extend([t["section_partial"], "", t["partial_blurb"], ""])
         for task_id, agg, task_attempts in sorted(grouped["partial"], key=lambda x: x[0]):
             lines.extend(
-                _outcome_block(
-                    task_id, agg, task_attempts, tasks_by_id, mode="failure", lang=lang
-                )
+                _outcome_block(task_id, agg, task_attempts, tasks_by_id, mode="failure", lang=lang)
             )
             lines.append("")
 
@@ -357,9 +356,7 @@ def write_success_markdown(
     lines.extend([t["section"], ""])
     for task_id, agg, task_attempts in sorted(grouped["pass"], key=lambda x: x[0]):
         lines.extend(
-            _outcome_block(
-                task_id, agg, task_attempts, tasks_by_id, mode="success", lang=lang
-            )
+            _outcome_block(task_id, agg, task_attempts, tasks_by_id, mode="success", lang=lang)
         )
         lines.append("")
 
@@ -409,6 +406,7 @@ def _outcome_block(
     outcome = _task_outcome(agg)
     outcome_label = {
         "pass": t["outcome_pass"],
+        "mostly": t["outcome_mostly"],
         "partial": t["outcome_partial"],
         "unreliable": t["outcome_unreliable"],
         "fail": t["outcome_fail"],

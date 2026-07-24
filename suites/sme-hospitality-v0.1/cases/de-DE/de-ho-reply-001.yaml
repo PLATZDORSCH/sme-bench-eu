@@ -14,7 +14,8 @@ tags:
 - reply
 messages:
 - role: system
-  content: "Schreibe eine kurze, sachliche Gästeantwort nur mit den angegebenen Fakten. Erfinde keine Zusagen."
+  content: Schreibe eine kurze, sachliche Gästeantwort nur mit den angegebenen Fakten.
+    Erfinde keine Zusagen.
 - role: user
   fixture: fixtures/de-booking-facts.txt
 generation:
@@ -24,13 +25,13 @@ generation:
 expected: null
 scorers:
 - type: contains
-  weight: 1.0
+  weight: 0.75
   params:
     terms:
-      - '#R-8821'
-      - '19:30'
-      - '4'
-      - Freitag
+    - R-8821
+    - '19:30'
+    - '4'
+    - Freitag
     mode: all
     case_insensitive: true
 - type: forbidden_terms
@@ -39,7 +40,14 @@ scorers:
   params:
     ignore_negated: true
     terms:
-      - 'kostenlose Flasche'
-      - 'lebenslange Garantie'
-      - 'complimentary wine'
+    - kostenlose Flasche
+    - lebenslange Garantie
+    - complimentary wine
+    mode: claims
+- type: text_structure
+  weight: 0.25
+  params:
+    min_words: 10
+    min_sentences: 1
+    forbid_bullet_only: true
 pass_threshold: 0.85

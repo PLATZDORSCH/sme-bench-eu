@@ -1,0 +1,57 @@
+schema_version: '1.0'
+id: en-ho-reply-002
+pair_id: ho-reply-002
+title: Factual booking confirmation (noise)
+language: en-GB
+category: customer_service
+task_type: customer_reply
+difficulty: normal
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- hospitality
+- reply
+- noise-variant
+- pair-reviewed
+- golden-reviewed
+- reference-calibrated
+messages:
+- role: system
+  content: Write a short factual guest reply using only provided facts. Do not invent
+    commitments.
+- role: user
+  fixture: fixtures/en-booking-facts-002.txt
+generation:
+  max_tokens: 250
+  temperature: 0
+  response_format: text
+expected: null
+scorers:
+- type: contains
+  weight: 0.75
+  params:
+    terms:
+    - R-8821
+    - '19:30'
+    - '4'
+    - Friday
+    mode: all
+    case_insensitive: true
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    ignore_negated: true
+    terms:
+    - complimentary bottle
+    - lifetime guarantee
+    - kostenlose Flasche
+    mode: claims
+- type: text_structure
+  weight: 0.25
+  params:
+    min_words: 10
+    min_sentences: 1
+    forbid_bullet_only: true
+pass_threshold: 0.85

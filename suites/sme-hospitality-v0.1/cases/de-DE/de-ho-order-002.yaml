@@ -1,0 +1,96 @@
+schema_version: '1.0'
+id: de-ho-order-002
+pair_id: ho-order-002
+title: Catering-Bestellung erfassen (noise)
+language: de-DE
+category: sales_operations
+task_type: order_extraction
+difficulty: normal
+risk: medium
+review_status: approved
+data_classification: synthetic
+tags:
+- hospitality
+- order
+- noise-variant
+- pair-reviewed
+- golden-reviewed
+- reference-calibrated
+messages:
+- role: system
+  content: 'Extrahiere die Bestellung als JSON: customer (string), currency "EUR",
+    items als Array von {sku (string), qty (integer), variant (string; verwende "none",
+    wenn der Artikel keine Variante hat)}. sku exakt wie geschrieben (inkl. Präfix,
+    z. B. "SKU-A100", nicht "A100"). variant als ein String (Größe/Farbe mit "/",
+    z. B. "M/navy").'
+- role: user
+  fixture: fixtures/de-catering-order-002.txt
+generation:
+  max_tokens: 350
+  temperature: 0
+  response_format: json
+expected:
+  customer: Eventbüro Seeblick
+  currency: EUR
+  items:
+  - sku: MENUE-A
+    qty: 40
+    variant: none
+  - sku: MENUE-V
+    qty: 10
+    variant: none
+  - sku: DRINK-W
+    qty: 50
+    variant: none
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/order-output.schema.json
+- type: json_fields
+  weight: 0.35
+  params:
+    fields:
+    - customer
+    - currency
+- type: set_equality
+  weight: 0.5
+  params:
+    field: items
+    ignore_order: true
+    keys:
+    - sku
+    - qty
+    - variant
+    key_match:
+      sku: exact
+      qty: exact
+      variant: exact
+    key_aliases:
+      variant:
+        none:
+        - keine
+        - Keine
+        - n/a
+        - N/A
+        - '-'
+        - standard
+        - Standard
+        white:
+        - weiß
+        - weiss
+        95/black:
+        - 95/schwarz
+        black:
+        - schwarz
+        clear:
+        - klar
+        L/red:
+        - L/rot
+        XL/black:
+        - XL/schwarz
+        mittel/braun:
+        - braun
+        medium/brown:
+        - brown
+pass_threshold: 0.85

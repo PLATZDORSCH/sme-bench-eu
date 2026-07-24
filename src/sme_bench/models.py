@@ -33,6 +33,7 @@ class ScorerSpec(BaseModel):
     type: str
     weight: float = 1.0
     critical: bool = False
+    must_pass: bool = False
     params: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("weight")
@@ -213,6 +214,7 @@ class AttemptResult(BaseModel):
     infrastructure_error: bool = False
     error_type: str | None = None
     error_message: str | None = None
+    finish_reason: str | None = None
     retry_count: int = 0
     started_at: datetime | None = None
     completed_at: datetime | None = None

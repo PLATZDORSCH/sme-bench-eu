@@ -26,18 +26,27 @@ from sme_bench.config import (
 )
 from sme_bench.env import load_env_files
 from sme_bench.models import AttemptResult, BenchmarkTask
+from sme_bench.regrade import (
+    build_regrade_plan,
+    format_compat_report,
+    merge_partial_runs,
+    regrade_run,
+    rescore_attempt,
+    validate_report_rescore,
+    write_compatibility_manifest,
+)
 from sme_bench.reporters.catalog import write_case_catalog
 from sme_bench.reporters.console import print_summary
 from sme_bench.reporters.csv_reporter import write_attempts_csv
 from sme_bench.reporters.failures import write_failures_reports, write_success_reports
 from sme_bench.reporters.json_reporter import write_summary_json
 from sme_bench.reporters.markdown import write_summary_reports
+from sme_bench.run_validity import invalid_reason, load_invalid_runs
 from sme_bench.runner import run_benchmark
 from sme_bench.scorers.base import known_scorer_names
-from sme_bench.scoring import apply_partial_grade, evaluate_attempt
+from sme_bench.scoring import apply_partial_grade
 from sme_bench.statistics import aggregate, dedupe_attempts
-from sme_bench.task_loader import load_suite, load_suite_from_metadata
-from sme_bench.utils import is_thinking_dump, separate_thinking_content
+from sme_bench.task_loader import load_full_benchmark, load_suite, load_suite_from_metadata
 
 load_env_files()
 
@@ -158,6 +167,11 @@ def run_cmd(
     categories: str | None = typer.Option(None, "--categories"),
     difficulty: str | None = typer.Option(None, "--difficulty"),
     tags: str | None = typer.Option(None, "--tags"),
+    task_ids: str | None = typer.Option(
+        None,
+        "--task-ids",
+        help="Comma-separated task ids to run (partial delta run)",
+    ),
     repeats: int = typer.Option(3, "--repeats"),
     concurrency: int = typer.Option(1, "--concurrency"),
     seed: int = typer.Option(42, "--seed"),
@@ -204,7 +218,7 @@ def run_cmd(
 ) -> None:
     """Run the benchmark against an OpenAI-compatible endpoint.
 
-    Default target is **SME Full** (Core + all domain packs, ~156 cases).
+    Default target is **SME Full** (Core + all domain packs, ~196 cases).
     Pass ``--suite PATH`` to run only one pack (e.g. Core alone).
     """
     print_startup_banner(console)
@@ -249,6 +263,7 @@ def run_cmd(
         categories=_parse_csv(categories),
         difficulty=_parse_csv(difficulty),
         tags=_parse_csv(tags),
+        task_ids=_parse_csv(task_ids),
         repeats=repeats,
         concurrency=concurrency,
         seed=seed,
@@ -272,7 +287,11 @@ def run_cmd(
         warmup=not no_warmup,
         dashboard=dashboard,
     )
-    run_dir = _run_async(run_benchmark(config, loaded))
+    try:
+        run_dir = _run_async(run_benchmark(config, loaded))
+    except ValueError as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=1) from exc
     summary = json.loads((run_dir / "summary.json").read_text(encoding="utf-8"))
     print_summary(
         summary,
@@ -305,52 +324,167 @@ def catalog_cmd(
     console.print(f"Wrote {len(loaded.tasks)} case docs to {out}")
 
 
-def _rescore_source_text(attempt: AttemptResult) -> str:
-    """Pick the best stored text to re-separate thinking from.
-
-    When a prior buggy recovery left a short anti-example in ``output_text`` but
-    the full CoT dump is still in ``reasoning_text``, re-derive the answer from
-    that dump. Otherwise use ``output_text``.
-    """
-    reasoning = attempt.reasoning_text or ""
-    output = attempt.output_text or ""
-    if is_thinking_dump(reasoning):
-        return reasoning
-    if is_thinking_dump(output):
-        return output
-    return output
-
-
 def _rescore_attempt(attempt: AttemptResult, task: BenchmarkTask) -> AttemptResult:
-    """Re-run scorers on a stored model output using the current suite definition.
+    return rescore_attempt(attempt, task)
 
-    Infrastructure errors have no usable output and are left untouched.
-    Persists a cleaned ``output_text`` when leaked thinking was stripped.
-    """
-    if attempt.infrastructure_error:
-        return attempt
-    source = _rescore_source_text(attempt)
-    answer_text, reasoning = separate_thinking_content(source)
-    # evaluate_attempt also strips thinking; pass the post-split answer directly.
-    score_results, weighted, effective, passed, partial, critical, parsed = evaluate_attempt(
-        task, answer_text
+
+@app.command("regrade")
+def regrade_cmd(
+    source: Path = typer.Argument(..., help="Existing run directory"),
+    output: Path = typer.Option(..., "--output", "-o", help="Target run directory"),
+    compat: Path | None = typer.Option(
+        None,
+        "--compat",
+        help="Legacy input-fingerprint manifest for runs without task_fingerprints",
+    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Only print compatibility plan"),
+    no_reports: bool = typer.Option(False, "--no-reports", help="Skip report generation"),
+) -> None:
+    """Copy attempts and re-score with the current suite (source run stays unchanged)."""
+    source = source.resolve()
+    meta_path = source / "metadata.json"
+    if not meta_path.exists():
+        console.print(f"[red]Missing {meta_path}[/red]")
+        raise typer.Exit(code=1)
+
+    if compat is None:
+        default_compat = Path("suites/compatibility/regrade-0.2.0-baseline.json")
+        if default_compat.exists():
+            compat = default_compat
+
+    source_meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    loaded = load_suite_from_metadata(
+        source_meta,
+        known_scorers=known_scorer_names(),
+        resolve_fixtures=True,
     )
-    updates: dict[str, Any] = {
-        "parsed_output": parsed,
-        "score_results": score_results,
-        "weighted_score": weighted,
-        "effective_score": effective,
-        "passed": passed,
-        "partial": partial,
-        "critical_failure": critical,
-        "output_text": answer_text,
-    }
-    if reasoning:
-        updates["reasoning_text"] = reasoning
-    elif is_thinking_dump(source) and not answer_text:
-        # Whole blob was thinking with no post-delimiter answer.
-        updates["reasoning_text"] = source
-    return attempt.model_copy(update=updates)
+    if loaded is None:
+        console.print("[red]Could not load suite from source metadata[/red]")
+        raise typer.Exit(code=1)
+
+    plan = build_regrade_plan(
+        source_dir=source,
+        loaded=loaded,
+        source_meta=source_meta,
+        legacy_allowlist=compat,
+    )
+    plan.target_dir = output.resolve()
+    console.print(format_compat_report(plan))
+
+    if dry_run:
+        raise typer.Exit(code=0 if plan.can_proceed else 1)
+
+    if not plan.can_proceed:
+        console.print(
+            "[red]Regrade blocked: input changed for one or more tasks present in source run.[/red]"
+        )
+        if plan.blocking_reruns:
+            console.print("Rerun required: " + ", ".join(plan.blocking_reruns))
+        raise typer.Exit(code=1)
+
+    try:
+        target, final_plan = regrade_run(
+            source_dir=source,
+            target_dir=output,
+            legacy_allowlist=compat,
+            write_reports=not no_reports,
+        )
+    except FileExistsError as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=1) from exc
+
+    console.print(f"[green]Regraded run written to {target}[/green]")
+    if final_plan.new_cases:
+        console.print(
+            "[yellow]New cases not in source run:[/yellow] " + ", ".join(final_plan.new_cases)
+        )
+
+
+@app.command("merge-run")
+def merge_run_cmd(
+    base: Path = typer.Argument(..., help="Base run directory"),
+    output: Path = typer.Option(..., "--output", "-o", help="Target merged run directory"),
+    delta: list[Path] = typer.Option(
+        [],
+        "--delta",
+        help="Additional compatible run dirs with new/changed task attempts (repeatable)",
+    ),
+    no_reports: bool = typer.Option(False, "--no-reports", help="Skip report generation"),
+) -> None:
+    """Merge compatible partial runs into one covering the current suite task set."""
+    loaded = load_full_benchmark(known_scorers=known_scorer_names(), resolve_fixtures=True)
+    errors = [i for i in loaded.issues if i.severity == "error"]
+    if errors:
+        for issue in errors[:20]:
+            console.print(f"[red]{issue.path}: {issue.message}[/red]")
+        raise typer.Exit(code=1)
+    try:
+        target, meta = merge_partial_runs(
+            base_dir=base,
+            delta_dirs=list(delta),
+            target_dir=output,
+            loaded=loaded,
+            write_reports=not no_reports,
+        )
+    except (FileExistsError, ValueError, FileNotFoundError) as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=1) from exc
+    console.print(f"[green]Merged run written to {target}[/green]")
+    console.print(f"suite_version={meta.get('suite_version')} tasks={len(loaded.tasks)}")
+
+
+@app.command("compat-report")
+def compat_report_cmd(
+    source: Path = typer.Argument(..., help="Existing run directory"),
+    compat: Path | None = typer.Option(None, "--compat", help="Legacy fingerprint manifest"),
+) -> None:
+    """Show which tasks can be regraded vs require a fresh run."""
+    source = source.resolve()
+    meta_path = source / "metadata.json"
+    if not meta_path.exists():
+        console.print(f"[red]Missing {meta_path}[/red]")
+        raise typer.Exit(code=1)
+    if compat is None:
+        default_compat = Path("suites/compatibility/regrade-0.2.0-baseline.json")
+        if default_compat.exists():
+            compat = default_compat
+    source_meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    loaded = load_suite_from_metadata(
+        source_meta,
+        known_scorers=known_scorer_names(),
+        resolve_fixtures=True,
+    )
+    if loaded is None:
+        console.print("[red]Could not load suite from source metadata[/red]")
+        raise typer.Exit(code=1)
+    plan = build_regrade_plan(
+        source_dir=source,
+        loaded=loaded,
+        source_meta=source_meta,
+        legacy_allowlist=compat,
+    )
+    console.print(format_compat_report(plan))
+    raise typer.Exit(code=0 if plan.can_proceed else 1)
+
+
+@app.command("fingerprints")
+def fingerprints_cmd(
+    suite: Path = typer.Option(..., "--suite", help="Suite directory"),
+    output: Path = typer.Option(
+        Path("suites/compatibility/regrade-0.2.0-baseline.json"),
+        "--output",
+        "-o",
+    ),
+) -> None:
+    """Export input fingerprints for legacy regrade compatibility."""
+    loaded = load_suite(suite.resolve(), known_scorers=known_scorer_names(), resolve_fixtures=True)
+    if loaded.issues:
+        for issue in loaded.issues:
+            if issue.severity == "error":
+                console.print(f"[red]{issue.path}: {issue.message}[/red]")
+        raise typer.Exit(code=1)
+    path = write_compatibility_manifest(loaded, output)
+    console.print(f"Wrote compatibility manifest to {path}")
 
 
 @app.command("report")
@@ -364,10 +498,23 @@ def report_cmd(
     rescore: bool = typer.Option(
         False,
         "--rescore",
-        help="Re-run scorers on the stored model outputs using the current suite definition.",
+        help="Re-run scorers in memory for reports (does not modify attempts.jsonl).",
+    ),
+    in_place: bool = typer.Option(
+        False,
+        "--in-place",
+        help="Deprecated: overwrite attempts.jsonl when used with --rescore. Prefer `regrade`.",
     ),
 ) -> None:
     """Rebuild reports from existing attempts.jsonl without model calls."""
+    if in_place and not rescore:
+        console.print("[red]--in-place requires --rescore[/red]")
+        raise typer.Exit(code=1)
+    if in_place:
+        console.print(
+            "[yellow]Warning:[/yellow] --in-place overwrites the source run. "
+            "Prefer `sme-bench regrade SOURCE --output TARGET`."
+        )
     attempts_path = run_dir / "attempts.jsonl"
     meta_path = run_dir / "metadata.json"
     if not attempts_path.exists():
@@ -388,38 +535,36 @@ def report_cmd(
         known_scorers=known_scorer_names(),
         resolve_fixtures=True,
     )
-    if loaded is not None:
+    if rescore:
+        try:
+            validate_report_rescore(attempts=attempts, loaded=loaded, source_meta=meta)
+        except ValueError as exc:
+            console.print(f"[red]{exc}[/red]")
+            raise typer.Exit(code=1) from exc
+        assert loaded is not None
         weights = loaded.manifest.category_weights
         tasks_by_id = {t.id: t for t in loaded.tasks}
-        if rescore:
-            for spec_task in loaded.tasks:
-                for spec in spec_task.scorers:
-                    if spec.type == "json_schema":
-                        # Prefer per-suite dir from absolutized schema parent when present
-                        schema_ref = spec.params.get("schema")
-                        if isinstance(schema_ref, str) and Path(schema_ref).is_absolute():
-                            spec.params.setdefault(
-                                "_suite_dir", str(Path(schema_ref).parents[1])
-                            )
-                        else:
-                            spec.params.setdefault("_suite_dir", str(loaded.directory))
-            attempts = [
-                _rescore_attempt(a, tasks_by_id[a.task_id])
-                if a.task_id in tasks_by_id
-                else a
-                for a in attempts
-            ]
-            # Persist rescored attempts so attempts.jsonl matches reports
+        for spec_task in loaded.tasks:
+            for spec in spec_task.scorers:
+                if spec.type == "json_schema":
+                    # Prefer per-suite dir from absolutized schema parent when present
+                    schema_ref = spec.params.get("schema")
+                    if isinstance(schema_ref, str) and Path(schema_ref).is_absolute():
+                        spec.params.setdefault("_suite_dir", str(Path(schema_ref).parents[1]))
+                    else:
+                        spec.params.setdefault("_suite_dir", str(loaded.directory))
+        attempts = [_rescore_attempt(a, tasks_by_id[a.task_id]) for a in attempts]
+        if in_place:
             with attempts_path.open("w", encoding="utf-8") as handle:
                 for attempt in attempts:
                     handle.write(attempt.model_dump_json() + "\n")
-        else:
-            attempts = [
-                apply_partial_grade(a, tasks_by_id[a.task_id])
-                if a.task_id in tasks_by_id
-                else a
-                for a in attempts
-            ]
+    elif loaded is not None:
+        weights = loaded.manifest.category_weights
+        tasks_by_id = {t.id: t for t in loaded.tasks}
+        attempts = [
+            apply_partial_grade(a, tasks_by_id[a.task_id]) if a.task_id in tasks_by_id else a
+            for a in attempts
+        ]
 
     summary = aggregate(attempts, category_weights=weights)
     summary["run_id"] = meta.get("run_id", run_dir.name)
@@ -457,6 +602,11 @@ def report_cmd(
 def compare_cmd(
     run_dirs: list[Path] = typer.Argument(..., help="Two or more run directories"),
     allow_suite_mismatch: bool = typer.Option(False, "--allow-suite-mismatch"),
+    allow_invalid: bool = typer.Option(
+        False,
+        "--allow-invalid",
+        help="Allow diagnostic comparison of invalid/excluded runs",
+    ),
 ) -> None:
     """Compare compatible runs side by side."""
     if len(run_dirs) < 2:
@@ -465,8 +615,14 @@ def compare_cmd(
 
     metas = []
     summaries = []
+    invalid_registry = load_invalid_runs()
     for path in run_dirs:
         meta = json.loads((path / "metadata.json").read_text(encoding="utf-8"))
+        reason = invalid_reason(path, meta, registry=invalid_registry)
+        if reason and not allow_invalid:
+            console.print(f"[red]Run {path.name} is invalid/excluded: {reason}[/red]")
+            console.print("Use --allow-invalid for diagnostic comparison only.")
+            raise typer.Exit(code=1)
         summary = json.loads((path / "summary.json").read_text(encoding="utf-8"))
         metas.append(meta)
         summaries.append(summary)
@@ -499,6 +655,8 @@ def compare_cmd(
         ("Attempt Pass Rate", "attempt_pass_rate", True, False),
         ("Attempt Partial Rate", "attempt_partial_rate", True, False),
         ("Reliable Pass Rate", "reliable_pass_rate", True, False),
+        ("Mostly Pass Rate", "mostly_pass_rate", True, False),
+        ("Unreliable Pass Rate", "unreliable_pass_rate", True, False),
         ("Critical Failures", "critical_failure_rate", True, False),
     ]
     for label, key, is_rate, bold in rows:

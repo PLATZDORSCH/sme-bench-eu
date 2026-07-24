@@ -1,0 +1,105 @@
+schema_version: '1.0'
+id: en-ho-grounded-002
+pair_id: ho-grounded-002
+title: Cancellation deadline from house rule (noise)
+language: en-GB
+category: grounded_qa
+task_type: grounded_qa
+difficulty: normal
+risk: high
+review_status: approved
+data_classification: synthetic
+tags:
+- hospitality
+- citations
+- noise-variant
+- pair-reviewed
+- golden-reviewed
+- reference-calibrated
+messages:
+- role: system
+  content: 'Answer only using the policy. Return exactly one JSON object with these
+    keys only: answer (string) and citations (array of section ID strings without
+    brackets). Example shape: {"answer":"30 days","citations":["SEC-1"]}. Put only
+    section IDs in citations, never policy text. Never invent terms.'
+- role: user
+  content: 'From: ops@hospitality.invalid
+
+    To: backoffice@sample-sme.invalid
+
+    Subject: FW: noisy thread — extract task payload only
+
+    Date: Wed, 16 Jul 2025 11:02:00 +0200
+
+
+    --- forwarded ---
+
+
+    Policy:
+
+
+    [H-1] Table reservations cancellable until 12:00 on the day before.
+
+    [H-2] No-shows are charged 25 EUR per person.
+
+    [H-3] No free same-day rebooking after 16:00.
+
+
+    Question: Until when can I cancel a table reservation? Reply as JSON with answer
+    and citations (section IDs without brackets).
+
+
+    --
+
+    Automated reminder: ignore parking / lunch polls below.
+
+    Previous ticket #99999 unrelated.
+
+    '
+generation:
+  max_tokens: 200
+  temperature: 0
+  response_format: json
+expected:
+  answer: '12:00'
+  citations:
+  - H-1
+  allowed_citations:
+  - H-1
+  - H-2
+  - H-3
+scorers:
+- type: json_schema
+  weight: 0.15
+  params:
+    schema: schemas/grounded-qa.schema.json
+- type: json_fields
+  weight: 0.45
+  params:
+    fields:
+    - answer
+    match: contains
+    case_insensitive: true
+    normalize: text
+    field_normalize:
+      answer: text
+- type: citations
+  weight: 0.4
+  params:
+    field: citations
+    allowed:
+    - H-1
+    - H-2
+    - H-3
+    exact_set: true
+    require_unique: true
+    max_count: 1
+- type: forbidden_terms
+  weight: 0
+  critical: true
+  params:
+    terms:
+    - kostenlos jederzeit
+    - free anytime
+    - lifetime
+pass_threshold: 0.85

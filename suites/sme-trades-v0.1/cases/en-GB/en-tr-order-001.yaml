@@ -15,7 +15,11 @@ tags:
 - chat
 messages:
 - role: system
-  content: "Extract the order as JSON: customer (string), currency \"EUR\", items as an array of {sku (string), qty (integer), variant (string; use \"none\" if the item has no variant)}. Ignore jokes and non-order chat. Use the exact sku string as written (including any prefix, e.g. \"SKU-A100\", not \"A100\"). variant as one string (size/colour with \"/\", e.g. \"M/navy\")."
+  content: 'Extract the order as JSON: customer (string), currency "EUR", items as
+    an array of {sku (string), qty (integer), variant (string; use "none" when the
+    item has no variant)}. Ignore jokes and chat that is not an order. sku is the
+    article code without the "SKU" label (e.g. "FK-FLEX-25", not "SKU FK-FLEX-25").
+    variant as one string (size/colour with "/", e.g. "M/navy").'
 - role: user
   fixture: fixtures/en-material-bestellung.txt
 generation:
@@ -54,4 +58,46 @@ scorers:
     keys:
     - sku
     - qty
+    - variant
+    key_match:
+      sku: exact
+      qty: exact
+      variant: exact
+    key_aliases:
+      variant:
+        none:
+        - keine
+        - Keine
+        - n/a
+        - N/A
+        - '-'
+        - standard
+        - Standard
+        white:
+        - weiß
+        - weiss
+        95/black:
+        - 95/schwarz
+        black:
+        - schwarz
+        clear:
+        - klar
+        L/red:
+        - L/rot
+        XL/black:
+        - XL/schwarz
+        mittel/braun:
+        - braun
+        medium/brown:
+        - brown
+      sku:
+        FK-FLEX-25:
+        - SKU FK-FLEX-25
+        - SKU-FK-FLEX-25
+        GR-01:
+        - SKU GR-01
+        - SKU-GR-01
+        SK-W:
+        - SKU SK-W
+        - SKU-SK-W
 pass_threshold: 0.85

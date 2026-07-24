@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite-ID** | `sme-logistics-v0.1` |
-| **Fälle** | 14 (7 DE/EN-Paare) |
+| **Fälle** | 20 (10 DE/EN-Paare) |
 | **Sprachen** | `de-DE`, `en-GB` |
 | **Rolle** | Test-Suite Logistik/Lager; Teil von **SME Full** |
 
@@ -16,10 +16,13 @@ Frachtrechnungen, Kommissionierung, Versand-SLA, Verspätungstickets und Dispatc
 | --- | --- |
 | lo-invoice-001 | invoice_extraction |
 | lo-order-001 | order_extraction |
+| lo-order-002 | order_extraction |
 | lo-missing-001 | missing_information |
 | lo-support-001 | support_routing |
 | lo-csv-001 | csv_analysis |
 | lo-grounded-001 | grounded_qa |
+| lo-grounded-002 | grounded_qa |
+| lo-grounded-003 | grounded_qa |
 | lo-process-001 | process_readiness |
 
 ## Verwendung

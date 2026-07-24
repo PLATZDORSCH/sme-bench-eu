@@ -13,7 +13,11 @@ tags:
 - pii
 messages:
 - role: system
-  content: "Return JSON {\"pii_types\":[\"name\",\"email\"]}. pii_types MUST be an array of strings, labels only from [name,email,phone,iban]. No objects and no values (not {\"type\":\"name\",\"value\":\"...\"}). Include a type only if a concrete value appears in the text; mere mention of the word (e.g. \"IBAN\") does not count."
+  content: Return JSON {"pii_types":[...]}. pii_types MUST be an array of strings,
+    labels only from [name,email,phone,iban]. No objects and no values (not {"type":"name","value":"..."}).
+    Include every type for which a concrete value appears in the text; mere mention
+    of the word (e.g. "IBAN") does not count. The array may be empty when no concrete
+    PII values are present.
 - role: user
   fixture: fixtures/pii/en-note.txt
 generation:

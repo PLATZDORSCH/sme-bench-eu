@@ -15,7 +15,11 @@ tags:
 - warehouse
 messages:
 - role: system
-  content: "Extract the order as JSON: customer (string), currency \"EUR\", items as an array of {sku (string), qty (integer), variant (string; use \"none\" if the item has no variant)}. Ignore cancelled lines. Use the exact sku string as written (including any prefix, e.g. \"SKU-A100\", not \"A100\"). variant as one string (size/colour with \"/\", e.g. \"M/navy\")."
+  content: 'Extract the order as JSON: customer (string), currency "EUR", items as
+    an array of {sku (string), qty (integer), variant (string; use "none" if the item
+    has no variant)}. Ignore cancelled lines. Use the exact sku string as written
+    (including any prefix, e.g. "SKU-A100", not "A100"). variant as one string (size/colour
+    with "/", e.g. "M/navy").'
 - role: user
   fixture: fixtures/en-pick-list.txt
 generation:
@@ -23,18 +27,18 @@ generation:
   temperature: 0
   response_format: json
 expected:
-  customer: 'East Hardware'
+  customer: East Hardware
   currency: EUR
   items:
-    - sku: PAL-100
-      qty: 12
-      variant: none
-    - sku: BOX-22
-      qty: 4
-      variant: brown
-    - sku: LABEL-9
-      qty: 1
-      variant: none
+  - sku: PAL-100
+    qty: 12
+    variant: none
+  - sku: BOX-22
+    qty: 4
+    variant: medium/brown
+  - sku: LABEL-9
+    qty: 1
+    variant: none
 scorers:
 - type: json_schema
   weight: 0.15
@@ -44,14 +48,46 @@ scorers:
   weight: 0.35
   params:
     fields:
-      - customer
-      - currency
+    - customer
+    - currency
 - type: set_equality
   weight: 0.5
   params:
     field: items
     ignore_order: true
     keys:
-      - sku
-      - qty
+    - sku
+    - qty
+    - variant
+    key_match:
+      sku: exact
+      qty: exact
+      variant: exact
+    key_aliases:
+      variant:
+        none:
+        - keine
+        - Keine
+        - n/a
+        - N/A
+        - '-'
+        - standard
+        - Standard
+        white:
+        - weiß
+        - weiss
+        95/black:
+        - 95/schwarz
+        black:
+        - schwarz
+        clear:
+        - klar
+        L/red:
+        - L/rot
+        XL/black:
+        - XL/schwarz
+        mittel/braun:
+        - braun
+        medium/brown:
+        - brown
 pass_threshold: 0.85

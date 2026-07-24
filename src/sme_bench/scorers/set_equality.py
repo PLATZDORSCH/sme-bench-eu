@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import re
+from datetime import date, datetime
 from typing import Any
 
 from sme_bench.models import BenchmarkTask, ScoreResult, ScorerSpec
 from sme_bench.scorers.base import register
 from sme_bench.utils import extract_json_payload, get_by_path
+
+_TOKEN_RE = re.compile(r"[^\W_]+", re.UNICODE)
 
 
 def _to_hashable(item: Any) -> Any:
@@ -47,6 +51,8 @@ def _alias_lookup(aliases: dict[str, list[str]] | None) -> dict[str, str]:
 
 
 def _normalize_token(item: Any, lookup: dict[str, str]) -> Any:
+    if isinstance(item, (date, datetime)):
+        item = item.isoformat()
     if isinstance(item, str) and lookup:
         return lookup.get(item.casefold(), item)
     return item
@@ -60,6 +66,38 @@ def _alias_variants(canonical: str, lookup: dict[str, str]) -> set[str]:
         if str(target).casefold() == canon:
             variants.add(str(alt).casefold())
     return variants
+
+
+def _tokens(value: str) -> set[str]:
+    """Casefolded word tokens; keeps digits/letters, drops punctuation."""
+    return {match.group(0).casefold() for match in _TOKEN_RE.finditer(value)}
+
+
+def _token_forms(tokens: set[str]) -> set[str]:
+    """Add conservative English third-person/plural base forms.
+
+    This keeps token-subset matching deterministic while allowing source-faithful
+    action wording such as ``sends the quote`` for expected ``send quote``.
+    """
+    forms = set(tokens)
+    forms.update(token[:-1] for token in tokens if len(token) > 3 and token.endswith("s"))
+    return forms
+
+
+def _token_subset_match(actual: str, expected: str, lookup: dict[str, str]) -> bool:
+    """True if every token of at least one expected/alias variant appears in actual.
+
+    Filler words and order are ignored. ``Zugangscode Keller`` therefore matches
+    ``Zugangscode zum Keller``, while ``Zugangscode Parkplatz`` does not.
+    """
+    actual_tokens = _token_forms(_tokens(actual))
+    if not actual_tokens:
+        return False
+    for variant in _alias_variants(expected, lookup):
+        required = _tokens(variant)
+        if required and required <= actual_tokens:
+            return True
+    return False
 
 
 def _elements_match(
@@ -80,7 +118,56 @@ def _elements_match(
         # alias ``Adresse`` → ``adresse`` ⊂ ``…lieferadresse``).
         act = actual.casefold()
         return any(variant in act for variant in _alias_variants(expected_n, lookup) if variant)
+    if (
+        match_mode == "token_subset"
+        and isinstance(actual, str)
+        and isinstance(expected_n, str)
+    ):
+        return _token_subset_match(actual, expected_n, lookup)
     return False
+
+
+def _key_alias_lookups(
+    key_aliases: dict[str, Any] | None,
+) -> dict[str, dict[str, str]]:
+    """Per-field alias lookups: ``{field: {alt.casefold(): canonical}}``."""
+    out: dict[str, dict[str, str]] = {}
+    if not key_aliases:
+        return out
+    for key, aliases in key_aliases.items():
+        if isinstance(aliases, dict):
+            out[str(key)] = _alias_lookup(aliases)
+    return out
+
+
+def _dict_items_match(
+    actual: Any,
+    expected: Any,
+    *,
+    keys: list[str],
+    default_match: str,
+    key_match: dict[str, str] | None,
+    alias_lookup: dict[str, str] | None,
+    key_alias_lookups: dict[str, dict[str, str]] | None = None,
+) -> bool:
+    if not isinstance(actual, dict) or not isinstance(expected, dict):
+        return _elements_match(
+            actual,
+            expected,
+            match_mode=default_match,
+            alias_lookup=alias_lookup,
+        )
+    for key in keys:
+        mode = (key_match or {}).get(key, default_match)
+        field_lookup = (key_alias_lookups or {}).get(key) or alias_lookup
+        if not _elements_match(
+            actual.get(key),
+            expected.get(key),
+            match_mode=mode,
+            alias_lookup=field_lookup,
+        ):
+            return False
+    return True
 
 
 def _match_lists(
@@ -89,6 +176,9 @@ def _match_lists(
     *,
     match_mode: str,
     alias_lookup: dict[str, str] | None = None,
+    keys: list[str] | None = None,
+    key_match: dict[str, str] | None = None,
+    key_alias_lookups: dict[str, dict[str, str]] | None = None,
 ) -> tuple[list[Any], list[Any], int]:
     matched_actual: set[int] = set()
     matched_expected: set[int] = set()
@@ -96,9 +186,21 @@ def _match_lists(
         for ai, act in enumerate(actual_items):
             if ai in matched_actual:
                 continue
-            if _elements_match(
-                act, exp, match_mode=match_mode, alias_lookup=alias_lookup
-            ):
+            if keys and isinstance(act, dict) and isinstance(exp, dict):
+                matched = _dict_items_match(
+                    act,
+                    exp,
+                    keys=keys,
+                    default_match=match_mode,
+                    key_match=key_match,
+                    alias_lookup=alias_lookup,
+                    key_alias_lookups=key_alias_lookups,
+                )
+            else:
+                matched = _elements_match(
+                    act, exp, match_mode=match_mode, alias_lookup=alias_lookup
+                )
+            if matched:
                 matched_expected.add(ei)
                 matched_actual.add(ai)
                 break
@@ -125,8 +227,14 @@ class SetEqualityScorer:
         coerce_scalar = bool(spec.params.get("coerce_scalar", False))
         match_mode = str(spec.params.get("match", "exact"))
         keys = spec.params.get("keys")
+        key_match_raw = spec.params.get("key_match")
+        key_match = key_match_raw if isinstance(key_match_raw, dict) else None
         aliases = spec.params.get("aliases")
         alias_lookup = _alias_lookup(aliases if isinstance(aliases, dict) else None)
+        key_aliases_raw = spec.params.get("key_aliases")
+        key_alias_lookups = _key_alias_lookups(
+            key_aliases_raw if isinstance(key_aliases_raw, dict) else None
+        )
         expected = task.expected
         data = parsed_output
         if data is None:
@@ -176,20 +284,24 @@ class SetEqualityScorer:
                 details={"actual_type": type(actual_list).__name__},
             )
 
-        actual_proj = [
-            _normalize_token(_project(x, keys), alias_lookup) for x in actual_list
-        ]
-        expected_proj = [
-            _normalize_token(_project(x, keys), alias_lookup) for x in expected_list
-        ]
+        actual_proj = [_normalize_token(_project(x, keys), alias_lookup) for x in actual_list]
+        expected_proj = [_normalize_token(_project(x, keys), alias_lookup) for x in expected_list]
 
         if ignore_order:
-            if match_mode == "substring" or alias_lookup:
+            if (
+                match_mode in {"substring", "token_subset"}
+                or alias_lookup
+                or key_alias_lookups
+                or keys
+            ):
                 missing, unexpected, matched_count = _match_lists(
                     actual_proj,
                     expected_proj,
                     match_mode=match_mode,
                     alias_lookup=alias_lookup,
+                    keys=keys if isinstance(keys, list) else None,
+                    key_match=key_match,
+                    key_alias_lookups=key_alias_lookups,
                 )
                 ok = not missing and not unexpected
                 union_size = len(actual_proj) + len(expected_proj) - matched_count

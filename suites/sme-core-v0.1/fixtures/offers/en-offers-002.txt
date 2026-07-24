@@ -1,4 +1,17 @@
+From: noreply@example-vendor.invalid
+To: orders@sample-sme.invalid
+Subject: FW: mixed thread — please process order section only
+Date: Tue, 15 Jul 2025 09:14:22 +0200
+MIME-Version: 1.0
+
+--- forwarded message ---
+
 Rule: Lowest total including shipping. Tie-break shorter lead time.
 
 GammaTech: goods 1200 EUR + shipping 0 EUR, 10 days
 DeltaLog: goods 1150 EUR + shipping 60 EUR, 4 days
+
+--
+Maria Schmidt | Einkauf
+T +49 30 123456-12 (ignore for extraction)
+Sent from my phone — ignore signature promos

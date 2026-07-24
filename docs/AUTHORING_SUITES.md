@@ -244,6 +244,7 @@ Each entry:
 - type: <name>
   weight: 0.5          # contribution to weighted score; 0 = check-only / often with critical
   critical: false      # if true and failed → critical_failure, effective score 0
+  must_pass: false     # if true and failed → blocks full pass (partial still allowed)
   params: { … }
 ```
 

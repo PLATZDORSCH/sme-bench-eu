@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite ID** | `sme-trades-v0.1` |
-| **Cases** | 14 (7 DE/EN pairs) |
+| **Cases** | 22 (11 DE/EN pairs) |
 | **Languages** | `de-DE`, `en-GB` |
 | **Role** | Trades/construction test suite; part of **SME Full** |
 
@@ -16,10 +16,14 @@ Longer fixtures: site-survey emails, material orders, contractor invoices, on-si
 | --- | --- |
 | tr-invoice-001 | invoice_extraction |
 | tr-order-001 | order_extraction |
+| tr-order-002 | order_extraction |
 | tr-missing-001 | missing_information |
 | tr-support-001 | support_routing |
 | tr-grounded-001 | grounded_qa |
+| tr-grounded-002 | grounded_qa |
+| tr-grounded-003 | grounded_qa |
 | tr-meeting-001 | meeting_actions |
+| tr-meeting-002 | meeting_actions |
 | tr-process-quote-001 | process_readiness |
 
 ## Usage

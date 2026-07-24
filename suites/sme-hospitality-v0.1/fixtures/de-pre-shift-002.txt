@@ -1,0 +1,16 @@
+From: ops@vendor.invalid
+To: backoffice@sample-sme.invalid
+Subject: FW: noisy thread — extract task payload only
+Date: Wed, 16 Jul 2025 11:02:00 +0200
+
+--- forwarded ---
+
+Vorservice-Briefing 2026-07-10
+
+- Chef Nora: Allergenliste aktualisieren bis 2026-07-10.
+- Service Lead Kai: Terrasse eindecken bis 2026-07-10.
+- Bar Mira: Weinkarte Q3 freigeben bis 2026-07-12.
+
+--
+Automated reminder: ignore parking / lunch polls below.
+Previous ticket #99999 unrelated.
