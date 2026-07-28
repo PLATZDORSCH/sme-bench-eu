@@ -19,7 +19,8 @@ messages:
     outage, security incident, same-day/legal deadline, or any explicit ask for help/clarification
     today; high = significant financial or blocked-process impact needing action within
     days (no same-day deadline); medium = limited impact, no tight deadline; low =
-    minor, cosmetic or informational.'
+    minor, cosmetic or informational. Write all text values in English; keep JSON
+    keys unchanged.'
 - role: user
   fixture: fixtures/support/en-ticket-001.txt
 generation:
@@ -60,5 +61,8 @@ scorers:
     - high
     - urgent
     adjacent_credit: 0.4
+  must_pass: true
+- type: language
+  weight: 0
   must_pass: true
 pass_threshold: 0.85

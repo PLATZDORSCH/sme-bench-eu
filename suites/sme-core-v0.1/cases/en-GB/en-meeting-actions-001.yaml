@@ -13,7 +13,8 @@ tags:
 - meeting
 messages:
 - role: system
-  content: Return JSON {actions:[{owner,task,due}]} for assigned actions only.
+  content: Return JSON {actions:[{owner,task,due}]} for assigned actions only. Write
+    all text values in English; keep JSON keys unchanged.
 - role: user
   fixture: fixtures/meeting/en-meeting.txt
 generation:
@@ -167,4 +168,7 @@ scorers:
         - Service lead Kai
         Mira:
         - Bar Mira
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

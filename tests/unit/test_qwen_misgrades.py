@@ -325,6 +325,65 @@ CASES = [
         True,
         id="de-process-english-snake-case",
     ),
+    # Content 0.9.0: accept capitalised field tokens and receiver_phone alias
+    pytest.param(
+        "en-missing-information-002",
+        '{"missing_fields":["Budget","contract_term"]}',
+        True,
+        id="en-missing-002-capitalised-budget",
+    ),
+    # Scoring-spec 0.6.1: accept ``[ID] policy text`` citation copies
+    pytest.param(
+        "de-fi-grounded-002",
+        (
+            '{"answer":"19%","citations":["[V-1] Standardsteuersatz 19% '
+            'für Waren und Dienstleistungen."]}'
+        ),
+        True,
+        id="de-fi-grounded-bracket-text-citation",
+    ),
+    pytest.param(
+        "de-grounded-qa-002",
+        (
+            '{"answer":"3–5 Werktage","citations":'
+            '["[SEC-A] Standardversand 3–5 Werktage."]}'
+        ),
+        True,
+        id="de-grounded-qa-002-bracket-text-citation",
+    ),
+    pytest.param(
+        "en-tr-grounded-001",
+        (
+            '{"answer":"14 days","citations":'
+            '["[H-1] Remediation within 14 days after defect notice."]}'
+        ),
+        True,
+        id="en-tr-grounded-bracket-text-citation",
+    ),
+    pytest.param(
+        "de-missing-information-002",
+        '{"missing_fields":["Budget","contract_term"]}',
+        True,
+        id="de-missing-002-capitalised-budget",
+    ),
+    pytest.param(
+        "de-lo-process-001",
+        (
+            '{"next_step":"Empfängertelefon erfassen","ready":false,'
+            '"missing":["receiver_phone"]}'
+        ),
+        True,
+        id="de-process-receiver-phone-alias",
+    ),
+    pytest.param(
+        "en-lo-process-001",
+        (
+            '{"next_step":"capture consignee phone","ready":false,'
+            '"missing":["receiver_phone"]}'
+        ),
+        True,
+        id="en-process-receiver-phone-alias",
+    ),
     pytest.param(
         "de-tr-order-001",
         (
@@ -376,6 +435,45 @@ CASES = [
         ),
         True,
         id="en-booking-separated-hash-id",
+    ),
+    pytest.param(
+        "en-ho-reply-001",
+        (
+            "Reservation R-8821 is confirmed for four guests on Saturday at 19:30. "
+            "Cancellation is allowed until Friday at 12:00."
+        ),
+        True,
+        id="en-booking-guest-count-word-four",
+    ),
+    pytest.param(
+        "de-ho-reply-001",
+        (
+            "Reservierung R-8821 ist bestätigt für vier Personen am Samstag um 19:30. "
+            "Stornierung ist bis Freitag 12:00 möglich."
+        ),
+        True,
+        id="de-booking-guest-count-word-vier",
+    ),
+    pytest.param(
+        "de-ho-reply-002",
+        (
+            "Reservierung R-8821 ist bestätigt für vier Personen am Samstag um 19:30. "
+            "Stornierung ist bis Freitag 12:00 möglich. "
+            "Wir können weder eine kostenlose Flasche Wein noch eine lebenslange "
+            "Garantie anbieten."
+        ),
+        True,
+        id="de-booking-weder-noch-refusal",
+    ),
+    pytest.param(
+        "en-ec-order-001",
+        (
+            '{"customer":"Levin Fashion House","currency":"EUR","items":['
+            '{"sku":"SHIRT-221","qty":2,"variant":"M/navy"},'
+            '{"sku":"BELT-09","qty":1,"variant":"black/95"}]}'
+        ),
+        True,
+        id="en-belt-variant-colour-length-order",
     ),
     pytest.param(
         "en-ec-injection-001",

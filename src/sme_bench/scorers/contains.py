@@ -7,7 +7,7 @@ from typing import Any
 
 from sme_bench.models import BenchmarkTask, ScoreResult, ScorerSpec
 from sme_bench.scorers.base import register
-from sme_bench.utils import extract_json_payload, get_by_path
+from sme_bench.utils import extract_json_payload, get_by_path, normalize_typography
 
 
 def _as_str(value: Any) -> str:
@@ -129,10 +129,12 @@ class ContainsScorer:
         word_boundaries = bool(spec.params.get("word_boundaries", False))
         min_count = spec.params.get("min_count")
         max_count = spec.params.get("max_count")
-        haystack = _resolve_haystack(
-            output_text=output_text,
-            parsed_output=parsed_output,
-            spec=spec,
+        haystack = normalize_typography(
+            _resolve_haystack(
+                output_text=output_text,
+                parsed_output=parsed_output,
+                spec=spec,
+            )
         )
         if case_insensitive:
             haystack = haystack.casefold()
@@ -141,7 +143,9 @@ class ContainsScorer:
         missing: list[str] = []
         count_violations: list[str] = []
         for group in groups:
-            needles = [t.casefold() if case_insensitive else t for t in group]
+            needles = [normalize_typography(t) for t in group]
+            if case_insensitive:
+                needles = [needle.casefold() for needle in needles]
             hit = next(
                 (
                     t

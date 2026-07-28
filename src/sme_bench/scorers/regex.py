@@ -7,6 +7,7 @@ from typing import Any
 
 from sme_bench.models import BenchmarkTask, ScoreResult, ScorerSpec
 from sme_bench.scorers.base import register
+from sme_bench.utils import normalize_typography
 
 
 @register
@@ -25,10 +26,13 @@ class RegexScorer:
         if "pattern" in spec.params:
             patterns = [spec.params["pattern"], *patterns]
         flags = re.IGNORECASE if spec.params.get("case_insensitive") else 0
+        # Only the haystack is folded; normalizing a pattern would rewrite
+        # character classes such as ``[\u2010-\u2015]``.
+        haystack = normalize_typography(output_text)
         matched: list[str] = []
         missing: list[str] = []
         for pattern in patterns:
-            if re.search(pattern, output_text, flags):
+            if re.search(pattern, haystack, flags):
                 matched.append(pattern)
             else:
                 missing.append(pattern)

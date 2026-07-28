@@ -15,15 +15,14 @@ tags:
 - long
 messages:
 - role: system
-  content: >-
-    Decide if a binding quote can be sent. Return JSON with exactly these keys:
-    next_step (string: "send_quote" or "request_missing"), ready (boolean),
-    missing (array of strings).
-    Readiness rule: if the message already states site address, surveyed scope
-    items, material preference, and preferred timing, set next_step=send_quote,
-    ready=true, missing=[]. Do not invent missing fields that are already present,
-    and do not require extra details such as exact tile areas, brand catalogues,
-    or demolition scope when the readiness rule is already met.
+  content: 'Decide if a binding quote can be sent. Return JSON with exactly these
+    keys: next_step (string: "send_quote" or "request_missing"), ready (boolean),
+    missing (array of strings). Readiness rule: if the message already states site
+    address, surveyed scope items, material preference, and preferred timing, set
+    next_step=send_quote, ready=true, missing=[]. Do not invent missing fields that
+    are already present, and do not require extra details such as exact tile areas,
+    brand catalogues, or demolition scope when the readiness rule is already met.
+    Write all text values in English; keep JSON keys unchanged.'
 - role: user
   fixture: fixtures/en-aufmass-mail.txt
 generation:
@@ -58,4 +57,7 @@ scorers:
     - Expresszuschlag
     - express surcharge
     - Whirlpool empfohlen
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

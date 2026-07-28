@@ -28,21 +28,23 @@ Rename folders only for a larger test-suite redesign.
 | Change | Action |
 | --- | --- |
 | Typo in docs / README only | No suite bump |
-| Prompt, fixture, expected, weights, suite composition, or score-changing scorer behaviour | Bump suite `version` + package release (e.g. **0.8.0** / harness **0.7.3**); use `sme-bench regrade` when inputs are unchanged; `merge-run` for partial new-task execution |
+| Prompt, fixture, expected, weights, suite composition, or score-changing scorer behaviour | Bump suite `version` + package release (e.g. **0.10.0** / harness **0.7.6**); use `sme-bench regrade` when inputs are unchanged; `merge-run` for partial new-task execution |
 | Scorer fix that changes grades for the same model output | Same as above; prefer **`regrade`** over in-place `--rescore`; filter leaderboard by `suite_version` |
 
 **Same content version = comparable runs.** Do not mix leaderboard rows from different content versions without labelling them. Regraded runs copy inference from a prior run and only re-apply scoring; they carry `regraded_from` in metadata and remain tied to the source inference run.
 
 ## 3. Scoring specification — `scoring_spec_version`
 
-Fingerprint of how scores are computed for a given content line (weights, must-pass gates, matcher semantics). Stored in run metadata as `scoring_spec_version` (current: **0.5.0**).
+Fingerprint of how scores are computed for a given content line (weights, must-pass gates, matcher semantics, input normalisation). Stored in run metadata as `scoring_spec_version` (current: **0.6.3**).
 
 | Change | Action |
 | --- | --- |
 | Docs-only / harness packaging | No scoring-spec bump |
 | Score-changing scorer or aggregation change with unchanged model inputs | Bump `scoring_spec_version` with the content/harness release; existing runs stay **regradable** when inputs are unchanged |
 
-Compatibility manifests under [`suites/compatibility/`](../suites/compatibility/) record which tasks are regrade-safe versus require a fresh inference delta, for example [`regrade-0.8.0-baseline.json`](../suites/compatibility/regrade-0.8.0-baseline.json).
+A **scorer defect** — a correct answer graded as wrong — is fixed on the scoring-spec line and applied retroactively by regrading, because the answer was already correct under the intended semantics. A **gap in the task specification** — grading against a requirement the prompt never stated — is fixed forward on the content line with a rerun; a model cannot be measured retroactively against a prompt it never saw.
+
+Compatibility manifests under [`suites/compatibility/`](../suites/compatibility/) record which tasks are regrade-safe versus require a fresh inference delta, for example [`regrade-0.10.3-baseline.json`](../suites/compatibility/regrade-0.10.3-baseline.json).
 
 ### Regrade versus rerun
 

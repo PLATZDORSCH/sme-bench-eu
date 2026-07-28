@@ -18,7 +18,8 @@ messages:
     and priority (one of [low,medium,high,urgent]). Priority rubric: urgent = business-critical
     outage, security incident or same-day/legal deadline; high = significant financial
     or blocked-process impact needing action within days; medium = limited impact,
-    no tight deadline; low = minor, cosmetic or informational.'
+    no tight deadline; low = minor, cosmetic or informational. Write all text values
+    in English; keep JSON keys unchanged.'
 - role: user
   fixture: fixtures/en-payment-ticket.txt
 generation:
@@ -59,5 +60,8 @@ scorers:
     - high
     - urgent
     adjacent_credit: 0.4
+  must_pass: true
+- type: language
+  weight: 0
   must_pass: true
 pass_threshold: 0.85

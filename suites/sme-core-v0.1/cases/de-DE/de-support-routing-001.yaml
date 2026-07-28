@@ -20,7 +20,8 @@ messages:
     oder jede ausdrückliche Bitte um Hilfe/Klärung noch heute; high = erheblicher
     finanzieller oder prozessblockierender Impact mit Handlungsbedarf innerhalb von
     Tagen (ohne Same-Day-Frist); medium = begrenzter Impact, keine enge Frist; low
-    = geringfügig, kosmetisch oder informativ.'
+    = geringfügig, kosmetisch oder informativ. Formuliere alle Textwerte auf Deutsch;
+    JSON-Schlüssel bleiben unverändert.'
 - role: user
   fixture: fixtures/support/de-ticket-001.txt
 generation:
@@ -61,5 +62,8 @@ scorers:
     - high
     - urgent
     adjacent_credit: 0.4
+  must_pass: true
+- type: language
+  weight: 0
   must_pass: true
 pass_threshold: 0.85

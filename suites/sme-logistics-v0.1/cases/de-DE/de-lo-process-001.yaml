@@ -17,7 +17,8 @@ messages:
   content: Entscheide die Versandbereitschaft. Gib JSON {next_step, ready, missing}
     zurück. ready=false, wenn ein Pflichtpunkt fehlt. missing MUSS ein Array kurzer
     Tokens sein (engl. snake_case, z. B. ["phone"]), kein einzelner String. next_step
-    ist ein kurzer Aktions-String.
+    ist ein kurzer Aktions-String. Formuliere alle Textwerte auf Deutsch; JSON-Schlüssel
+    bleiben unverändert.
 - role: user
   fixture: fixtures/de-dispatch-check.txt
 generation:
@@ -42,7 +43,7 @@ scorers:
     - ready
     case_insensitive: true
     patterns:
-      next_step: (?=.*(?:\b(?:empf[aä]ngertelefon(?:nummer)?|empf[aä]nger(?:s)?\s+telefon(?:nummer)?|telefon(?:nummer)?\s+(?:des\s+)?empf[aä]ngers?|consignee\s+phone(?:\s+number)?)\b|recipient_?phone|consignee_?phone|(?:_|\b)phone(?:\s+number)?\b))(?=.*(?:\b(?:erfassen|hinzufügen|ergänzen|eintragen|notieren|anfordern|einholen|collect|obtain|get|add|request|record|capture)(?:_|\b))).+
+      next_step: (?=.*(?:\b(?:empf[aä]ngertelefon(?:nummer)?|empf[aä]nger(?:s)?\s+telefon(?:nummer)?|telefon(?:nummer)?\s+(?:des\s+)?empf[aä]ngers?|consignee\s+phone(?:\s+number)?)\b|recipient_?phone|consignee_?phone|receiver_?phone|(?:_|\b)phone(?:\s+number)?\b))(?=.*(?:\b(?:erfassen|hinzufügen|ergänzen|eintragen|notieren|anfordern|einholen|collect|obtain|get|add|request|record|capture)(?:_|\b))).+
   must_pass: true
 - type: set_equality
   weight: 0.4
@@ -53,6 +54,7 @@ scorers:
       phone:
       - consignee_phone
       - recipient_phone
+      - receiver_phone
   must_pass: true
 - type: forbidden_terms
   weight: 0
@@ -61,4 +63,7 @@ scorers:
     terms:
     - '"ready": true'
     - '"ready":true'
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

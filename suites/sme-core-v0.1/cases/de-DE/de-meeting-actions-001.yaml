@@ -14,6 +14,7 @@ tags:
 messages:
 - role: system
   content: Gib JSON {actions:[{owner,task,due}]} nur für zugewiesene Aufgaben zurück.
+    Formuliere alle Textwerte auf Deutsch; JSON-Schlüssel bleiben unverändert.
 - role: user
   fixture: fixtures/meeting/de-meeting.txt
 generation:
@@ -167,4 +168,7 @@ scorers:
         - Service lead Kai
         Mira:
         - Bar Mira
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

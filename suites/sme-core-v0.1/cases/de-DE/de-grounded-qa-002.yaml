@@ -16,8 +16,9 @@ messages:
 - role: system
   content: 'Antworte nur anhand der Richtlinie. Gib genau ein JSON-Objekt mit nur
     diesen Schlüsseln zurück: answer (string) und citations (Array von Abschnitts-IDs
-    als Strings ohne Klammern). Beispiel-Form: {"answer":"30 Tage","citations":["SEC-1"]}.
-    In citations nur Abschnitts-IDs, keinen Policy-Text. Erfinde keine Bedingungen.'
+    als Strings ohne Klammern). Beispiel-Form: {"answer":"30 Tage","citations":["ID-1"]}.
+    In citations nur Abschnitts-IDs, keinen Policy-Text. Erfinde keine Bedingungen.
+    Formuliere alle Textwerte auf Deutsch; JSON-Schlüssel bleiben unverändert.'
 - role: user
   content: 'Policy:
 
@@ -77,4 +78,7 @@ scorers:
     - same day
     - kostenlos weltweit
     - free worldwide
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

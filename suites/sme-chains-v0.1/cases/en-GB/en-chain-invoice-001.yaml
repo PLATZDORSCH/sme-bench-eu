@@ -14,7 +14,11 @@ tags:
 - chain
 messages:
 - role: system
-  content: "Return JSON {next_step, ready, missing}. Choose next_step from the options in the user text. ready=true only if the process can proceed without blocking gaps. missing MUST be an array of short tokens (English snake_case, e.g. [\"cost_center\"]); if nothing is missing use missing=[]. Never false, null, \"\" or {}."
+  content: Return JSON {next_step, ready, missing}. Choose next_step from the options
+    in the user text. ready=true only if the process can proceed without blocking
+    gaps. missing MUST be an array of short tokens (English snake_case, e.g. ["cost_center"]);
+    if nothing is missing use missing=[]. Never false, null, "" or {}. Write all text
+    values in English; keep JSON keys unchanged.
 - role: user
   fixture: fixtures/en-chain-invoice.txt
 generation:
@@ -46,4 +50,7 @@ scorers:
     ignore_order: true
     coerce_scalar: true
     match: substring
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

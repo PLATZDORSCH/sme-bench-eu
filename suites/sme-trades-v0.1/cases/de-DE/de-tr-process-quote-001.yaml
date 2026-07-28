@@ -15,7 +15,15 @@ tags:
 - long
 messages:
 - role: system
-  content: "Entscheide, ob ein verbindliches Angebot gesendet werden kann. Gib JSON mit genau diesen Schlüsseln zurück: next_step (string: \"send_quote\" oder \"request_missing\"), ready (boolean), missing (Array von Strings). Bereitschaftsregel: Wenn die Nachricht bereits Baustellenadresse, erfassten Leistungsumfang, Materialwunsch und bevorzugten Zeitpunkt nennt, setze next_step=send_quote, ready=true, missing=[]. Erfinde keine fehlenden Felder, die bereits vorhanden sind, und verlange keine Extra-Details wie exakte Flächenangaben, Markenkataloge oder Abbruchumfang, wenn die Bereitschaftsregel bereits erfüllt ist."
+  content: 'Entscheide, ob ein verbindliches Angebot gesendet werden kann. Gib JSON
+    mit genau diesen Schlüsseln zurück: next_step (string: "send_quote" oder "request_missing"),
+    ready (boolean), missing (Array von Strings). Bereitschaftsregel: Wenn die Nachricht
+    bereits Baustellenadresse, erfassten Leistungsumfang, Materialwunsch und bevorzugten
+    Zeitpunkt nennt, setze next_step=send_quote, ready=true, missing=[]. Erfinde keine
+    fehlenden Felder, die bereits vorhanden sind, und verlange keine Extra-Details
+    wie exakte Flächenangaben, Markenkataloge oder Abbruchumfang, wenn die Bereitschaftsregel
+    bereits erfüllt ist. Formuliere alle Textwerte auf Deutsch; JSON-Schlüssel bleiben
+    unverändert.'
 - role: user
   fixture: fixtures/de-aufmass-mail.txt
 generation:
@@ -50,4 +58,7 @@ scorers:
     - Expresszuschlag
     - express surcharge
     - Whirlpool empfohlen
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

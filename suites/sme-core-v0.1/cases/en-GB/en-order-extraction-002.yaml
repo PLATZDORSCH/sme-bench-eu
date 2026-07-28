@@ -17,7 +17,8 @@ messages:
   content: 'Extract the order as JSON: customer (string), currency "EUR", items as
     an array of {sku (string), qty (integer), variant (string; use "none" if the item
     has no variant)}. Use the exact sku string as written (including any prefix, e.g.
-    "SKU-A100", not "A100"). variant as one string (size/colour with "/", e.g. "M/navy").'
+    "SKU-A100", not "A100"). variant as one string (size/colour with "/", e.g. "M/navy").
+    Write all text values in English; keep JSON keys unchanged.'
 - role: user
   fixture: fixtures/order/en-order-002.txt
 generation:
@@ -73,6 +74,8 @@ scorers:
         - weiss
         95/black:
         - 95/schwarz
+        - black/95
+        - schwarz/95
         black:
         - schwarz
         clear:
@@ -85,4 +88,7 @@ scorers:
         - braun
         medium/brown:
         - brown
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

@@ -15,6 +15,7 @@ tags:
 messages:
 - role: system
   content: Write a short factual reply using only provided facts. No invented commitments.
+    Respond in English.
 - role: user
   fixture: fixtures/reply/en-partial.txt
 generation:
@@ -49,4 +50,7 @@ scorers:
     min_words: 10
     min_sentences: 1
     forbid_bullet_only: true
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

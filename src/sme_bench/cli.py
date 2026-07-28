@@ -658,14 +658,16 @@ def compare_cmd(
         ("Mostly Pass Rate", "mostly_pass_rate", True, False),
         ("Unreliable Pass Rate", "unreliable_pass_rate", True, False),
         ("Critical Failures", "critical_failure_rate", True, False),
+        ("Language Compliance", "language_compliance_rate", True, False),
     ]
     for label, key, is_rate, bold in rows:
         values = []
         for s in summaries:
             if key in {"sme_core_score", "sme_rank_score"}:
                 val = f"{s.get(key, 0):.1f}"
+            elif (raw := s.get("overall", {}).get(key)) is None:
+                val = "—"
             else:
-                raw = s.get("overall", {}).get(key, 0)
                 val = f"{raw * 100:.1f}%" if is_rate else f"{raw:.3f}"
             values.append(f"[bold]{val}[/bold]" if bold else val)
         row_label = f"[bold]{label}[/bold]" if bold else label

@@ -18,7 +18,7 @@ messages:
     colour_preference, quantity, company. Omit fields that are already present. Do
     not invent extra field names. Include every candidate field that has no explicit
     value in the message; an empty missing_fields array means everything in the list
-    is present.'
+    is present. Write all text values in English; keep JSON keys unchanged.'
 - role: user
   fixture: fixtures/missing/en-quote-request.txt
 generation:
@@ -39,5 +39,8 @@ scorers:
   params:
     field: missing_fields
     ignore_order: true
+  must_pass: true
+- type: language
+  weight: 0
   must_pass: true
 pass_threshold: 0.85

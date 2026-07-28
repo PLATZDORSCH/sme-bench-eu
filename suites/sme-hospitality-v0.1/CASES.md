@@ -1,4 +1,4 @@
-# Case catalogue — sme-hospitality-v0.1 0.8.0
+# Case catalogue — sme-hospitality-v0.1 0.10.0
 
 Reference for every benchmark case: what is checked, which failures are critical?
 
@@ -61,7 +61,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Return a JSON object with exactly these keys: top_sku (SKU with the highest revenue, revenue = units*price), total_revenue (sum of units*price over all rows), low_stock (array of SKUs with stock < 5).
+> Return a JSON object with exactly these keys: top_sku (SKU with the highest revenue, revenue = units*price), total_revenue (sum of units*price over all rows), low_stock (array of SKUs with stock < 5)…
 
 **Scorers:**
 - `json_schema` (15 %)
@@ -78,7 +78,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Schreibe eine kurze, sachliche Gästeantwort nur mit den angegebenen Fakten. Erfinde keine Zusagen.
+> Schreibe eine kurze, sachliche Gästeantwort nur mit den angegebenen Fakten. Erfinde keine Zusagen. Antworte auf Deutsch.
 
 **Critical checks (fail → effective score 0):**
 - Critical: kostenlose Flasche, lebenslange Garantie, complimentary wine
@@ -95,7 +95,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Write a short factual guest reply using only provided facts. Do not invent commitments.
+> Write a short factual guest reply using only provided facts. Do not invent commitments. Respond in English.
 
 **Critical checks (fail → effective score 0):**
 - Critical: complimentary bottle, lifetime guarantee, kostenlose Flasche
@@ -112,7 +112,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Schreibe eine kurze, sachliche Gästeantwort nur mit den angegebenen Fakten. Erfinde keine Zusagen.
+> Schreibe eine kurze, sachliche Gästeantwort nur mit den angegebenen Fakten. Erfinde keine Zusagen. Antworte auf Deutsch.
 
 **Critical checks (fail → effective score 0):**
 - Critical: kostenlose Flasche, lebenslange Garantie, complimentary wine
@@ -129,7 +129,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Write a short factual guest reply using only provided facts. Do not invent commitments.
+> Write a short factual guest reply using only provided facts. Do not invent commitments. Respond in English.
 
 **Critical checks (fail → effective score 0):**
 - Critical: complimentary bottle, lifetime guarantee, kostenlose Flasche
@@ -258,7 +258,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Extrahiere JSON {"actions":[{"owner","task","due"}]} mit due als YYYY-MM-DD. Nur ausdrücklich genannte Entscheidungen.
+> Extrahiere JSON {"actions":[{"owner","task","due"}]} mit due als YYYY-MM-DD. Nur ausdrücklich genannte Entscheidungen. Formuliere alle Textwerte auf Deutsch; JSON-Schlüssel bleiben unverändert.
 
 **Scorers:**
 - `json_schema` (20 %)
@@ -271,7 +271,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Extract JSON {"actions":[{"owner","task","due"}]} with due as YYYY-MM-DD. Only stated decisions.
+> Extract JSON {"actions":[{"owner","task","due"}]} with due as YYYY-MM-DD. Only stated decisions. Write all text values in English; keep JSON keys unchanged.
 
 **Scorers:**
 - `json_schema` (20 %)
@@ -284,7 +284,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Extrahiere JSON {"actions":[{"owner","task","due"}]} mit due als YYYY-MM-DD. Nur ausdrücklich genannte Entscheidungen.
+> Extrahiere JSON {"actions":[{"owner","task","due"}]} mit due als YYYY-MM-DD. Nur ausdrücklich genannte Entscheidungen. Formuliere alle Textwerte auf Deutsch; JSON-Schlüssel bleiben unverändert.
 
 **Scorers:**
 - `json_schema` (20 %)
@@ -297,7 +297,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Extract JSON {"actions":[{"owner","task","due"}]} with due as YYYY-MM-DD. Only stated decisions.
+> Extract JSON {"actions":[{"owner","task","due"}]} with due as YYYY-MM-DD. Only stated decisions. Write all text values in English; keep JSON keys unchanged.
 
 **Scorers:**
 - `json_schema` (20 %)

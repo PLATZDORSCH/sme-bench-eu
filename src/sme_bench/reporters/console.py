@@ -31,6 +31,9 @@ def print_summary(
     out.print(f"Unreliable Pass Rate {overall.get('unreliable_pass_rate', 0) * 100:.1f} %")
     out.print(f"Critical Failures    {overall.get('critical_failure_rate', 0) * 100:.1f} %")
     out.print(f"Infrastructure       {overall.get('infrastructure_error_rate', 0) * 100:.1f} %")
+    lang_rate = overall.get("language_compliance_rate")
+    lang_rate_s = f"{lang_rate * 100:.1f} %" if isinstance(lang_rate, (int, float)) else "—"
+    out.print(f"Language compliance  {lang_rate_s}")
     tps = overall.get("mean_generation_tps")
     tps_s = f"{tps:.1f} tok/s" if isinstance(tps, (int, float)) else "—"
     out.print(f"Output tokens/s (Ø)  {tps_s}")

@@ -13,7 +13,10 @@ tags:
 - catalog
 messages:
 - role: system
-  content: "Return JSON with brand, color, size, material. Map raw values to the allowed vocabularies given in the user message (e.g. size \"medium\"/\"extra large\" → \"M\"/\"XL\"; material blends → \"blend\"). brand lowercase; use only allowed tokens for color/size/material."
+  content: Return JSON with brand, color, size, material. Map raw values to the allowed
+    vocabularies given in the user message (e.g. size "medium"/"extra large" → "M"/"XL";
+    material blends → "blend"). brand lowercase; use only allowed tokens for color/size/material.
+    Write all text values in English; keep JSON keys unchanged.
 - role: user
   fixture: fixtures/product/en-product.txt
 generation:
@@ -39,4 +42,7 @@ scorers:
     - size
     - material
     case_insensitive: true
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

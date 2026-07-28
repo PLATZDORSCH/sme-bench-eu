@@ -2,6 +2,117 @@
 
 ## Unreleased
 
+<!-- Add notes here; move into a version section at release. -->
+
+## 0.7.11
+
+### Scoring specification 0.6.3
+
+- `forbidden_terms` with `ignore_negated` treats long existential refusals as safe: English `there is/are no …, or TERM` / German `es gibt kein…` list items, and post-negation `nicht erfüllen` / `nicht bestätigen` (and EN counterparts). Fixes false criticals when models correctly deny invented payment claims in a longer list or refusal clause
+- Model inputs and suite content are unchanged (`suite_version` stays 0.10.3); existing 0.10.x runs are regradable
+
+### Tool 0.7.11
+
+- Package bump for scoring-spec 0.6.3
+
+## 0.7.10
+
+### Benchmark (SME Full content 0.10.3)
+
+- Trades order prompts clarify that a colour/size named in the item text (e.g. "Sockelleiste weiß" / "white skirting") must be extracted as `variant`, not `none`
+- **Input change** on `de/en-tr-order-001` and `de/en-tr-order-002` only — regrade of full 0.10.2 runs is blocked; use a 4-task delta run + `merge-run`
+- Compatibility manifest: [`regrade-0.10.3-baseline.json`](suites/compatibility/regrade-0.10.3-baseline.json)
+
+### Tool 0.7.10
+
+- Package bump for content 0.10.3
+
+## 0.7.9
+
+### Scoring specification 0.6.2
+
+- `forbidden_terms` with `ignore_negated` treats correlative refusals as safe: German `weder … noch` and English `neither … nor` (plus `weder`/`neither`/`nor` as negators). Fixes false criticals when models correctly refuse invented perks
+
+### Benchmark (SME Full content 0.10.2)
+
+- Order `variant` aliases: accept `black/95` and `schwarz/95` for expected `95/black` (fixture order is colour then length)
+- Only scorer params / scorer semantics change for these; model inputs unchanged → regradable from 0.10.1
+- Compatibility manifest: [`regrade-0.10.2-baseline.json`](suites/compatibility/regrade-0.10.2-baseline.json)
+
+### Tool 0.7.9
+
+- Package bump for scoring-spec 0.6.2 and content 0.10.2
+
+## 0.7.8
+
+### Benchmark (SME Full content 0.10.1)
+
+- Hospitality booking replies accept guest-count as digit or word: `4` / `four` / `vier`. Models that write "four covers" or "vier Personen" were previously failed by a digit-only `contains` check
+- Only scorer params change on four cases; model inputs are unchanged, so existing 0.10.x runs are regradable
+- Compatibility manifest: [`regrade-0.10.1-baseline.json`](suites/compatibility/regrade-0.10.1-baseline.json)
+
+### Tool 0.7.8
+
+- Package bump for content 0.10.1
+
+## 0.7.7
+
+### Scoring specification 0.6.1
+
+- The `citations` scorer extracts a leading bracketed section ID when a model pastes the whole policy line (`[V-1] Standardsteuersatz…` → `V-1`). Clean IDs and bare `[V-1]` forms stay accepted; wrong IDs and numeric placeholders such as `[1]` still fail
+- Model inputs and suite content are unchanged (`suite_version` stays 0.10.0); existing 0.10.0 runs are regradable
+
+### Tool 0.7.7
+
+- Package bump for scoring-spec 0.6.1
+
+## 0.7.6
+
+### Benchmark (SME Full content 0.10.0)
+
+- Grounded-QA system prompts no longer use `SEC-1` as the citation example shape. Domain packs use real IDs such as `R-2` / `H-2` / `L-2` / `V-2`, so the shared example was a misleading format cue that weaker models copied instead of citing the policy
+- Example shape is now prefix-neutral: `{"answer":"…","citations":["ID-1"]}`. Core cases that genuinely use `SEC-*` IDs are unchanged in the policy body
+- Only the 36 grounded-QA input fingerprints change. From content 0.9.0, use `sme-bench run --task-ids …` on those cases and `merge-run`; full reruns are only needed for models that still fail by inventing `SEC-*` on domain packs
+- Compatibility manifest: [`regrade-0.10.0-baseline.json`](suites/compatibility/regrade-0.10.0-baseline.json)
+
+### Tool 0.7.6
+
+- Package bump for the content 0.10.0 line
+
+## 0.7.5
+
+### Benchmark (SME Full content 0.9.0)
+
+- Every case now states its answer language in the prompt. Grading a German case against German expected values while the prompt never asked for German was a specification gap, and it produced failures that looked like scorer bugs
+- New `language` scorer on all 196 cases with `weight: 0` and `must_pass: true`: a language break leaves the SME Core Score untouched but blocks the attempt from passing. Any positive weight would renormalise the other scorers and dilute real errors
+- The check counts function words unambiguous for one language and fails only when the wrong language leads by two markers. The threshold is validated against every case's own expected answer; a stricter setting fails cases against their own reference. Short English phrases without function words (`update inventory`) stay undetected
+- JSON keys are never scanned. Injection and security cases exclude `reason`, where a refusal legitimately quotes the English payload it refused, matching the existing `forbidden_terms` exclusion; offer comparison excludes the unscored `reasons` field whose canonical values are language-neutral tokens
+- All 196 input fingerprints changed, so runs on content 0.8.0 or earlier require a **rerun**, not a regrade
+- Compatibility manifest: [`regrade-0.9.0-baseline.json`](suites/compatibility/regrade-0.9.0-baseline.json)
+- Known gap: the curated-candidate calibration in `calibration-0.4.0.json` is pinned to content 0.4.0 and needs a fresh run for 0.9.0; the calibrated candidate set is still verified against the shipped set
+
+### Tool 0.7.5
+
+- Add the `language` scorer with `expected`, `fields`, `exclude_fields`, and `margin` params
+- Report `language_compliance_rate` in summaries, markdown and console reports, and `sme-bench compare`; it is `null` for runs graded before content 0.9.0 so an absent check is not read as total non-compliance
+- Add `scripts/add_language_requirement.py` for the idempotent case migration
+
+## 0.7.4
+
+### Benchmark (SME Full content 0.8.0)
+
+- Scorers fold typographic Unicode variants onto their ASCII equivalents before matching: non-breaking hyphen (U+2011), en/em dash, minus sign, narrow no-break space (U+202F), soft hyphen, zero-width characters, and typographic quotes
+- Identifiers such as `#W-55021`, `RE-2026-1048`, and `R-8821` are now recognised when a model formats them with a non-breaking hyphen; 63 attempts across two runs were previously graded as missing terms although the identifier was present and correct
+- `forbidden_terms` folds the same variants, so a critical gate can no longer be evaded with a typographic dash
+- Model inputs and case content are unchanged: `suite_version` stays 0.8.0 and every existing run is regradable
+- Scoring fingerprints include scoring-spec version 0.6.0
+- Compatibility manifest: [`regrade-0.8.0-baseline.json`](suites/compatibility/regrade-0.8.0-baseline.json)
+
+### Tool 0.7.4
+
+- Add `normalize_typography` / `normalize_typography_deep` and apply them in `contains`, `forbidden_terms`, `regex`, `set_equality`, `json_fields`, `citations`, `exact_match`, and `classification`
+- Regex *patterns* are exempt from folding so character classes such as `[\u2010-\u2015]` keep working; only the haystack is folded
+
 ## 0.7.3
 
 ### Benchmark (SME Full content 0.8.0)

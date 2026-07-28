@@ -14,7 +14,12 @@ tags:
 - chain
 messages:
 - role: system
-  content: "Return JSON {next_step, ready, missing}. Choose next_step from the options stated in the user text. ready=true only if process can proceed without blocking gaps. missing MUST be an array of short tokens (English snake_case, e.g. [\"address\"]). For failed address validation (including invalid postcode), always use the token \"address\" in missing, not postcode. ready=false while the address is invalid."
+  content: Return JSON {next_step, ready, missing}. Choose next_step from the options
+    stated in the user text. ready=true only if process can proceed without blocking
+    gaps. missing MUST be an array of short tokens (English snake_case, e.g. ["address"]).
+    For failed address validation (including invalid postcode), always use the token
+    "address" in missing, not postcode. ready=false while the address is invalid.
+    Write all text values in English; keep JSON keys unchanged.
 - role: user
   fixture: fixtures/en-chain-order-fulfill.txt
 generation:
@@ -52,4 +57,7 @@ scorers:
       - Lieferadresse
       - shipping address
       - delivery address
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

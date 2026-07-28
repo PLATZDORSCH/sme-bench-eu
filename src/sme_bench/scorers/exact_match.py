@@ -7,12 +7,13 @@ from typing import Any
 
 from sme_bench.models import BenchmarkTask, ScoreResult, ScorerSpec
 from sme_bench.scorers.base import register
+from sme_bench.utils import normalize_typography
 
 
 def _normalize(text: str, *, case_insensitive: bool, strip_whitespace: bool) -> str:
-    value = text.strip() if strip_whitespace else text
+    value = normalize_typography(text)
     if strip_whitespace:
-        value = re.sub(r"\s+", " ", value)
+        value = re.sub(r"\s+", " ", value.strip())
     if case_insensitive:
         value = value.casefold()
     return value

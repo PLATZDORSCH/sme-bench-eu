@@ -13,7 +13,9 @@ tags:
 - offers
 messages:
 - role: system
-  content: "Wende die Auswahlregel an. Gib JSON mit selected_supplier (string), total_cost (Zahl, inkl. Versand) und reasons (Liste kurzer Strings) zurück."
+  content: Wende die Auswahlregel an. Gib JSON mit selected_supplier (string), total_cost
+    (Zahl, inkl. Versand) und reasons (Liste kurzer Strings) zurück. Formuliere alle
+    Textwerte auf Deutsch; JSON-Schlüssel bleiben unverändert.
 - role: user
   fixture: fixtures/offers/de-offers-003.txt
 generation:
@@ -41,4 +43,10 @@ scorers:
     fields:
     - total_cost
     absolute_tolerance: 0.01
+- type: language
+  weight: 0
+  must_pass: true
+  params:
+    exclude_fields:
+    - reasons
 pass_threshold: 0.85

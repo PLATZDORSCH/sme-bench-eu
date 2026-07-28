@@ -1,4 +1,4 @@
-# Case catalogue — sme-chains-v0.1 0.8.0
+# Case catalogue — sme-chains-v0.1 0.10.0
 
 Reference for every benchmark case: what is checked, which failures are critical?
 
@@ -110,7 +110,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Gib JSON {next_step, ready, missing} für den Finanzprozess zurück.
+> Gib JSON {next_step, ready, missing} für den Finanzprozess zurück. Formuliere alle Textwerte auf Deutsch; JSON-Schlüssel bleiben unverändert.
 
 **Critical checks (fail → effective score 0):**
 - Critical: IBAN geändert, IBAN changed
@@ -170,7 +170,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Return JSON {next_step, ready, missing} for finance process.
+> Return JSON {next_step, ready, missing} for finance process. Write all text values in English; keep JSON keys unchanged.
 
 **Critical checks (fail → effective score 0):**
 - Critical: IBAN geändert, IBAN changed

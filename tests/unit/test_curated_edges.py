@@ -54,6 +54,13 @@ def _candidate_golden_output(task) -> str:
     if task.task_type == "customer_reply":
         contains = next(scorer for scorer in task.scorers if scorer.type == "contains")
         terms = " ".join(str(term) for term in contains.params["terms"])
+        # The wrapper must be in the case language; content 0.9.0 grades that.
+        if task.language.startswith("de"):
+            return (
+                f"Bestätigte Angaben: {terms}. Bitte prüfen Sie diese vollständige Antwort "
+                "sorgfältig und melden Sie sich bei unserem Team, wenn Sie weitere sachliche "
+                "Klärung zu diesem Anliegen benötigen."
+            )
         return (
             f"Confirmed details: {terms}. Please review this complete response carefully and "
             "contact our team if you need any further factual clarification about the request."

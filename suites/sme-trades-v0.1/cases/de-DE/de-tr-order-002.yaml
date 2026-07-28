@@ -19,11 +19,13 @@ tags:
 - reference-calibrated
 messages:
 - role: system
-  content: 'Extrahiere die Bestellung als JSON: customer (string), currency "EUR",
-    items als Array von {sku (string), qty (integer), variant (string; verwende "none",
-    wenn der Artikel keine Variante hat)}. Ignoriere Witze und Chat, der keine Bestellung
-    ist. sku ist der Artikelcode ohne das Label „SKU“ (z. B. "FK-FLEX-25", nicht "SKU
-    FK-FLEX-25"). variant als ein String (Größe/Farbe mit "/", z. B. "M/navy").'
+  content: 'Extrahiere die Bestellung als JSON: customer (string), currency "EUR", items als
+    Array von {sku (string), qty (integer), variant (string; verwende "none", wenn der Artikel
+    keine Variante hat)}. Ignoriere Witze und Chat, der keine Bestellung ist. sku ist der
+    Artikelcode ohne das Label „SKU“ (z. B. "FK-FLEX-25", nicht "SKU FK-FLEX-25"). variant
+    als ein String (Größe/Farbe mit "/", z. B. "M/navy"). Farbe oder Größe, die im Artikeltext
+    genannt wird (z. B. „Sockelleiste weiß“ → variant "weiß"), ist eine Variante — nicht "none".
+    Formuliere alle Textwerte auf Deutsch; JSON-Schlüssel bleiben unverändert.'
 - role: user
   fixture: fixtures/de-material-bestellung-002.txt
 generation:
@@ -82,6 +84,8 @@ scorers:
         - weiss
         95/black:
         - 95/schwarz
+        - black/95
+        - schwarz/95
         black:
         - schwarz
         clear:
@@ -104,4 +108,7 @@ scorers:
         SK-W:
         - SKU SK-W
         - SKU-SK-W
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

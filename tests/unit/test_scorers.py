@@ -268,6 +268,26 @@ def test_forbidden_terms_exclude_fields_truncated_json() -> None:
             "Order #W-55021: Do not invent early-payment discount or Sofortgutschrift.",
             False,
         ),
+        # Long "there is no … or TERM" list (negator farther than the 8-word window).
+        (
+            True,
+            "Order #W-55021: There is no early-payment discount, offset against "
+            "credit note G-12, or Sofortgutschrift status for this invoice.",
+            False,
+        ),
+        # Must not treat a later affirmative claim as part of "there is no …".
+        (
+            True,
+            "Order #W-55021: There is no shipping delay and we confirm Sofortgutschrift today.",
+            True,
+        ),
+        # German: modal … TERM … nicht erfüllen
+        (
+            True,
+            "Bestellung #W-55021: Leider kann ich Ihre Anfrage nach Skonto oder "
+            'der Angabe "Sofortgutschrift" nicht erfüllen.',
+            False,
+        ),
     ],
 )
 def test_forbidden_terms_negation(ignore_negated: bool, output: str, expect_critical: bool) -> None:
@@ -282,6 +302,53 @@ def test_forbidden_terms_negation(ignore_negated: bool, output: str, expect_crit
                 weight=0,
                 critical=True,
                 params=params,
+            ),
+        ],
+    )
+    _, _, _, _, _, critical, _ = evaluate_attempt(task, output)
+    assert critical is expect_critical
+
+
+@pytest.mark.parametrize(
+    ("output", "expect_critical"),
+    [
+        (
+            "Reservierung R-8821: Wir können weder eine kostenlose Flasche Wein "
+            "noch eine lebenslange Garantie anbieten.",
+            False,
+        ),
+        (
+            "Reservation R-8821: We can offer neither a complimentary bottle "
+            "nor a lifetime guarantee.",
+            False,
+        ),
+        (
+            "Reservierung R-8821: Dazu gibt es eine kostenlose Flasche Wein.",
+            True,
+        ),
+    ],
+)
+def test_forbidden_terms_correlative_negation(output: str, expect_critical: bool) -> None:
+    task = make_task(
+        scorers=[
+            ScorerSpec(
+                type="contains",
+                weight=1.0,
+                params={"terms": ["R-8821"], "mode": "all"},
+            ),
+            ScorerSpec(
+                type="forbidden_terms",
+                weight=0,
+                critical=True,
+                params={
+                    "ignore_negated": True,
+                    "terms": [
+                        "kostenlose Flasche",
+                        "lebenslange Garantie",
+                        "complimentary bottle",
+                        "lifetime guarantee",
+                    ],
+                },
             ),
         ],
     )
@@ -460,6 +527,15 @@ def test_json_schema_coerce_scalar_fields(tmp_path: Path) -> None:
     [
         ('{"citations":["[SEC-A]"]}', True),
         ('{"citations":["[SEC-Z]"]}', False),
+        (
+            '{"citations":["[SEC-A] Standardversand 3–5 Werktage."]}',
+            True,
+        ),
+        (
+            '{"citations":["[V-1] Standardsteuersatz 19% für Waren und Dienstleistungen."]}',
+            False,
+        ),
+        ('{"citations":["[1]"]}', False),
     ],
 )
 def test_citations_normalizes_brackets(output: str, expected_pass: bool) -> None:
@@ -476,6 +552,33 @@ def test_citations_normalizes_brackets(output: str, expected_pass: bool) -> None
     )
     _, _, _, passed, _, _, _ = evaluate_attempt(task, output)
     assert passed is expected_pass
+
+
+def test_citations_extracts_id_from_policy_line_copy() -> None:
+    """Weak models paste ``[ID] policy text``; the ID alone is enough."""
+    task = make_task(
+        expected={"citations": ["V-1"], "allowed_citations": ["V-1", "V-2", "V-3"]},
+        scorers=[
+            ScorerSpec(
+                type="citations",
+                weight=1.0,
+                must_pass=True,
+                params={
+                    "field": "citations",
+                    "allowed": ["V-1", "V-2", "V-3"],
+                    "exact_set": True,
+                },
+            )
+        ],
+        generation=GenerationConfig(response_format="json"),
+    )
+    output = (
+        '{"answer":"19%","citations":["[V-1] Standardsteuersatz 19% '
+        'für Waren und Dienstleistungen."]}'
+    )
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, output)
+    assert passed
+
 
 
 @pytest.mark.parametrize(

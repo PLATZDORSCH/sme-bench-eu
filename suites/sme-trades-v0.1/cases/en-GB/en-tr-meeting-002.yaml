@@ -19,7 +19,8 @@ tags:
 messages:
 - role: system
   content: Extract JSON {"actions":[{"owner","task","due"}]} with due as YYYY-MM-DD.
-    Only stated decisions; do not invent owners or dates.
+    Only stated decisions; do not invent owners or dates. Write all text values in
+    English; keep JSON keys unchanged.
 - role: user
   fixture: fixtures/en-baubesprechung-002.txt
 generation:
@@ -173,4 +174,7 @@ scorers:
         - Service lead Kai
         Mira:
         - Bar Mira
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

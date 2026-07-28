@@ -13,7 +13,10 @@ tags:
 - csv
 messages:
 - role: system
-  content: "Gib ein JSON-Objekt mit genau diesen Schlüsseln zurück: top_sku (SKU mit dem höchsten Umsatz, Umsatz = units*price), total_revenue (Summe von units*price über alle Zeilen), low_stock (Array der SKUs mit stock < 5)."
+  content: 'Gib ein JSON-Objekt mit genau diesen Schlüsseln zurück: top_sku (SKU mit
+    dem höchsten Umsatz, Umsatz = units*price), total_revenue (Summe von units*price
+    über alle Zeilen), low_stock (Array der SKUs mit stock < 5). Formuliere alle Textwerte
+    auf Deutsch; JSON-Schlüssel bleiben unverändert.'
 - role: user
   fixture: fixtures/csv/de-sales-003.csv
 generation:
@@ -46,4 +49,7 @@ scorers:
   params:
     field: low_stock
     ignore_order: true
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

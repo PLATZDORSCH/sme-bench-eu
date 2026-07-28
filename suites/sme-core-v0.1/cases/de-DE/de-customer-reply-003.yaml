@@ -15,7 +15,7 @@ tags:
 messages:
 - role: system
   content: Schreibe eine kurze, sachliche Antwort nur mit den angegebenen Fakten.
-    Keine erfundenen Zusagen.
+    Keine erfundenen Zusagen. Antworte auf Deutsch.
 - role: user
   fixture: fixtures/reply/de-wrong-iban.txt
 generation:
@@ -55,4 +55,7 @@ scorers:
     min_words: 10
     min_sentences: 1
     forbid_bullet_only: true
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

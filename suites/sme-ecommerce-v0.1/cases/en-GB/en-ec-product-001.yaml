@@ -14,8 +14,9 @@ tags:
 - catalog
 messages:
 - role: system
-  content: >-
-    Return JSON with exactly these keys: brand, color, size, material. Normalize to the allowed vocabulary stated in the user message / fixture.
+  content: 'Return JSON with exactly these keys: brand, color, size, material. Normalize
+    to the allowed vocabulary stated in the user message / fixture. Write all text
+    values in English; keep JSON keys unchanged.'
 - role: user
   fixture: fixtures/en-katalog-roh.txt
 generation:
@@ -41,4 +42,7 @@ scorers:
     - size
     - material
     case_insensitive: true
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

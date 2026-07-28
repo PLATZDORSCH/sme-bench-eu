@@ -15,7 +15,8 @@ messages:
 - role: system
   content: 'Return a JSON object with exactly these keys: top_sku (SKU with the highest
     revenue, revenue = units*price), total_revenue (sum of units*price over all rows),
-    low_stock (array of SKUs with stock < 5).'
+    low_stock (array of SKUs with stock < 5). Write all text values in English; keep
+    JSON keys unchanged.'
 - role: user
   fixture: fixtures/csv/en-sales.csv
 generation:
@@ -49,4 +50,7 @@ scorers:
   params:
     field: low_stock
     ignore_order: true
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

@@ -2,6 +2,8 @@
 
 How to create a **custom SME-Bench test suite**: directory layout, `suite.yaml`, case YAML, scorers, validation, and fairness rules.
 
+**Coding-agent entrypoint:** short brief in [`suites/AGENTS.md`](../suites/AGENTS.md) — start there, then follow this guide.
+
 Use an existing small test suite as a template: [`suites/sme-trades-v0.1`](../suites/sme-trades-v0.1) or the minimal example [`suites/demo-v0.1`](../suites/demo-v0.1).
 
 ---
@@ -260,11 +262,13 @@ Each entry:
 | `citations` | Citation ids must be in allow-list | `field`, `allowed`, `require_nonempty` |
 | `exact_match` | Whole-string match | optional `expected`, `case_insensitive`, `normalize_whitespace` |
 | `regex` | Pattern checks | `patterns`, optional `case_insensitive` |
+| `language` | Answer is in the case language (`weight: 0`, `must_pass: true`) | optional `expected`, `fields` / `exclude_fields`, `margin` |
 
 ### Fairness tips (avoid flaky fails)
 
-- **System prompt:** name exact JSON keys and formats (`vat_rate` as decimal `0.19`, dates `YYYY-MM-DD`).
+- **System prompt:** name exact JSON keys and formats (`vat_rate` as decimal `0.19`, dates `YYYY-MM-DD`), and state the answer language.
 - **`forbidden_terms`:** use `fields` to only scan structured values, or `exclude_fields` (e.g. exclude `reason`) so free-text explanations do not false-trigger.
+- **`language`:** keep `weight: 0` — a positive weight renormalises every other scorer and dilutes real errors. Exclude fields whose canonical content is language-neutral (quoted payloads in `reason`, token lists such as `lower_than_beta_870`). Every case's own `expected` answer must pass its own `language` scorer; `tests/unit/test_suite_audits.py` enforces this.
 - **Orders / lists:** grade with `set_equality` + `keys: [sku, qty]` instead of full-object equality when extra keys are allowed.
 - **Citations:** ids may appear as `SEC-A` or `[SEC-A]`; the scorer normalizes common forms.
 - Weights of positive scorers should sum sensibly (often ≈ 1.0); pairs must stay comparable.

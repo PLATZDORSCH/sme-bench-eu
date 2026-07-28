@@ -10,8 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from sme_bench.fingerprints import task_input_fingerprint
-from sme_bench.scorers.base import known_scorer_names
+from sme_bench.scorers.base import get_scorer, known_scorer_names
 from sme_bench.task_loader import FULL_SUITE_IDS, load_full_benchmark, load_suite
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -35,7 +34,7 @@ def test_full_benchmark_baseline_count_and_audits() -> None:
     assert len(loaded.member_suites) == len(FULL_SUITE_IDS)
     assert len(loaded.tasks) == 196
     assert len({t.id for t in loaded.tasks}) == 196
-    assert loaded.manifest.version == "0.8.0"
+    assert loaded.manifest.version == "0.10.3"
     candidates = [
         task for task in loaded.tasks if {"noise-variant", "edge-variant"}.intersection(task.tags)
     ]
@@ -57,15 +56,19 @@ def test_full_benchmark_baseline_count_and_audits() -> None:
     assert "0.6.0" in releases["released"]
     assert "0.7.0" in releases["released"]
     assert "0.8.0" in releases["released"]
+    assert "0.10.3" in releases["released"]
     assert "0.4.1" not in releases["draft"]
 
     calibration = json.loads(
         (ROOT / "suites" / "compatibility" / "calibration-0.4.0.json").read_text(encoding="utf-8")
     )
     assert calibration["candidate_count"] == 40
-    assert calibration["candidate_input_fingerprints"] == {
-        task.id: task_input_fingerprint(task) for task in candidates
-    }
+    assert calibration["suite_version"] == "0.4.0"
+    # The manifest is the immutable record of the 0.4.0 calibration run. Content
+    # 0.9.0 rewrote every prompt to state the language requirement, so its input
+    # fingerprints have moved on and are no longer expected to match. What must
+    # still hold is that the calibrated *candidate set* is the set we ship.
+    assert set(calibration["candidate_input_fingerprints"]) == {task.id for task in candidates}
     assert len(calibration["models"]) == 2
     assert all(model["attempts"] == 40 for model in calibration["models"])
     assert all(model["passed"] >= 36 for model in calibration["models"])
@@ -77,6 +80,46 @@ def test_positive_weights_sum_to_one() -> None:
         positive = [s.weight for s in task.scorers if s.weight > 0]
         assert positive
         assert abs(sum(positive) - 1.0) < 1e-6, task.id
+
+
+LANGUAGE_INSTRUCTIONS = {
+    "de-DE": ("Formuliere alle Textwerte auf Deutsch", "Antworte auf Deutsch."),
+    "en-GB": ("Write all text values in English", "Respond in English."),
+}
+
+
+def test_every_case_states_and_checks_its_language() -> None:
+    """Content 0.9.0 contract: the prompt asks for the language and a scorer checks it."""
+    loaded = load_full_benchmark(known_scorers=known_scorer_names())
+    for task in loaded.tasks:
+        specs = [scorer for scorer in task.scorers if scorer.type == "language"]
+        assert len(specs) == 1, task.id
+        # A positive weight would renormalise every other scorer and dilute real
+        # errors; must_pass is what turns the check into a gate.
+        assert specs[0].weight == 0.0, task.id
+        assert specs[0].must_pass, task.id
+
+        system = next(m.content or "" for m in task.messages if m.role == "system")
+        expected = LANGUAGE_INSTRUCTIONS[task.language]
+        assert any(phrase in system for phrase in expected), task.id
+
+
+def test_expected_answers_pass_their_own_language_scorer() -> None:
+    """A case must never grade its own canonical answer as the wrong language."""
+    loaded = load_full_benchmark(known_scorers=known_scorer_names())
+    scorer = get_scorer("language")
+    for task in loaded.tasks:
+        if task.expected is None:
+            continue
+        spec = next(s for s in task.scorers if s.type == "language")
+        payload = json.loads(json.dumps(task.expected, ensure_ascii=False, default=str))
+        result = scorer.score(
+            task=task,
+            output_text=json.dumps(payload, ensure_ascii=False),
+            parsed_output=payload,
+            spec=spec,
+        )
+        assert result.passed, f"{task.id}: {result.details}"
 
 
 def test_no_duplicate_scorers() -> None:

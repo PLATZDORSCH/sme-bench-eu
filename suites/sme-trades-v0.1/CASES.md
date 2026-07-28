@@ -1,4 +1,4 @@
-# Case catalogue — sme-trades-v0.1 0.8.0
+# Case catalogue — sme-trades-v0.1 0.10.0
 
 Reference for every benchmark case: what is checked, which failures are critical?
 
@@ -192,7 +192,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Extrahiere JSON {"actions":[{"owner","task","due"}]} mit due als YYYY-MM-DD. Nur ausdrücklich genannte Entscheidungen; erfinde keine Owner oder Daten.
+> Extrahiere JSON {"actions":[{"owner","task","due"}]} mit due als YYYY-MM-DD. Nur ausdrücklich genannte Entscheidungen; erfinde keine Owner oder Daten. Formuliere alle Textwerte auf Deutsch; JSON-Schl…
 
 **Scorers:**
 - `json_schema` (20 %)
@@ -205,7 +205,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Extract JSON {"actions":[{"owner","task","due"}]} with due as YYYY-MM-DD. Only stated decisions; do not invent owners or dates.
+> Extract JSON {"actions":[{"owner","task","due"}]} with due as YYYY-MM-DD. Only stated decisions; do not invent owners or dates. Write all text values in English; keep JSON keys unchanged.
 
 **Scorers:**
 - `json_schema` (20 %)
@@ -218,7 +218,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Extrahiere JSON {"actions":[{"owner","task","due"}]} mit due als YYYY-MM-DD. Nur ausdrücklich genannte Entscheidungen; erfinde keine Owner oder Daten.
+> Extrahiere JSON {"actions":[{"owner","task","due"}]} mit due als YYYY-MM-DD. Nur ausdrücklich genannte Entscheidungen; erfinde keine Owner oder Daten. Formuliere alle Textwerte auf Deutsch; JSON-Schl…
 
 **Scorers:**
 - `json_schema` (20 %)
@@ -231,7 +231,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Extract JSON {"actions":[{"owner","task","due"}]} with due as YYYY-MM-DD. Only stated decisions; do not invent owners or dates.
+> Extract JSON {"actions":[{"owner","task","due"}]} with due as YYYY-MM-DD. Only stated decisions; do not invent owners or dates. Write all text values in English; keep JSON keys unchanged.
 
 **Scorers:**
 - `json_schema` (20 %)

@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import unicodedata
 from json import JSONDecoder
 from pathlib import Path
 from typing import Any
@@ -277,6 +278,57 @@ def separate_thinking_content(text: str) -> tuple[str, str | None]:
         return json.dumps(recovered, ensure_ascii=False), text
 
     return text, None
+
+
+# Typographic variants that models emit interchangeably with their ASCII
+# counterparts. The table runs *before* NFKC so each entry maps to the intended
+# ASCII character: NFKC would otherwise turn U+00B4 into space + combining
+# acute and U+2033 into two primes. NFKC then folds the remaining width and
+# no-break forms (U+FF0D, U+00A0, U+202F, …) on its own.
+_DASH_CHARS = "\u2010\u2011\u2012\u2013\u2014\u2015\u2043\u2212\u2796"
+_SPACE_CHARS = "\u1680\u202f\u205f"
+_APOSTROPHE_CHARS = "\u2018\u2019\u02bc\u2032\u00b4"
+_QUOTE_CHARS = "\u201c\u201d\u201e\u2033"
+# Invisible formatting characters carry no meaning for term matching.
+_INVISIBLE_CHARS = "\u00ad\u200b\u200c\u200d\u2060\ufeff"
+
+_TYPOGRAPHY_TABLE: dict[int, str] = {
+    **{ord(char): "-" for char in _DASH_CHARS},
+    **{ord(char): " " for char in _SPACE_CHARS},
+    **{ord(char): "'" for char in _APOSTROPHE_CHARS},
+    **{ord(char): '"' for char in _QUOTE_CHARS},
+    **{ord(char): "" for char in _INVISIBLE_CHARS},
+}
+
+
+def normalize_typography(text: str) -> str:
+    """Fold typographic Unicode variants onto their ASCII equivalents.
+
+    Models routinely format identifiers with a non-breaking hyphen
+    (``#W‑55021``, U+2011) or a narrow no-break space (U+202F). Those are
+    semantically identical to the ASCII forms a case declares, so scorers must
+    fold both sides before matching — otherwise a correct answer fails purely on
+    typography.
+
+    Both haystack and needle must be passed through this function; folding only
+    one side would create new mismatches instead of removing them. Regex
+    *patterns* are exempt: folding a pattern would rewrite character classes
+    such as ``[\\u2010-\\u2015]``.
+    """
+    if not text:
+        return text
+    return unicodedata.normalize("NFKC", text.translate(_TYPOGRAPHY_TABLE))
+
+
+def normalize_typography_deep(value: Any) -> Any:
+    """Recursively apply :func:`normalize_typography` to strings in a structure."""
+    if isinstance(value, str):
+        return normalize_typography(value)
+    if isinstance(value, dict):
+        return {key: normalize_typography_deep(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [normalize_typography_deep(item) for item in value]
+    return value
 
 
 def get_by_path(data: Any, path: str) -> Any:

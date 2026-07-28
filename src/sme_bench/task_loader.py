@@ -143,7 +143,7 @@ def load_full_benchmark(
         schema_version="1.0",
         id="sme-full",
         name="SME Full Benchmark",
-        version="0.8.0",
+        version="0.10.3",
         description=(
             "Standard ranking pack: Core + Trades, E-Commerce, Financial, "
             "Hospitality, Logistics, Chains (196 DE/EN cases; curated noise/edge expansion)"

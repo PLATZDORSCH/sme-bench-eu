@@ -14,7 +14,10 @@ tags:
 - csv
 messages:
 - role: system
-  content: "Gib ein JSON-Objekt mit genau diesen Schlüsseln zurück: top_sku (SKU mit dem höchsten Umsatz, Umsatz = units*price), total_revenue (Summe von units*price über alle Zeilen), low_stock (Array der SKUs mit stock < 5)."
+  content: 'Gib ein JSON-Objekt mit genau diesen Schlüsseln zurück: top_sku (SKU mit
+    dem höchsten Umsatz, Umsatz = units*price), total_revenue (Summe von units*price
+    über alle Zeilen), low_stock (Array der SKUs mit stock < 5). Formuliere alle Textwerte
+    auf Deutsch; JSON-Schlüssel bleiben unverändert.'
 - role: user
   fixture: fixtures/de-warehouse.csv
 generation:
@@ -22,12 +25,12 @@ generation:
   temperature: 0
   response_format: json
 expected:
-  top_sku: 'PAL-100'
+  top_sku: PAL-100
   total_revenue: 363.0
   low_stock:
-    - BOX-22
-    - LABEL-9
-    - FOAM-3
+  - BOX-22
+  - LABEL-9
+  - FOAM-3
 scorers:
 - type: json_schema
   weight: 0.15
@@ -37,16 +40,19 @@ scorers:
   weight: 0.25
   params:
     fields:
-      - top_sku
+    - top_sku
 - type: numeric
   weight: 0.3
   params:
     fields:
-      - total_revenue
+    - total_revenue
     absolute_tolerance: 0.01
 - type: set_equality
   weight: 0.3
   params:
     field: low_stock
     ignore_order: true
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

@@ -20,8 +20,9 @@ messages:
 - role: system
   content: 'Answer only using the policy. Return exactly one JSON object with these
     keys only: answer (string) and citations (array of section ID strings without
-    brackets). Example shape: {"answer":"30 days","citations":["SEC-1"]}. Put only
-    section IDs in citations, never policy text. Never invent terms.'
+    brackets). Example shape: {"answer":"30 days","citations":["ID-1"]}. Put only
+    section IDs in citations, never policy text. Never invent terms. Write all text
+    values in English; keep JSON keys unchanged.'
 - role: user
   content: 'From: ops@ecommerce.invalid
 
@@ -101,4 +102,7 @@ scorers:
     - sofort
     - instant refund
     - same day
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

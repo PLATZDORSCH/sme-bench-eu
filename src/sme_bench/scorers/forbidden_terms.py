@@ -14,9 +14,10 @@ Params:
     exclude_fields: list[str] — if set and output is a JSON object, scan every
         value except those of these top-level keys.
     ignore_negated: bool = False — when True, skip a hit if a negator appears in
-        the same sentence before the term, or a clear post-negation pattern
-        appears after it (DE/EN), e.g. ``Sofortgutschrift … nicht zugesagt`` or
-        ``instant credit can … not be promised``.
+        the same sentence before the term, a clear post-negation pattern
+        appears after it (DE/EN), e.g. ``Sofortgutschrift … nicht zugesagt`` /
+        ``… nicht erfüllen``, or the term is a list item under
+        ``there is/are no …`` / ``es gibt kein…``.
     mode: ``"terms"`` (default) or ``"claims"`` — claims mode treats bare entity
         tokens more carefully and still requires an affirmative commitment
         pattern nearby when the term itself is short/entity-like.
@@ -29,7 +30,7 @@ from typing import Any
 
 from sme_bench.models import BenchmarkTask, ScoreResult, ScorerSpec
 from sme_bench.scorers.base import register
-from sme_bench.utils import extract_json_payload
+from sme_bench.utils import extract_json_payload, normalize_typography
 
 _NEGATORS = (
     "no",
@@ -38,6 +39,8 @@ _NEGATORS = (
     "never",
     "without",
     "cannot",
+    "neither",
+    "nor",
     "kein",
     "keine",
     "keinen",
@@ -46,6 +49,7 @@ _NEGATORS = (
     "keines",
     "nicht",
     "ohne",
+    "weder",
 )
 # Match negator as a whole word immediately before the forbidden term.
 _NEGATOR_PATTERN = re.compile(
@@ -79,7 +83,9 @@ _POST_NEGATION = re.compile(
     # nicht/not/never/no + refusal word
     r"\b(?:nicht|not|never|no)\b\s+"
     r"(?:zugesagt|angeboten|möglich|gewährt|verfügbar|zusagbar|"
-    r"offered|available|promised|possible|eligible|granted)"
+    r"erfüllen|erfüllt|bestätigen|bestätigt|anerkennen|anerkannt|"
+    r"offered|available|promised|possible|eligible|granted|"
+    r"confirmed|confirm|fulfilled|accepted)"
     r"|"
     # Compact English forms right after the term
     r"\b(?:cannot|can't|won't|isn't|aren't|wasn't|weren't|doesn't|don't|didn't|"
@@ -195,10 +201,46 @@ _NEGATED_ENUMERATION = re.compile(
     r"\b(?:do\s+not|don't)\s+invent\b"
     r"|"
     r"\b(?:without|ohne)\s+(?:further\s+)?(?:commitments?|promises?|zusagen)"
+    r"|"
+    # Correlative refusal: "weder … noch …" / "neither … nor …"
+    r"\bweder\b"
+    r"|"
+    r"\bneither\b"
     r")"
     r"[^.!?\n]{0,200}$",
     re.IGNORECASE,
 )
+
+# Sentence-level "there is/are no …" / "es gibt kein…" governing a list item.
+# Only treat the hit as negated when it still looks like a list continuation
+# (comma / or / oder), not a new affirmative clause after "and"/"und".
+_EXISTENTIAL_NO = re.compile(
+    r"\b(?:there\s+(?:is|are)\s+no|es\s+gibt\s+kein(?:e|en|em|er|es)?)\b",
+    re.IGNORECASE,
+)
+_LIST_CONTINUATION_TAIL = re.compile(
+    r"(?:,\s*|\b(?:or|oder)\b\s*)[\"'„“]?\s*$",
+    re.IGNORECASE,
+)
+
+# "and/und + subject" after a negator starts a new clause (negation no longer covers the term).
+_NEW_CLAUSE_AFTER_NEGATOR = re.compile(
+    r"\b(?:and|und)\b\s+(?:we|wir|i|ich|they|sie|you|man)\b",
+    re.IGNORECASE,
+)
+_EXISTENTIAL_NO_IMMEDIATE = re.compile(
+    r"\b(?:there\s+(?:is|are)\s+no|es\s+gibt\s+kein(?:e|en|em|er|es)?)\b\s+[\"'„“]?\s*$",
+    re.IGNORECASE,
+)
+
+
+def _is_negated_existential_list_item(prefix: str) -> bool:
+    """True when the term is a list item under same-sentence 'there is no' / 'es gibt kein'."""
+    if not _EXISTENTIAL_NO.search(prefix):
+        return False
+    if _EXISTENTIAL_NO_IMMEDIATE.search(prefix):
+        return True
+    return bool(_LIST_CONTINUATION_TAIL.search(prefix))
 
 
 def _is_negated(haystack: str, start: int, term_len: int) -> bool:
@@ -210,19 +252,27 @@ def _is_negated(haystack: str, start: int, term_len: int) -> bool:
         return False
     if _NEGATED_ENUMERATION.search(prefix):
         return True
+    if _is_negated_existential_list_item(prefix):
+        return True
     if _PRE_REFUSAL.search(prefix):
         return True
-    if _NEGATOR_PATTERN.search(prefix):
+    if _NEGATOR_PATTERN.search(prefix) and not _NEW_CLAUSE_AFTER_NEGATOR.search(prefix):
         return True
     words = re.findall(r"\b[\w']+\b", prefix)
-    window = [w.casefold() for w in words[-_NEGATION_WINDOW_WORDS:]]
-    if any(w in _NEGATOR_WORDS for w in window):
+    window_start = max(0, len(words) - _NEGATION_WINDOW_WORDS)
+    for i in range(len(words) - 1, window_start - 1, -1):
+        word = words[i].casefold()
+        is_neg = word in _NEGATOR_WORDS
+        if word == "do" and i + 1 < len(words) and words[i + 1].casefold() == "not":
+            is_neg = True
+        if word == "can" and i + 1 < len(words) and words[i + 1].casefold() == "not":
+            is_neg = True
+        if not is_neg:
+            continue
+        after = " ".join(words[i + 1 :])
+        if _NEW_CLAUSE_AFTER_NEGATOR.search(after):
+            continue
         return True
-    for i, word in enumerate(window):
-        if word == "do" and i + 1 < len(window) and window[i + 1] == "not":
-            return True
-        if word == "can" and i + 1 < len(window) and window[i + 1] == "not":
-            return True
 
     suffix = _sentence_suffix(haystack, start + term_len)
     return bool(_POST_NEGATION.search(suffix))
@@ -262,8 +312,13 @@ def _find_forbidden_terms(
     mode: str = "terms",
 ) -> list[str]:
     hits: list[str] = []
+    haystack = normalize_typography(haystack)
     for term in terms:
-        needle = term.casefold() if case_insensitive else term
+        # Fold both sides so a typographic dash cannot be used to slip a
+        # forbidden claim past the gate.
+        needle = normalize_typography(term)
+        if case_insensitive:
+            needle = needle.casefold()
         search_in = haystack.casefold() if case_insensitive else haystack
         start = 0
         found = False

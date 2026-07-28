@@ -8,7 +8,12 @@ from typing import Any
 
 from sme_bench.models import BenchmarkTask, ScoreResult, ScorerSpec
 from sme_bench.scorers.base import register
-from sme_bench.utils import extract_json_payload, get_by_path
+from sme_bench.utils import (
+    extract_json_payload,
+    get_by_path,
+    normalize_typography,
+    normalize_typography_deep,
+)
 
 _TOKEN_RE = re.compile(r"[^\W_]+", re.UNICODE)
 
@@ -39,23 +44,40 @@ def _coerce_to_list(value: Any, *, coerce_scalar: bool) -> Any:
 
 
 def _alias_lookup(aliases: dict[str, list[str]] | None) -> dict[str, str]:
-    """Map alternate labels (casefolded) → canonical expected token."""
+    """Map alternate labels (typography-folded, casefolded) → canonical token."""
     lookup: dict[str, str] = {}
     if not aliases:
         return lookup
     for canonical, alts in aliases.items():
-        lookup[str(canonical).casefold()] = str(canonical)
+        canon = normalize_typography(str(canonical))
+        lookup[canon.casefold()] = canon
         for alt in alts or []:
-            lookup[str(alt).casefold()] = str(canonical)
+            lookup[normalize_typography(str(alt)).casefold()] = canon
     return lookup
 
 
-def _normalize_token(item: Any, lookup: dict[str, str]) -> Any:
+def _casefold_values(item: Any) -> Any:
+    """Casefold string values recursively; dict keys stay untouched.
+
+    Keys carry the output contract (``sku``, ``qty``) and must keep matching the
+    schema, while values are the free-form part a model chooses the casing for.
+    """
+    if isinstance(item, str):
+        return item.casefold()
+    if isinstance(item, dict):
+        return {key: _casefold_values(value) for key, value in item.items()}
+    if isinstance(item, list):
+        return [_casefold_values(value) for value in item]
+    return item
+
+
+def _normalize_token(item: Any, lookup: dict[str, str], *, casefold: bool = False) -> Any:
     if isinstance(item, (date, datetime)):
         item = item.isoformat()
+    item = normalize_typography_deep(item)
     if isinstance(item, str) and lookup:
-        return lookup.get(item.casefold(), item)
-    return item
+        item = lookup.get(item.casefold(), item)
+    return _casefold_values(item) if casefold else item
 
 
 def _alias_variants(canonical: str, lookup: dict[str, str]) -> set[str]:
@@ -106,24 +128,25 @@ def _elements_match(
     *,
     match_mode: str,
     alias_lookup: dict[str, str] | None = None,
+    casefold: bool = False,
 ) -> bool:
     lookup = alias_lookup or {}
-    actual_n = _normalize_token(actual, lookup)
-    expected_n = _normalize_token(expected, lookup)
+    actual_n = _normalize_token(actual, lookup, casefold=casefold)
+    expected_n = _normalize_token(expected, lookup, casefold=casefold)
     if actual_n == expected_n:
         return True
-    if match_mode == "substring" and isinstance(actual, str) and isinstance(expected_n, str):
+    if match_mode == "substring" and isinstance(actual_n, str) and isinstance(expected_n, str):
         # Accept if expected token *or any of its aliases* appears inside actual
         # (e.g. expected ``address``, actual ``Validierte Lieferadresse`` with
         # alias ``Adresse`` → ``adresse`` ⊂ ``…lieferadresse``).
-        act = actual.casefold()
+        act = actual_n.casefold()
         return any(variant in act for variant in _alias_variants(expected_n, lookup) if variant)
     if (
         match_mode == "token_subset"
-        and isinstance(actual, str)
+        and isinstance(actual_n, str)
         and isinstance(expected_n, str)
     ):
-        return _token_subset_match(actual, expected_n, lookup)
+        return _token_subset_match(actual_n, expected_n, lookup)
     return False
 
 
@@ -149,6 +172,7 @@ def _dict_items_match(
     key_match: dict[str, str] | None,
     alias_lookup: dict[str, str] | None,
     key_alias_lookups: dict[str, dict[str, str]] | None = None,
+    casefold: bool = False,
 ) -> bool:
     if not isinstance(actual, dict) or not isinstance(expected, dict):
         return _elements_match(
@@ -156,6 +180,7 @@ def _dict_items_match(
             expected,
             match_mode=default_match,
             alias_lookup=alias_lookup,
+            casefold=casefold,
         )
     for key in keys:
         mode = (key_match or {}).get(key, default_match)
@@ -165,6 +190,7 @@ def _dict_items_match(
             expected.get(key),
             match_mode=mode,
             alias_lookup=field_lookup,
+            casefold=casefold,
         ):
             return False
     return True
@@ -179,6 +205,7 @@ def _match_lists(
     keys: list[str] | None = None,
     key_match: dict[str, str] | None = None,
     key_alias_lookups: dict[str, dict[str, str]] | None = None,
+    casefold: bool = False,
 ) -> tuple[list[Any], list[Any], int]:
     matched_actual: set[int] = set()
     matched_expected: set[int] = set()
@@ -195,10 +222,15 @@ def _match_lists(
                     key_match=key_match,
                     alias_lookup=alias_lookup,
                     key_alias_lookups=key_alias_lookups,
+                    casefold=casefold,
                 )
             else:
                 matched = _elements_match(
-                    act, exp, match_mode=match_mode, alias_lookup=alias_lookup
+                    act,
+                    exp,
+                    match_mode=match_mode,
+                    alias_lookup=alias_lookup,
+                    casefold=casefold,
                 )
             if matched:
                 matched_expected.add(ei)
@@ -225,6 +257,7 @@ class SetEqualityScorer:
         field = spec.params.get("field")
         ignore_order = bool(spec.params.get("ignore_order", True))
         coerce_scalar = bool(spec.params.get("coerce_scalar", False))
+        case_insensitive = bool(spec.params.get("case_insensitive", False))
         match_mode = str(spec.params.get("match", "exact"))
         keys = spec.params.get("keys")
         key_match_raw = spec.params.get("key_match")
@@ -284,8 +317,14 @@ class SetEqualityScorer:
                 details={"actual_type": type(actual_list).__name__},
             )
 
-        actual_proj = [_normalize_token(_project(x, keys), alias_lookup) for x in actual_list]
-        expected_proj = [_normalize_token(_project(x, keys), alias_lookup) for x in expected_list]
+        actual_proj = [
+            _normalize_token(_project(x, keys), alias_lookup, casefold=case_insensitive)
+            for x in actual_list
+        ]
+        expected_proj = [
+            _normalize_token(_project(x, keys), alias_lookup, casefold=case_insensitive)
+            for x in expected_list
+        ]
 
         if ignore_order:
             if (
@@ -302,6 +341,7 @@ class SetEqualityScorer:
                     keys=keys if isinstance(keys, list) else None,
                     key_match=key_match,
                     key_alias_lookups=key_alias_lookups,
+                    casefold=case_insensitive,
                 )
                 ok = not missing and not unexpected
                 union_size = len(actual_proj) + len(expected_proj) - matched_count

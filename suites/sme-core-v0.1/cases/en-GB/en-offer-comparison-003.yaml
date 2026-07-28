@@ -13,8 +13,9 @@ tags:
 - offers
 messages:
 - role: system
-  content: 'Apply the selection rule. Return JSON with selected_supplier (string), total_cost
-    (number, incl. shipping), and reasons (a list of short strings).'
+  content: Apply the selection rule. Return JSON with selected_supplier (string),
+    total_cost (number, incl. shipping), and reasons (a list of short strings). Write
+    all text values in English; keep JSON keys unchanged.
 - role: user
   fixture: fixtures/offers/en-offers-003.txt
 generation:
@@ -42,4 +43,10 @@ scorers:
     fields:
     - total_cost
     absolute_tolerance: 0.01
+- type: language
+  weight: 0
+  must_pass: true
+  params:
+    exclude_fields:
+    - reasons
 pass_threshold: 0.85

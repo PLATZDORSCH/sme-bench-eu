@@ -7,7 +7,7 @@ from typing import Any
 
 from sme_bench.models import BenchmarkTask, ScoreResult, ScorerSpec
 from sme_bench.scorers.base import register
-from sme_bench.utils import extract_json_payload, get_by_path
+from sme_bench.utils import extract_json_payload, get_by_path, normalize_typography_deep
 
 _DASH_RE = re.compile(r"[\u2010-\u2015\u2212\-]+")
 _PERCENT_RE = re.compile(r"^(\d+(?:[.,]\d+)?)\s*%$")
@@ -132,7 +132,9 @@ def _values_match(
 
 
 def _normalize_for_field(value: Any, *, path: str, mode: str | None) -> Any:
-    normalized = _normalize_value(value, mode=mode)
+    # Typography is folded for every field regardless of ``normalize`` mode;
+    # actual and expected both pass through here, so both sides stay aligned.
+    normalized = _normalize_value(normalize_typography_deep(value), mode=mode)
     if mode in {"text", None} and path == "answer":
         normalized = _normalize_range(normalized)
         if isinstance(normalized, str):

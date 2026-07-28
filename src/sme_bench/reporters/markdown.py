@@ -50,6 +50,7 @@ def write_summary_markdown(
             t["unreliable_pass"].format(value=_pct(overall.get("unreliable_pass_rate"))),
             t["critical_rate"].format(value=_pct(overall.get("critical_failure_rate"))),
             t["infra_rate"].format(value=_pct(overall.get("infrastructure_error_rate"))),
+            t["language_rate"].format(value=_pct(overall.get("language_compliance_rate"))),
             t["tps"].format(value=_num(overall.get("mean_generation_tps"), 1)),
             "",
             t["by_language"],

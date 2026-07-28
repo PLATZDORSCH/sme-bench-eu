@@ -2,6 +2,8 @@
 
 Anleitung für **eigene SME-Bench-Test-Suites**: Verzeichnisstruktur, `suite.yaml`, Case-YAML, Scorer, Validierung, Fairness-Regeln.
 
+**Einstieg für Coding-Agents:** kurzes Briefing in [`suites/AGENTS.md`](../suites/AGENTS.md) — dort starten, dann diese Anleitung folgen.
+
 Vorlage: [`demo-v0.1`](../suites/demo-v0.1) (minimal) oder [`sme-trades-v0.1`](../suites/sme-trades-v0.1).
 
 ---
@@ -155,11 +157,13 @@ Ausführliche Beispiele (Classification, JSON Schema, `set_equality`, `citations
 | `citations` | Zitations-IDs in Allow-List | `field`, `allowed`, `require_nonempty` |
 | `exact_match` | Vollstring-Vergleich | optional `expected`, `case_insensitive`, `normalize_whitespace` |
 | `regex` | Musterprüfung | `patterns`, optional `case_insensitive` |
+| `language` | Antwort in der Fallsprache (`weight: 0`, `must_pass: true`) | optional `expected`, `fields` / `exclude_fields`, `margin` |
 
 ### Fairness (weniger flaky Fails)
 
-- **System-Prompt:** exakte JSON-Keys und Formate benennen (`vat_rate` als Dezimal `0.19`, Datum `YYYY-MM-DD`).
+- **System-Prompt:** exakte JSON-Keys und Formate benennen (`vat_rate` als Dezimal `0.19`, Datum `YYYY-MM-DD`) und die Antwortsprache nennen.
 - **`forbidden_terms`:** `fields` zum Scannen strukturierter Werte oder `exclude_fields` (z. B. `reason`), damit Freitext nicht false-positive auslöst.
+- **`language`:** `weight: 0` beibehalten — ein positives Gewicht renormalisiert alle anderen Scorer und verwässert echte Fehler. Felder ausschließen, deren kanonischer Inhalt sprachneutral ist (zitierte Payloads in `reason`, Token-Listen wie `lower_than_beta_870`). Die `expected`-Antwort jedes Cases muss den eigenen `language`-Scorer bestehen; `tests/unit/test_suite_audits.py` erzwingt das.
 - **Listen:** `set_equality` + `keys: [sku, qty]` statt Vollobjekt-Gleichheit, wenn Extra-Keys erlaubt sind.
 - **Citations:** IDs als `SEC-A` oder `[SEC-A]`; Scorer normalisiert gängige Formen.
 - Positive Scorer-Gewichte sinnvoll summieren (oft ≈ 1.0); Paare vergleichbar halten.

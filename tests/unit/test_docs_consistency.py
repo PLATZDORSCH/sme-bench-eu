@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from sme_bench import __version__
+from sme_bench.config import SCORING_SPEC_VERSION
 from sme_bench.scorers.base import known_scorer_names
 from sme_bench.task_loader import FULL_SUITE_IDS, load_full_benchmark, load_suite
 
@@ -78,6 +80,23 @@ def test_readme_example_files_exist(readme_name: str) -> None:
     assert refs, f"{readme_name}: expected at least one examples/*.json reference"
     missing = [ref for ref in refs if not (ROOT / ref).is_file()]
     assert not missing, f"{readme_name}: missing example files: {missing}"
+
+
+@pytest.mark.parametrize("doc_name", ["docs/VERSIONING.md", "docs/VERSIONING.de.md"])
+def test_versioning_docs_state_current_scoring_spec(doc_name: str) -> None:
+    text = (ROOT / doc_name).read_text(encoding="utf-8")
+    assert f"`scoring_spec_version` (current: **{SCORING_SPEC_VERSION}**)" in text or (
+        f"`scoring_spec_version` (aktuell: **{SCORING_SPEC_VERSION}**)" in text
+    ), f"{doc_name}: scoring-spec version out of sync with {SCORING_SPEC_VERSION}"
+
+
+@pytest.mark.parametrize("readme_name", ["README.md", "README.de.md"])
+def test_readme_release_line_matches_package(readme_name: str) -> None:
+    text = (ROOT / readme_name).read_text(encoding="utf-8")
+    assert f"**v{__version__}**" in text, f"{readme_name}: harness version not {__version__}"
+    match = re.search(r"[Ss]coring[- ][Ss]pec\D*\*\*([0-9.]+)\*\*", text)
+    assert match, f"{readme_name}: scoring-spec release line not found"
+    assert match.group(1) == SCORING_SPEC_VERSION
 
 
 def test_glm_example_payload() -> None:

@@ -196,16 +196,27 @@ Use `--task-ids id1,id2` on `run` for selective deltas when only some inputs cha
 - **SME Core Score:** mean of category-weighted effective scores × 100 (domain quality, no rate penalty)
 - **SME Rank Score:** `SME Core × Attempt Pass × max(0, 1 − 5 × critical_rate) × max(0, 1 − 0.5 × partial_rate)` — primary leaderboard metric; successful repeats receive proportional credit
 - **Language gap:** pass/score difference `en-GB − de-DE` plus pair consistency
+- **Language compliance:** share of attempts answered in the case language (`—` for runs graded before content 0.9.0)
+
+### Scoring normalisation
+
+Scoring is deterministic and never uses an LLM judge. Before matching, every scorer folds typographic Unicode variants onto their ASCII equivalents on **both** sides of the comparison: non-breaking hyphen (U+2011), en/em dash, minus sign, narrow no-break space (U+202F), soft hyphen, zero-width characters, and typographic quotes. A model that writes an order number as `#W‑55021` therefore scores the same as one that writes `#W-55021`. Regex *patterns* are exempt so character classes such as `[\u2010-\u2015]` keep working; only the scanned text is folded.
+
+### Language compliance
+
+A German case answered in English is unusable in practice, so every case states its answer language in the prompt and carries a `language` scorer with `weight: 0` and `must_pass: true`. A language break therefore leaves the SME Core Score untouched but blocks the attempt from passing, which lowers Attempt Pass Rate and SME Rank.
+
+The check counts function words that are unambiguous for one language and fails only when the wrong language leads by two markers. It deliberately abstains when the evidence is thin, because German business answers legitimately carry English loanwords and structured values. Consequence worth knowing: a short English phrase without function words (`update inventory`) is not detected. That threshold is validated against every case's own expected answer — a stricter setting would fail cases against their own reference. JSON keys are never scanned, and cases whose `reason` field quotes a refused English payload exclude that field, the same way `forbidden_terms` already does.
 
 ## Releases and versioning
 
-Current release: **v0.7.3** (harness) with SME Full content **0.8.0** (196 DE/EN cases) and scoring-spec **0.5.0**. Its 40 added domain variants passed pair review, deterministic golden checks, and calibration with GPT-5.6 Luna and GLM-5.2 Thinking.
+Current release: **v0.7.11** (harness) with SME Full content **0.10.3** (196 DE/EN cases) and scoring-spec **0.6.3**. Content 0.10.0 keeps the language contract from 0.9.0 and makes grounded-QA citation examples prefix-neutral (`ID-1`), so only the 36 grounded cases need a fresh inference delta from 0.9.0.
 
 Harness bugfixes stay on the same content line (patch). Prompt, case, or score-changing changes get a **new version** so leaderboard runs stay comparable. Details: **[docs/VERSIONING.md](docs/VERSIONING.md)**.
 
 ## Test suites
 
-All cases on a released content line have `review_status: approved`. Folder ids stay `*-v0.1`; the current suite version is **0.8.0**.
+All cases on a released content line have `review_status: approved`. Folder ids stay `*-v0.1`; the current suite version is **0.10.3**.
 
 | Name | Path | Content | Cases |
 | --- | --- | --- | --- |
@@ -246,14 +257,72 @@ Custom example (not in Full): [`suites/demo-v0.1`](suites/demo-v0.1) — run wit
 
 ## Authoring your own test suite
 
-Step by step for humans and coding agents: **[docs/AUTHORING_SUITES.md](docs/AUTHORING_SUITES.md)** (layout, case schema, scorers, fairness, validate/run).
+A custom suite lets you test models on **your** workflows — ticket categories,
+invoice fields, approval rules, and similar — with the same transparent,
+deterministic scoring as SME Full. You see which model is reliable on your
+tasks, not only on the public ranking.
 
-In short:
+Full guide (layout, case schema, scorers, fairness):
+**[docs/AUTHORING_SUITES.md](docs/AUTHORING_SUITES.md)**.
+For coding agents: short brief in **[`suites/AGENTS.md`](suites/AGENTS.md)**
+(points to the same guide). Minimal template: [`suites/demo-v0.1`](suites/demo-v0.1).
 
-1. Create YAML under `suites/<suite>/cases/<lang>/`.
-2. Reference fixtures relative to the suite; paths must not escape the suite directory.
-3. Pair DE/EN via a shared `pair_id`.
-4. Check with `sme-bench validate`.
+### Why a custom suite?
+
+- You own the ground truth and scorers — no LLM-as-a-Judge.
+- DE/EN pairs, repeats, and critical fails work like the Full benchmark.
+- Custom suites are **not** auto-merged into the SME Full leaderboard; run them
+  explicitly with `--suite`.
+
+### How to proceed
+
+1. **Create a folder** under `suites/<my-suite-v0.1>/` with `suite.yaml`,
+   `cases/de-DE/`, `cases/en-GB/`, and optionally `fixtures/` and `schemas/`.
+2. **Write cases** as YAML: system/user prompt (inline or via fixture),
+   expected output, and scorers (e.g. `json_fields`, `contains`,
+   `classification`, `forbidden_terms`).
+3. **Pair languages**: the same task in DE and EN with a shared `pair_id`,
+   matching `task_type`, and comparable scorer weights.
+4. **Validate**: `uv run sme-bench validate suites/<my-suite-v0.1>`.
+5. **Smoke-run** with one repeat, then a full run with `--repeats 3`.
+
+```bash
+# Try the demo suite
+uv run sme-bench validate suites/demo-v0.1
+uv run sme-bench run \
+  --base-url "$BASE_URL" --model "$MODEL" \
+  --suite suites/demo-v0.1 --repeats 1 \
+  --output runs/demo-smoke
+
+# Your suite
+uv run sme-bench validate suites/my-suite-v0.1
+uv run sme-bench run \
+  --base-url "$BASE_URL" --model "$MODEL" \
+  --suite suites/my-suite-v0.1 \
+  --output runs/my-suite
+```
+
+### Typical layout
+
+```text
+suites/my-suite-v0.1/
+├── suite.yaml
+├── cases/de-DE/…yaml
+├── cases/en-GB/…yaml
+├── fixtures/          # optional input texts
+└── schemas/           # optional for json_schema scorers
+```
+
+Notes:
+
+- Each message uses either `content` **or** `fixture` (not both).
+- Fixture paths are relative to the suite root and must stay inside the suite.
+- At least one scorer with `weight > 0`; use `critical: true` only for hard
+  business rules (e.g. forbidden commitments).
+- Keep `review_status: draft` until review; use `approved` for released packs.
+
+Optional catalog:
+`uv run sme-bench catalog --suite suites/my-suite-v0.1 --output suites/my-suite-v0.1/CASES.md`.
 
 ## Privacy and limitations
 

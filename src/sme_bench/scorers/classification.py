@@ -7,10 +7,11 @@ from typing import Any
 
 from sme_bench.models import BenchmarkTask, ScoreResult, ScorerSpec
 from sme_bench.scorers.base import register
+from sme_bench.utils import normalize_typography
 
 
 def _normalize_label(text: str) -> str:
-    value = text.strip()
+    value = normalize_typography(text).strip()
     value = value.strip("\"'`")
     value = re.sub(r"\s+", " ", value)
     return value

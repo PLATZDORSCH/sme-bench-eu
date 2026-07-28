@@ -22,7 +22,7 @@ _BOOL_PARAMS = frozenset(
         "word_boundaries",
     }
 )
-_INT_PARAMS = frozenset({"min_count", "max_count", "min_words", "min_sentences"})
+_INT_PARAMS = frozenset({"min_count", "max_count", "min_words", "min_sentences", "margin"})
 _FLOAT_PARAMS = frozenset(
     {"tolerance", "relative_tolerance", "absolute_tolerance", "adjacent_credit"}
 )
@@ -62,6 +62,7 @@ _SCORER_PARAMS: dict[str, set[str]] = {
         "field",
         "ignore_order",
         "coerce_scalar",
+        "case_insensitive",
         "match",
         "keys",
         "aliases",
@@ -111,6 +112,7 @@ _SCORER_PARAMS: dict[str, set[str]] = {
         "adjacent_credit",
         "case_insensitive",
     },
+    "language": {"expected", "fields", "exclude_fields", "margin"},
 }
 
 _JSON_NORMALIZE_MODES = frozenset(
@@ -156,6 +158,7 @@ def validate_scorer_spec(
         "forbidden_terms": ("terms", "fields", "exclude_fields"),
         "regex": ("patterns",),
         "json_schema": ("coerce_scalar_fields",),
+        "language": ("fields", "exclude_fields"),
     }
     dict_params: dict[str, tuple[str, ...]] = {
         "set_equality": ("aliases", "key_aliases", "key_match"),
@@ -179,6 +182,7 @@ def validate_scorer_spec(
         "forbidden_terms": ("fields", "exclude_fields"),
         "regex": ("patterns",),
         "json_schema": ("coerce_scalar_fields",),
+        "language": ("fields", "exclude_fields"),
     }
     for key in string_list_params.get(spec.type, ()):
         value = spec.params.get(key)

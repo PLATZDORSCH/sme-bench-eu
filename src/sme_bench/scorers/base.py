@@ -49,6 +49,7 @@ def _ensure_scorers_loaded() -> None:
         forbidden_terms,
         json_fields,
         json_schema,
+        language,
         numeric,
         regex,
         set_equality,

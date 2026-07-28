@@ -1,4 +1,4 @@
-# Case catalogue — sme-ecommerce-v0.1 0.8.0
+# Case catalogue — sme-ecommerce-v0.1 0.10.0
 
 Reference for every benchmark case: what is checked, which failures are critical?
 
@@ -59,7 +59,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Return a JSON object with exactly these keys: top_sku (SKU with the highest revenue, revenue = units*price), total_revenue (sum of units*price over all rows), low_stock (array of SKUs with stock < 5).
+> Return a JSON object with exactly these keys: top_sku (SKU with the highest revenue, revenue = units*price), total_revenue (sum of units*price over all rows), low_stock (array of SKUs with stock < 5)…
 
 **Scorers:**
 - `json_schema` (15 %)
@@ -76,7 +76,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Schreibe eine sachliche Kundenantwort nur mit den angegebenen Richtlinien-Fakten. Keine erfundenen Zusagen.
+> Schreibe eine sachliche Kundenantwort nur mit den angegebenen Richtlinien-Fakten. Keine erfundenen Zusagen. Antworte auf Deutsch.
 
 **Critical checks (fail → effective score 0):**
 - Critical: Soforterstattung, Sofortgutschrift zusagen, Sofortgutschrift gewähren, instant credit promised, promise instant credit, bereits erstattet
@@ -93,7 +93,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Write factual customer reply using only provided policy facts. No invented commitments.
+> Write factual customer reply using only provided policy facts. No invented commitments. Respond in English.
 
 **Critical checks (fail → effective score 0):**
 - Critical: instant refund, instant credit, already refunded
@@ -110,7 +110,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Schreibe eine sachliche Kundenantwort nur mit den angegebenen Richtlinien-Fakten. Keine erfundenen Zusagen.
+> Schreibe eine sachliche Kundenantwort nur mit den angegebenen Richtlinien-Fakten. Keine erfundenen Zusagen. Antworte auf Deutsch.
 
 **Critical checks (fail → effective score 0):**
 - Critical: Soforterstattung, Sofortgutschrift zusagen, Sofortgutschrift gewähren, instant credit promised, promise instant credit, bereits erstattet
@@ -127,7 +127,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Write factual customer reply using only provided policy facts. No invented commitments.
+> Write factual customer reply using only provided policy facts. No invented commitments. Respond in English.
 
 **Critical checks (fail → effective score 0):**
 - Critical: instant refund, instant credit, already refunded
@@ -330,7 +330,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Gib JSON mit genau diesen Schlüsseln zurück: brand, color, size, material. Normalisiere auf das erlaubte Vokabular aus der Benutzernachricht / dem Fixture.
+> Gib JSON mit genau diesen Schlüsseln zurück: brand, color, size, material. Normalisiere auf das erlaubte Vokabular aus der Benutzernachricht / dem Fixture. Formuliere alle Textwerte auf Deutsch; JSON…
 
 **Scorers:**
 - `json_schema` (20 %)
@@ -343,7 +343,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Pass from:** 85% weighted score
 
 **Task (system prompt):**
-> Return JSON with exactly these keys: brand, color, size, material. Normalize to the allowed vocabulary stated in the user message / fixture.
+> Return JSON with exactly these keys: brand, color, size, material. Normalize to the allowed vocabulary stated in the user message / fixture. Write all text values in English; keep JSON keys unchanged.
 
 **Scorers:**
 - `json_schema` (20 %)

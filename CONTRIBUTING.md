@@ -26,6 +26,7 @@ CI runs the same checks on Python 3.11 and 3.12.
 ## Authoring suites and cases
 
 New benchmark cases or suites must follow **[docs/AUTHORING_SUITES.md](docs/AUTHORING_SUITES.md)**.
+Coding agents: start with **[`suites/AGENTS.md`](suites/AGENTS.md)**.
 Key rules:
 
 - Deterministic scorers only — no LLM-as-a-Judge.

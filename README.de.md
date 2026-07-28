@@ -195,16 +195,27 @@ Mit `--task-ids id1,id2` auf `run` lassen sich selektive Deltas erzeugen, wenn n
 - **SME Core Score:** Mittel der kategoriegewichteten effektiven Scores × 100 (Domänenqualität, ohne Raten-Penalty)
 - **SME Rank Score:** `SME Core × Attempt Pass × max(0, 1 − 5 × critical_rate) × max(0, 1 − 0.5 × partial_rate)` — primäre Leaderboard-Metrik; erfolgreiche Wiederholungen werden anteilig berücksichtigt
 - **Language gap:** Pass-/Score-Differenz `en-GB − de-DE` plus Paarkonsistenz
+- **Sprachtreue:** Anteil der Attempts, die in der Fallsprache geantwortet haben (`—` bei Runs vor Content 0.9.0)
+
+### Scoring-Normalisierung
+
+Das Scoring ist deterministisch und nutzt keinen LLM-Judge. Vor dem Vergleich faltet jeder Scorer typografische Unicode-Varianten auf **beiden** Seiten auf ihre ASCII-Entsprechung: geschütztes Trennzeichen (U+2011), Gedankenstriche, Minuszeichen, schmales geschütztes Leerzeichen (U+202F), weiches Trennzeichen, Zero-Width-Zeichen und typografische Anführungszeichen. Ein Modell, das eine Bestellnummer als `#W‑55021` schreibt, wird damit genauso bewertet wie eines, das `#W-55021` schreibt. Regex-*Patterns* sind ausgenommen, damit Zeichenklassen wie `[\u2010-\u2015]` weiter funktionieren; gefaltet wird nur der geprüfte Text.
+
+### Sprachtreue
+
+Ein deutscher Fall, der auf Englisch beantwortet wird, ist in der Praxis unbrauchbar. Deshalb nennt jeder Case seine Antwortsprache im Prompt und trägt einen `language`-Scorer mit `weight: 0` und `must_pass: true`. Ein Sprachbruch lässt den SME Core Score damit unberührt, verhindert aber das Bestehen des Attempts und senkt so Attempt Pass Rate und SME Rank.
+
+Die Prüfung zählt Funktionswörter, die für genau eine Sprache eindeutig sind, und schlägt erst an, wenn die falsche Sprache um zwei Marker führt. Sie hält sich bei dünner Evidenz absichtlich zurück, weil deutsche Geschäftsantworten legitim englische Lehnwörter und strukturierte Werte enthalten. Bekannte Konsequenz: eine kurze englische Phrase ohne Funktionswörter (`update inventory`) wird nicht erkannt. Dieser Schwellwert ist gegen die Musterantwort jedes einzelnen Cases validiert — eine strengere Einstellung würde Cases an ihrer eigenen Referenz scheitern lassen. JSON-Schlüssel werden nie geprüft, und Cases, deren `reason`-Feld einen abgewiesenen englischen Payload zitiert, schließen dieses Feld aus, genau wie `forbidden_terms` es bereits tut.
 
 ## Releases und Versionierung
 
-Aktuelles Release: **v0.7.3** (Harness) mit SME-Full-Content **0.8.0** (196 DE/EN-Fälle) und Scoring-Spec **0.5.0**. Die 40 neuen Domänenvarianten bestanden Pair-Review, deterministische Golden-Checks und die Kalibrierung mit GPT-5.6 Luna sowie GLM-5.2 Thinking.
+Aktuelles Release: **v0.7.11** (Harness) mit SME-Full-Content **0.10.3** (196 DE/EN-Fälle) und Scoring-Spec **0.6.3**. Content 0.10.0 behält den Sprachvertrag aus 0.9.0 und macht Grounded-QA-Zitationsbeispiele prefix-neutral (`ID-1`); von 0.9.0 aus brauchen nur die 36 Grounded-Cases ein frisches Inference-Delta.
 
 Harness-Bugfixes bleiben auf derselben Inhaltslinie (Patch). Prompt-, Case- oder score-relevante Änderungen bekommen eine **neue Version**, damit Leaderboard-Runs vergleichbar bleiben. Details: **[docs/VERSIONING.de.md](docs/VERSIONING.de.md)**.
 
 ## Test-Suites
 
-Alle Cases einer freigegebenen Content-Linie haben `review_status: approved`. Ordner-IDs bleiben `*-v0.1`; die aktuelle Suite-Version ist **0.8.0**.
+Alle Cases einer freigegebenen Content-Linie haben `review_status: approved`. Ordner-IDs bleiben `*-v0.1`; die aktuelle Suite-Version ist **0.10.3**.
 
 | Name | Pfad | Inhalt | Cases |
 | --- | --- | --- | --- |
@@ -245,14 +256,72 @@ Custom-Beispiel (nicht in Full): [`suites/demo-v0.1`](suites/demo-v0.1) — mit 
 
 ## Eigene Test-Suite schreiben
 
-Schritt für Schritt für Menschen und Coding-Agents: **[docs/AUTHORING_SUITES.de.md](docs/AUTHORING_SUITES.de.md)** (Layout, Case-Schema, Scorer, Fairness, validate/run).
+Mit einer eigenen Suite prüfst du Modelle an **deinen** Workflows — z. B. deine
+Ticket-Kategorien, Rechnungsfelder oder Freigaberegeln — mit derselben
+transparenten, deterministischen Bewertung wie SME Full. So siehst du, welches
+Modell bei deinen Aufgaben zuverlässig ist, nicht nur im öffentlichen Ranking.
 
-Kurz:
+Ausführliche Anleitung (Layout, Case-Schema, Scorer, Fairness):
+**[docs/AUTHORING_SUITES.de.md](docs/AUTHORING_SUITES.de.md)**.
+Für Coding-Agents: kurzes Briefing in **[`suites/AGENTS.md`](suites/AGENTS.md)**
+(verweist auf dieselbe Anleitung). Minimales Vorbild: [`suites/demo-v0.1`](suites/demo-v0.1).
 
-1. YAML unter `suites/<suite>/cases/<lang>/` anlegen.
-2. Fixtures relativ zur Suite referenzieren; Pfade dürfen die Suite nicht verlassen.
-3. DE/EN über gemeinsame `pair_id` koppeln.
-4. Mit `sme-bench validate` prüfen.
+### Warum eine eigene Suite?
+
+- Du definierst die Ground Truth und Scorer selbst — kein LLM-as-a-Judge.
+- DE/EN-Paare, Wiederholungen und Critical-Fails funktionieren wie im Full-Benchmark.
+- Eigene Suites landen **nicht** automatisch im SME-Full-Leaderboard; du startest
+  sie gezielt mit `--suite`.
+
+### So gehst du vor
+
+1. **Ordner anlegen** unter `suites/<meine-suite-v0.1>/` mit `suite.yaml`,
+   `cases/de-DE/`, `cases/en-GB/` und bei Bedarf `fixtures/` sowie `schemas/`.
+2. **Cases schreiben** als YAML: System-/User-Prompt (direkt oder per Fixture),
+   erwartetes Ergebnis und Scorer (z. B. `json_fields`, `contains`,
+   `classification`, `forbidden_terms`).
+3. **Sprachen koppeln**: denselben Task in DE und EN mit gemeinsamer `pair_id`,
+   gleichem `task_type` und vergleichbaren Scorer-Gewichten.
+4. **Prüfen**: `uv run sme-bench validate suites/<meine-suite-v0.1>`.
+5. **Smoke-Run** mit einem Repeat, danach den vollen Lauf mit `--repeats 3`.
+
+```bash
+# Demo-Suite ausprobieren
+uv run sme-bench validate suites/demo-v0.1
+uv run sme-bench run \
+  --base-url "$BASE_URL" --model "$MODEL" \
+  --suite suites/demo-v0.1 --repeats 1 \
+  --output runs/demo-smoke
+
+# Eigene Suite
+uv run sme-bench validate suites/meine-suite-v0.1
+uv run sme-bench run \
+  --base-url "$BASE_URL" --model "$MODEL" \
+  --suite suites/meine-suite-v0.1 \
+  --output runs/meine-suite
+```
+
+### Typische Struktur
+
+```text
+suites/meine-suite-v0.1/
+├── suite.yaml
+├── cases/de-DE/…yaml
+├── cases/en-GB/…yaml
+├── fixtures/          # optionale Eingabetexte
+└── schemas/           # optional für json_schema-Scorer
+```
+
+Hinweise:
+
+- Jede Message nutzt entweder `content` **oder** `fixture` (nicht beides).
+- Fixture-Pfade sind relativ zum Suite-Root und dürfen die Suite nicht verlassen.
+- Mindestens ein Scorer mit `weight > 0`; `critical: true` nur für harte
+  Geschäftsregeln (z. B. verbotene Zusagen).
+- `review_status: draft` bis zur Prüfung; für freigegebene Packs `approved`.
+
+Optional Katalog erzeugen:
+`uv run sme-bench catalog --suite suites/meine-suite-v0.1 --output suites/meine-suite-v0.1/CASES.md`.
 
 ## Privatsphäre und Grenzen
 

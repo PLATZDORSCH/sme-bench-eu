@@ -15,7 +15,8 @@ tags:
 messages:
 - role: system
   content: Extrahiere JSON {"actions":[{"owner","task","due"}]} mit due als YYYY-MM-DD.
-    Nur ausdrücklich genannte Entscheidungen; erfinde keine Owner oder Daten.
+    Nur ausdrücklich genannte Entscheidungen; erfinde keine Owner oder Daten. Formuliere
+    alle Textwerte auf Deutsch; JSON-Schlüssel bleiben unverändert.
 - role: user
   fixture: fixtures/de-baubesprechung.txt
 generation:
@@ -169,4 +170,7 @@ scorers:
         - Service lead Kai
         Mira:
         - Bar Mira
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

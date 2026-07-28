@@ -15,7 +15,7 @@ tags:
 messages:
 - role: system
   content: Write a short factual guest reply using only provided facts. Do not invent
-    commitments.
+    commitments. Respond in English.
 - role: user
   fixture: fixtures/en-booking-facts.txt
 generation:
@@ -30,7 +30,9 @@ scorers:
     terms:
     - R-8821
     - '19:30'
-    - '4'
+    - - '4'
+      - four
+      - vier
     - Friday
     mode: all
     case_insensitive: true
@@ -50,4 +52,7 @@ scorers:
     min_words: 10
     min_sentences: 1
     forbid_bullet_only: true
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

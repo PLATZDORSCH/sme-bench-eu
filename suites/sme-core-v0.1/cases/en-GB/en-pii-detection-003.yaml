@@ -17,7 +17,7 @@ messages:
     labels only from [name,email,phone,iban]. No objects and no values (not {"type":"name","value":"..."}).
     Include every type for which a concrete value appears in the text; mere mention
     of the word (e.g. "IBAN") does not count. The array may be empty when no concrete
-    PII values are present.
+    PII values are present. Write all text values in English; keep JSON keys unchanged.
 - role: user
   fixture: fixtures/pii/en-note-003.txt
 generation:
@@ -41,4 +41,7 @@ scorers:
   params:
     field: pii_types
     ignore_order: true
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

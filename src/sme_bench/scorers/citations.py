@@ -2,23 +2,32 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from sme_bench.models import BenchmarkTask, ScoreResult, ScorerSpec
 from sme_bench.scorers.base import register
-from sme_bench.utils import extract_json_payload, get_by_path
+from sme_bench.utils import extract_json_payload, get_by_path, normalize_typography
+
+# Leading ``[ID]`` optionally followed by policy text the model copied with the label.
+_BRACKETED_ID = re.compile(r"^\[([^\]]+)\](?:\s+.*)?$")
 
 
 def _normalize_citation(value: Any) -> Any:
     """Normalize a citation ID for comparison.
 
     Policies label sections as ``[SEC-A]``; models legitimately cite them with or
-    without the surrounding brackets. Strip brackets and whitespace so both forms
-    match, and compare case-insensitively.
+    without the surrounding brackets. Weak models sometimes paste the whole
+    policy line (``[V-1] Standardsteuersatz…``); extract the leading bracketed
+    ID in that case. Compare case-insensitively and fold typographic dashes so
+    ``SEC‑A`` with a non-breaking hyphen still resolves to ``SEC-A``.
     """
     if not isinstance(value, str):
         return value
-    return value.strip().strip("[]").strip().casefold()
+    text = normalize_typography(value).strip()
+    match = _BRACKETED_ID.match(text)
+    text = match.group(1).strip() if match else text.strip("[]").strip()
+    return text.casefold()
 
 
 @register

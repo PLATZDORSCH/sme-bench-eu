@@ -23,7 +23,8 @@ messages:
     items als Array von {sku (string), qty (integer), variant (string; verwende "none",
     wenn der Artikel keine Variante hat)}. Ignoriere stornierte Zeilen. sku exakt
     wie geschrieben (inkl. Präfix, z. B. "SKU-A100", nicht "A100"). variant als ein
-    String (Größe/Farbe mit "/", z. B. "M/navy").'
+    String (Größe/Farbe mit "/", z. B. "M/navy"). Formuliere alle Textwerte auf Deutsch;
+    JSON-Schlüssel bleiben unverändert.'
 - role: user
   fixture: fixtures/de-pick-list-002.txt
 generation:
@@ -82,6 +83,8 @@ scorers:
         - weiss
         95/black:
         - 95/schwarz
+        - black/95
+        - schwarz/95
         black:
         - schwarz
         clear:
@@ -94,4 +97,7 @@ scorers:
         - braun
         medium/brown:
         - brown
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

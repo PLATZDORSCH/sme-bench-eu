@@ -40,6 +40,7 @@ def _slice_metrics(attempts: list[AttemptResult]) -> dict[str, Any]:
             "mean_effective_score": 0.0,
             "critical_failure_rate": 0.0,
             "infrastructure_error_rate": 0.0,
+            "language_compliance_rate": None,
             "ttft_p50": None,
             "ttft_p95": None,
             "latency_p50": None,
@@ -76,6 +77,17 @@ def _slice_metrics(attempts: list[AttemptResult]) -> dict[str, Any]:
         else:
             failed += 1
 
+    # Runs graded before content 0.9.0 carry no language scorer; report ``None``
+    # instead of 0.0 so an absent check is not read as total non-compliance.
+    language_results = [
+        result for a in attempts for result in a.score_results if result.scorer == "language"
+    ]
+    language_compliance = (
+        sum(1 for result in language_results if result.passed) / len(language_results)
+        if language_results
+        else None
+    )
+
     ttfts = [a.ttft for a in attempts if a.ttft is not None]
     latencies = [a.total_latency for a in attempts if a.total_latency is not None]
     tps = [
@@ -111,6 +123,7 @@ def _slice_metrics(attempts: list[AttemptResult]) -> dict[str, Any]:
         "mean_effective_score": sum(a.effective_score for a in attempts) / n,
         "critical_failure_rate": critical / n if n else 0.0,
         "infrastructure_error_rate": infra / n if n else 0.0,
+        "language_compliance_rate": language_compliance,
         "ttft_p50": percentile(ttfts, 50) if ttfts else None,
         "ttft_p95": percentile(ttfts, 95) if ttfts else None,
         "latency_p50": percentile(latencies, 50) if latencies else None,

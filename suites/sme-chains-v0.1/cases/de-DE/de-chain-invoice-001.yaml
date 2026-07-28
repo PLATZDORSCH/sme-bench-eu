@@ -14,7 +14,11 @@ tags:
 - chain
 messages:
 - role: system
-  content: "Gib JSON {next_step, ready, missing} zurück. Wähle next_step aus den Optionen im Benutzertext. ready=true nur, wenn der Prozess ohne blockierende Lücken fortgesetzt werden kann. missing MUSS ein Array kurzer Tokens sein (engl. snake_case, z. B. [\"cost_center\"]); wenn nichts fehlt: missing=[]. Nie false, null, \"\" oder {}."
+  content: 'Gib JSON {next_step, ready, missing} zurück. Wähle next_step aus den Optionen
+    im Benutzertext. ready=true nur, wenn der Prozess ohne blockierende Lücken fortgesetzt
+    werden kann. missing MUSS ein Array kurzer Tokens sein (engl. snake_case, z. B.
+    ["cost_center"]); wenn nichts fehlt: missing=[]. Nie false, null, "" oder {}.
+    Formuliere alle Textwerte auf Deutsch; JSON-Schlüssel bleiben unverändert.'
 - role: user
   fixture: fixtures/de-chain-invoice.txt
 generation:
@@ -49,4 +53,7 @@ scorers:
       cost_center:
       - Kostenstelle
       - cost centre
+- type: language
+  weight: 0
+  must_pass: true
 pass_threshold: 0.85

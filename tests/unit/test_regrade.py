@@ -178,7 +178,7 @@ def test_regrade_blocks_input_change(tmp_path: Path) -> None:
 
 
 def test_compat_manifest_matches_current_draft_and_is_deterministic(tmp_path: Path) -> None:
-    manifest = Path("suites/compatibility/regrade-0.8.0-baseline.json")
+    manifest = Path("suites/compatibility/regrade-0.10.3-baseline.json")
     data = json.loads(manifest.read_text(encoding="utf-8"))
     loaded = load_full_benchmark(known_scorers=known_scorer_names())
     assert data["suite_version"] == loaded.manifest.version
