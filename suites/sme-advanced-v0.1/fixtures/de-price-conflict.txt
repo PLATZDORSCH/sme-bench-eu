@@ -1,0 +1,5 @@
+Vorrangregel: Ein noch gültiges unterschriebenes Angebot schlägt die Preisliste.
+
+Preisliste 2026: Widget-A = 12.50 EUR/Stück.
+Angebot Q-88 vom 2026-06-01, gültig bis 2026-08-31, unterschrieben: Widget-A = 11.00 EUR/Stück.
+Heute: 2026-07-15. Menge 8 Stück.

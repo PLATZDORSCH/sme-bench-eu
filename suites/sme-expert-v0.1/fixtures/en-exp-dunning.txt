@@ -1,0 +1,12 @@
+As of 2026-06-18. Open invoices only (remaining > 0).
+A due date on a weekend or holiday moves to the next business day.
+Holidays: 2026-05-01, 2026-05-25, 2026-06-04.
+Stage: 0 = not overdue, 1 = 1–14 days, 2 = 15–30 days, 3 = over 30 days.
+days_overdue = as-of minus effective due, 0 if not overdue.
+
+RE-D1 due 2026-05-15 amount 1000 paid 0
+RE-D2 due 2026-06-04 amount 400 paid 0
+RE-D3 due 2026-06-13 amount 250 paid 0
+RE-D4 due 2026-06-20 amount 180 paid 0
+RE-D5 due 2026-05-20 amount 800 paid 400
+RE-D6 due 2026-06-01 amount 120 paid 120

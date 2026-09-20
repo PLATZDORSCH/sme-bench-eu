@@ -15,13 +15,19 @@ from sme_bench.task_loader import FULL_SUITE_IDS, load_full_benchmark, load_suit
 ROOT = Path(__file__).resolve().parents[2]
 
 EXPECTED_SUITE_COUNTS = {
-    "sme-core-v0.1": 72,
-    "sme-trades-v0.1": 22,
+    "sme-core-v0.1": 42,
+    "sme-trades-v0.1": 14,
     "sme-ecommerce-v0.1": 22,
-    "sme-financial-v0.1": 22,
-    "sme-hospitality-v0.1": 24,
-    "sme-logistics-v0.1": 20,
-    "sme-chains-v0.1": 14,
+    "sme-financial-v0.1": 16,
+    "sme-hospitality-v0.1": 16,
+    "sme-logistics-v0.1": 18,
+    "sme-chains-v0.1": 4,
+    "sme-advanced-v0.1": 36,
+    "sme-expert-v0.1": 20,
+    "sme-tools-v0.1": 32,
+    "sme-dialog-v0.1": 16,
+    "sme-longctx-v0.1": 16,
+    "sme-agentic-v0.1": 32,
 }
 
 
@@ -47,14 +53,14 @@ def test_suite_disk_counts_match_expected(suite_id: str, expected: int) -> None:
 
 def test_full_benchmark_count() -> None:
     loaded = load_full_benchmark(known_scorers=known_scorer_names())
-    assert len(loaded.tasks) == 196
+    assert len(loaded.tasks) == 284
     assert set(FULL_SUITE_IDS) == set(EXPECTED_SUITE_COUNTS)
 
 
 @pytest.mark.parametrize("readme_name", ["README.md", "README.de.md"])
 def test_root_readme_suite_counts(readme_name: str) -> None:
     text = (ROOT / readme_name).read_text(encoding="utf-8")
-    assert _full_count(text) == 196
+    assert _full_count(text) == 284
     for suite_id, expected in EXPECTED_SUITE_COUNTS.items():
         found = _readme_table_count(text, suite_id)
         assert found == expected, f"{readme_name}: {suite_id} expected {expected}, got {found}"

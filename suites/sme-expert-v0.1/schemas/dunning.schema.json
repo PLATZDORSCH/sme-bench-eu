@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "required": [
+    "invoices"
+  ],
+  "properties": {
+    "invoices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "invoice",
+          "stage",
+          "days_overdue"
+        ],
+        "properties": {
+          "invoice": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "integer"
+          },
+          "days_overdue": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}

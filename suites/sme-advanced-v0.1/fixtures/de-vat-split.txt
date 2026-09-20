@@ -1,0 +1,7 @@
+Rechnung MIX-77
+Positionen:
+- Bücher (ermäßigt 7%): Netto 80.00
+- Hardware (19%): Netto 200.00
+- Rabatt auf Hardware: −20.00 Netto, gleicher Steuersatz 19%
+
+Runde auf 2 Nachkommastellen. Keine andere Steuer.

@@ -1,0 +1,14 @@
+From: accounts@vendor.invalid
+Subject: FW: RE-4410 and credit note
+
+--- Original ---
+Invoice RE-4410
+Supplier: Norddruck Ltd
+Net 1000.00 EUR, VAT 19% = 190.00, Gross 1190.00
+Due 2026-08-01
+
+--- Forward 1 ---
+Credit note GS-12 against RE-4410: 119.00 EUR gross (10% goodwill).
+
+--- Forward 2 ---
+Attached copy of the same invoice RE-4410 (do not book twice).

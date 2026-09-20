@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "required": [
+    "actions"
+  ],
+  "properties": {
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "owner",
+          "task",
+          "due"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string"
+          },
+          "task": {
+            "type": "string"
+          },
+          "due": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

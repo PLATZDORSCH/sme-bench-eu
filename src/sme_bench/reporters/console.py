@@ -22,7 +22,19 @@ def print_summary(
     rank = summary.get("sme_rank_score", core)
     out.print(f"SME-Bench {version} · {suite_label} · {model}")
     out.print()
-    out.print(f"[bold]SME Rank Score       {rank:.1f} / 100[/bold]")
+    readiness = summary.get("readiness") or {}
+    tier = str(readiness.get("tier") or "")
+    tier_labels = {
+        "ready": "ready",
+        "supervised": "supervised",
+        "not_recommended": "not recommended",
+        "inconclusive": "inconclusive",
+    }
+    reasons = readiness.get("reasons") or []
+    out.print(f"[bold]SME Readiness Score  {rank:.1f} / 100[/bold]")
+    if tier:
+        reason_s = f" ({', '.join(reasons)})" if reasons else ""
+        out.print(f"Readiness tier       {tier_labels.get(tier, tier)}{reason_s}")
     out.print(f"SME Core Score       {core:.1f} / 100")
     out.print(f"Attempt Pass Rate    {overall.get('attempt_pass_rate', 0) * 100:.1f} %")
     out.print(f"Attempt Partial Rate {overall.get('attempt_partial_rate', 0) * 100:.1f} %")

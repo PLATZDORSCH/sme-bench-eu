@@ -1,0 +1,8 @@
+Hotel Nordblick cancellation policy. Booking value 400.00 EUR.
+Cancellation on 2026-07-20 for arrival 2026-07-25. Medical certificate is attached.
+
+[P-1] More than 14 days before arrival: no fee.
+[P-2] 7 to 14 days before arrival: 30% of booking value.
+[P-3] Fewer than 7 days before arrival: 80% of booking value.
+[P-4] With a medical certificate the ladder is replaced by a 10% admin fee only.
+[P-9] Weekend surcharge 15% on the room rate (Fri–Sun arrival). Do not apply to cancellation.

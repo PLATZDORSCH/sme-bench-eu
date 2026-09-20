@@ -20,6 +20,18 @@ def _num(value: float | None, digits: int = 3) -> str:
     return f"{value:.{digits}f}"
 
 
+def _readiness_lines(summary: dict[str, Any], t: dict[str, str]) -> list[str]:
+    readiness = summary.get("readiness") or {}
+    tier_key = str(readiness.get("tier") or "")
+    label = t.get(f"tier_{tier_key}", tier_key or "—")
+    lines = [t["readiness_tier"].format(tier=label)]
+    reasons = readiness.get("reasons") or []
+    if reasons:
+        labels = [t.get(f"reason_{reason}", reason) for reason in reasons]
+        lines.append(t["readiness_reason"].format(reasons=", ".join(labels)))
+    return lines
+
+
 def write_summary_markdown(
     path: Path,
     summary: dict[str, Any],
@@ -42,6 +54,7 @@ def write_summary_markdown(
     lines.extend(
         [
             t["rank_score"].format(score=float(summary.get("sme_rank_score", 0))),
+            *_readiness_lines(summary, t),
             t["core_score"].format(score=float(summary.get("sme_core_score", 0))),
             t["attempt_pass"].format(value=_pct(overall.get("attempt_pass_rate"))),
             t["attempt_partial"].format(value=_pct(overall.get("attempt_partial_rate"))),
@@ -50,8 +63,28 @@ def write_summary_markdown(
             t["unreliable_pass"].format(value=_pct(overall.get("unreliable_pass_rate"))),
             t["critical_rate"].format(value=_pct(overall.get("critical_failure_rate"))),
             t["infra_rate"].format(value=_pct(overall.get("infrastructure_error_rate"))),
+            t["completion_rate"].format(value=_pct(overall.get("completion_rate"))),
+            t["graded_pass"].format(value=_pct(overall.get("attempt_pass_rate_graded"))),
             t["language_rate"].format(value=_pct(overall.get("language_compliance_rate"))),
             t["tps"].format(value=_num(overall.get("mean_generation_tps"), 1)),
+            t["format_only"].format(value=_pct(overall.get("format_only_failure_rate"))),
+            t["ttft_cold"].format(value=_num(overall.get("ttft_cold_p50"), 3)),
+            t["ttfa"].format(value=_num(overall.get("ttfa_p50"), 3)),
+        ]
+    )
+    if summary.get("baseline_latency_s") is not None:
+        lines.append(t["baseline"].format(value=_num(summary.get("baseline_latency_s"), 3)))
+    runtime = summary.get("runtime") or {}
+    if any(runtime.get(key) for key in ("engine", "hardware", "quantization")):
+        lines.append(
+            t["runtime"].format(
+                engine=runtime.get("engine") or "—",
+                hardware=runtime.get("hardware") or "—",
+                quantization=runtime.get("quantization") or "—",
+            )
+        )
+    lines.extend(
+        [
             "",
             t["by_language"],
             "",
@@ -65,6 +98,15 @@ def write_summary_markdown(
             f"{_num(m.get('mean_effective_score'))} | {_pct(m.get('critical_failure_rate'))} | "
             f"{_num(m.get('latency_p95'), 2)} s | {_num(m.get('mean_generation_tps'), 1)} |"
         )
+
+    buckets = summary.get("by_prompt_bucket") or {}
+    if buckets:
+        lines.extend(["", t["by_prompt"], "", t["prompt_header"], "| --- | ---: | ---: | ---: | ---: |"])
+        for bucket, m in buckets.items():
+            lines.append(
+                f"| {bucket} | {_pct(m.get('attempt_pass_rate'))} | {_pct(m.get('reliable_pass_rate'))} | "
+                f"{_num(m.get('mean_effective_score'))} | {_num(m.get('mean_generation_tps'), 1)} |"
+            )
 
     lines.extend(["", t["by_category"], ""])
     lines.append(t["cat_header"])
@@ -87,6 +129,28 @@ def write_summary_markdown(
             "",
         ]
     )
+    if summary.get("completion_rate_warning"):
+        lines.extend([t["completion_warn"], ""])
+    delta = summary.get("toolset_delta") or {}
+    pairs = delta.get("pairs") or []
+    if pairs:
+        lines.extend(
+            [
+                t["toolset_delta"],
+                "",
+                t["toolset_mean"].format(value=_num(delta.get("mean_delta"), 3)),
+                "",
+                t["toolset_header"],
+                "| --- | --- | ---: | ---: | ---: |",
+            ]
+        )
+        for item in pairs:
+            lines.append(
+                f"| {item.get('pair_id')} | {item.get('language')} | "
+                f"{_num(item.get('small_score'))} | {_num(item.get('crowded_score'))} | "
+                f"{_num(item.get('delta'))} |"
+            )
+        lines.append("")
     path.write_text("\n".join(lines), encoding="utf-8")
 
 

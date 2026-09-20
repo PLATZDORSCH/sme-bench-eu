@@ -54,6 +54,8 @@ def _ensure_scorers_loaded() -> None:
         regex,
         set_equality,
         text_structure,
+        tool_call,
+        trace,
     )
 
     _LOADED = True

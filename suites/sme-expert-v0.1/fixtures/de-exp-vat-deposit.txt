@@ -1,0 +1,9 @@
+Rechnung RE-VD-01. Rabatt 10 % anteilig nach Netto je Steuersatz.
+Bereits gezahlte Anzahlung 500.00 EUR verrechnen. Je Satz auf 2 Nachkommastellen.
+
+Positionen (Netto vor Rabatt):
+- Bücher / Druck  net 200.00  MwSt 7%
+- Ware Widget     net 1000.00 MwSt 19%
+- Beratung        net 400.00  MwSt 0% Reverse Charge
+
+Gib net_7, vat_7, net_19, vat_19, net_0, vat_0 und amount_due nach Rabatt und Anzahlung.

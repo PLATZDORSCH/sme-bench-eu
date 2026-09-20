@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "required": [
+    "unit_price",
+    "source",
+    "conflict"
+  ],
+  "properties": {
+    "unit_price": {
+      "type": "number"
+    },
+    "source": {
+      "type": "string"
+    },
+    "conflict": {
+      "type": "boolean"
+    }
+  }
+}

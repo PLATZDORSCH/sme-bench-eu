@@ -1,0 +1,24 @@
+Hinweis: Nur Zeilen mit status=ok zählen. net = units*price*(1-discount).
+Stornierte und Retouren ignorieren.
+
+sku,category,month,units,price,discount,status
+SKU-A,tools,2026-01,2,100.0,0.0,ok
+SKU-B,tools,2026-01,4,50.0,0.1,ok
+SKU-C,paint,2026-01,10,20.0,0.0,ok
+SKU-D,paint,2026-02,5,40.0,0.0,ok
+SKU-E,fasteners,2026-02,20,5.0,0.0,ok
+SKU-F,tools,2026-02,1,300.0,0.0,cancelled
+SKU-G,paint,2026-02,8,25.0,0.0,return
+SKU-H,tools,2026-03,3,80.0,0.25,ok
+SKU-I,fasteners,2026-03,50,4.0,0.0,ok
+SKU-J,paint,2026-03,2,100.0,0.0,ok
+SKU-K,tools,2026-01,6,15.0,0.0,ok
+SKU-L,fasteners,2026-01,10,8.0,0.0,ok
+SKU-M,paint,2026-02,4,30.0,0.0,ok
+SKU-N,tools,2026-03,2,50.0,0.0,ok
+SKU-O,fasteners,2026-03,3,10.0,0.0,cancelled
+SKU-P,paint,2026-01,1,250.0,0.2,ok
+SKU-Q,tools,2026-02,5,20.0,0.0,ok
+SKU-R,fasteners,2026-02,8,12.0,0.0,return
+SKU-S,paint,2026-03,6,15.0,0.0,ok
+SKU-T,tools,2026-03,1,400.0,0.0,ok

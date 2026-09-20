@@ -30,7 +30,7 @@ uv sync --all-extras --dev
 cp .env.example .env
 ```
 
-**Standardziel ist SME Full** (Core + alle Domänen-Test-Suites, 196 Cases × Repeats).
+**Standardziel ist SME Full** (Core + Domänen-Packs + Advanced + Expert + Tools + Dialog + Long-Context + Agentic, 284 Cases × 2 Repeats).
 
 ### Ollama
 
@@ -183,19 +183,36 @@ uv run sme-bench run \
 
 Mit `--task-ids id1,id2` auf `run` lassen sich selektive Deltas erzeugen, wenn nur einzelne Inputs geändert wurden.
 
+## Was der Score bedeutet
+
+SME-Bench ist ein **Eignungstest**, kein Ranking. Die Cases bilden Arbeit ab, die ein Modell im KMU-Alltag beherrschen muss. Hohe Scores heißen: das Modell ist für diese Arbeit einsetzbar. 100 % auf einem Aufgabentyp bleiben bewusst als Regressionsschutz. Härtere Differenzierung gehört in ein separates Expert-Pack, nicht ins Standardpaket.
+
+| Eignungsstufe | Wann |
+| --- | --- |
+| **einsatzbereit** | SME Readiness Score ≥ 95, keine kritischen Fehler, Sprachtreue 100 % (wenn gemessen) |
+| **mit Aufsicht** | Score 85–95, oder ein Sprachbruch (dann höchstens diese Stufe, auch bei höherem Score) |
+| **nicht empfohlen** | Score unter 85, oder mindestens ein kritischer Fehler |
+| **nicht aussagekräftig** | Completion Rate unter 95 % — der Lauf ist nicht voll vergleichbar |
+
+Der JSON-Key bleibt `sme_rank_score`, damit bestehende Runs lesbar bleiben.
+
 ## Kennzahlen
 
 - **Attempt Pass Rate:** bestandene Attempts / alle Attempts (≥85 %, vollständig korrekt)
 - **Attempt Partial Rate:** teilweise bestandene Attempts (65–84 %, größtenteils korrekt)
-- **Reliable Pass Rate:** Cases, die in *jeder* Wiederholung bestanden (3/3) / alle Cases
-- **Mostly Pass Rate:** Cases mit 2 von 3 bestandenen Wiederholungen / alle Cases
-- **Unreliable Pass Rate:** Cases mit 1 von 3 bestandenen Wiederholungen / alle Cases
-- **Failed Task Rate:** Cases mit 0 von 3 vollen Passes / alle Cases
+- **Reliable Pass Rate:** Cases, die in *jeder* Wiederholung bestanden / alle Cases
+- **Mostly Pass Rate:** Cases, die die meisten Repeats bestanden, aber nicht alle / alle Cases
+- **Unreliable Pass Rate:** Cases, die einige, aber nicht alle Repeats bestanden / alle Cases
+- **Failed Task Rate:** Cases ohne vollen Pass / alle Cases
 - **Critical Failure:** kritischer Scorer fehlgeschlagen → effektiver Score `0` für den Attempt
 - **SME Core Score:** Mittel der kategoriegewichteten effektiven Scores × 100 (Domänenqualität, ohne Raten-Penalty)
-- **SME Rank Score:** `SME Core × Attempt Pass × max(0, 1 − 5 × critical_rate) × max(0, 1 − 0.5 × partial_rate)` — primäre Leaderboard-Metrik; erfolgreiche Wiederholungen werden anteilig berücksichtigt
+- **SME Readiness Score** (JSON-Key `sme_rank_score`): `SME Core × Attempt Pass × max(0, 1 − 5 × critical_rate) × max(0, 1 − 0.5 × partial_rate)` — primäre Eignungskennzahl; erfolgreiche Wiederholungen werden anteilig berücksichtigt
+- **Eignungsstufe:** betriebliche Interpretation des Scores (`einsatzbereit` / `mit Aufsicht` / `nicht empfohlen` / `nicht aussagekräftig`)
 - **Language gap:** Pass-/Score-Differenz `en-GB − de-DE` plus Paarkonsistenz
 - **Sprachtreue:** Anteil der Attempts, die in der Fallsprache geantwortet haben (`—` bei Runs vor Content 0.9.0)
+- **Nur-Format-Fehler:** Inhaltsscorer bestanden, Format-/Sprachscorer nicht
+- **TTFT kalt / TTFA:** First-Token-Zeit nur bei `repeat_index == 0`, und Zeit bis zum ersten *Antwort*-Token (nicht Reasoning)
+- Performance-Zahlen entstehen **unter Benchmark-Last** (Default-Concurrency 1). Für pp/tg-Sweeps, Prefix-Cache und Concurrency siehe [llama-benchy](https://github.com/eugr/llama-benchy).
 
 ### Scoring-Normalisierung
 
@@ -203,30 +220,36 @@ Das Scoring ist deterministisch und nutzt keinen LLM-Judge. Vor dem Vergleich fa
 
 ### Sprachtreue
 
-Ein deutscher Fall, der auf Englisch beantwortet wird, ist in der Praxis unbrauchbar. Deshalb nennt jeder Case seine Antwortsprache im Prompt und trägt einen `language`-Scorer mit `weight: 0` und `must_pass: true`. Ein Sprachbruch lässt den SME Core Score damit unberührt, verhindert aber das Bestehen des Attempts und senkt so Attempt Pass Rate und SME Rank.
+Ein deutscher Fall, der auf Englisch beantwortet wird, ist in der Praxis unbrauchbar. Deshalb nennt jeder Case seine Antwortsprache im Prompt und trägt einen `language`-Scorer mit `weight: 0` und `must_pass: true`. Ein Sprachbruch lässt den SME Core Score damit unberührt, verhindert aber das Bestehen des Attempts und senkt so Attempt Pass Rate und SME Readiness Score.
 
 Die Prüfung zählt Funktionswörter, die für genau eine Sprache eindeutig sind, und schlägt erst an, wenn die falsche Sprache um zwei Marker führt. Sie hält sich bei dünner Evidenz absichtlich zurück, weil deutsche Geschäftsantworten legitim englische Lehnwörter und strukturierte Werte enthalten. Bekannte Konsequenz: eine kurze englische Phrase ohne Funktionswörter (`update inventory`) wird nicht erkannt. Dieser Schwellwert ist gegen die Musterantwort jedes einzelnen Cases validiert — eine strengere Einstellung würde Cases an ihrer eigenen Referenz scheitern lassen. JSON-Schlüssel werden nie geprüft, und Cases, deren `reason`-Feld einen abgewiesenen englischen Payload zitiert, schließen dieses Feld aus, genau wie `forbidden_terms` es bereits tut.
 
 ## Releases und Versionierung
 
-Aktuelles Release: **v0.7.11** (Harness) mit SME-Full-Content **0.10.3** (196 DE/EN-Fälle) und Scoring-Spec **0.6.3**. Content 0.10.0 behält den Sprachvertrag aus 0.9.0 und macht Grounded-QA-Zitationsbeispiele prefix-neutral (`ID-1`); von 0.9.0 aus brauchen nur die 36 Grounded-Cases ein frisches Inference-Delta.
+Aktuelles Release: **v0.11.2** (Harness) mit SME-Full-Content **0.14.2** (284 DE/EN-Fälle) und Scoring-Spec **0.8.1**. Harness 0.11 ergänzt den Live-Mock-Tool-Loop, Completion Rate, eine `tool_choice=required`-Probe und Crowded-Namespace-Deltas. Harness 0.11.2 zeigt den Score als SME Readiness Score und ergänzt eine Eignungsstufe. Content 0.14.x fügt `sme-agentic-v0.1` und Crowded-Varianten in Tools hinzu; 0.14.1 schließt Spezifikationslücken in den Agentic-, Dialog-, Long-Context- und Tools-Prompts (geschlossene Literale, IDs und Zahlenformate stehen jetzt im Prompt); 0.14.2 macht `dialog-clarify-001` eindeutig.
 
-Harness-Bugfixes bleiben auf derselben Inhaltslinie (Patch). Prompt-, Case- oder score-relevante Änderungen bekommen eine **neue Version**, damit Leaderboard-Runs vergleichbar bleiben. Details: **[docs/VERSIONING.de.md](docs/VERSIONING.de.md)**.
+Harness-Bugfixes bleiben auf derselben Inhaltslinie (Patch). Prompt-, Case- oder score-relevante Änderungen bekommen eine **neue Version**, damit veröffentlichte Vergleichs-Runs vergleichbar bleiben. Details: **[docs/VERSIONING.de.md](docs/VERSIONING.de.md)**.
 
 ## Test-Suites
 
-Alle Cases einer freigegebenen Content-Linie haben `review_status: approved`. Ordner-IDs bleiben `*-v0.1`; die aktuelle Suite-Version ist **0.10.3**.
+Alle Cases einer freigegebenen Content-Linie haben `review_status: approved`. Ordner-IDs bleiben `*-v0.1`; die aktuelle Suite-Version ist **0.14.2**.
 
 | Name | Pfad | Inhalt | Cases |
 | --- | --- | --- | --- |
-| **SME Full** | *(virtuell)* | Standard-Ranking: Core + kuratierte Domänen-Varianten | 196 |
-| **SME Core v0.1** | `suites/sme-core-v0.1` | Core: 12 Task-Typen × 3 Varianten (DE/EN) | 72 |
-| **SME Trades v0.1** | `suites/sme-trades-v0.1` | Handwerk/Bau | 22 |
+| **SME Full** | *(virtuell)* | Standard-Eignungsprüfung: Core + Domänen + Advanced + Expert + Tools + Dialog + Long-Context + Agentic | 284 |
+| **SME Core v0.1** | `suites/sme-core-v0.1` | Trennscharfe Core-Aufgaben (DE/EN) | 42 |
+| **SME Trades v0.1** | `suites/sme-trades-v0.1` | Handwerk/Bau | 14 |
 | **SME E-Commerce v0.1** | `suites/sme-ecommerce-v0.1` | Shop/Retail | 22 |
-| **SME Financial v0.1** | `suites/sme-financial-v0.1` | Buchhaltung/Finance | 22 |
-| **SME Hospitality v0.1** | `suites/sme-hospitality-v0.1` | Gastronomie/Hotel | 24 |
-| **SME Logistics v0.1** | `suites/sme-logistics-v0.1` | Logistik/Lager | 20 |
-| **SME Chains v0.1** | `suites/sme-chains-v0.1` | Prozessketten + Security/PII | 14 |
+| **SME Financial v0.1** | `suites/sme-financial-v0.1` | Buchhaltung/Finance | 16 |
+| **SME Hospitality v0.1** | `suites/sme-hospitality-v0.1` | Gastronomie/Hotel | 16 |
+| **SME Logistics v0.1** | `suites/sme-logistics-v0.1` | Logistik/Lager | 18 |
+| **SME Chains v0.1** | `suites/sme-chains-v0.1` | Prozessketten + Security/PII | 4 |
+| **SME Advanced v0.1** | `suites/sme-advanced-v0.1` | Harte Mehrschritt-Fälle | 36 |
+| **SME Expert v0.1** | `suites/sme-expert-v0.1` | Sehr harte Mehrschritt-Fälle | 20 |
+| **SME Tools v0.1** | `suites/sme-tools-v0.1` | Tool Use, Negativ- und Halluzinationsfälle, Crowded-Namespace | 32 |
+| **SME Dialog v0.1** | `suites/sme-dialog-v0.1` | Multi-Turn-Kundenthreads | 16 |
+| **SME Long Context v0.1** | `suites/sme-longctx-v0.1` | 8k–24k-Token-Nadeln | 16 |
+| **SME Agentic v0.1** | `suites/sme-agentic-v0.1` | Live-Tool-Loops: Ketten, Recovery, Exactly-once, Auth | 32 |
 
 Details zu jeder Test-Suite stehen in `suites/<id>/README.md`.
 
@@ -250,7 +273,7 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-financial-v0.1 --output runs/financial
 ```
 
-Im Full-Lauf enthalten: `sme-core-v0.1`, `sme-trades-v0.1`, `sme-ecommerce-v0.1`, `sme-financial-v0.1`, `sme-hospitality-v0.1`, `sme-logistics-v0.1`, `sme-chains-v0.1`.
+Im Full-Lauf enthalten: `sme-core-v0.1`, `sme-trades-v0.1`, `sme-ecommerce-v0.1`, `sme-financial-v0.1`, `sme-hospitality-v0.1`, `sme-logistics-v0.1`, `sme-chains-v0.1`, `sme-advanced-v0.1`, `sme-expert-v0.1`, `sme-tools-v0.1`, `sme-dialog-v0.1`, `sme-longctx-v0.1`.
 
 Custom-Beispiel (nicht in Full): [`suites/demo-v0.1`](suites/demo-v0.1) — mit `--suite suites/demo-v0.1` starten.
 
@@ -259,7 +282,7 @@ Custom-Beispiel (nicht in Full): [`suites/demo-v0.1`](suites/demo-v0.1) — mit 
 Mit einer eigenen Suite prüfst du Modelle an **deinen** Workflows — z. B. deine
 Ticket-Kategorien, Rechnungsfelder oder Freigaberegeln — mit derselben
 transparenten, deterministischen Bewertung wie SME Full. So siehst du, welches
-Modell bei deinen Aufgaben zuverlässig ist, nicht nur im öffentlichen Ranking.
+Modell bei deinen Aufgaben zuverlässig ist, nicht nur im veröffentlichten Vergleich.
 
 Ausführliche Anleitung (Layout, Case-Schema, Scorer, Fairness):
 **[docs/AUTHORING_SUITES.de.md](docs/AUTHORING_SUITES.de.md)**.
@@ -270,7 +293,7 @@ Für Coding-Agents: kurzes Briefing in **[`suites/AGENTS.md`](suites/AGENTS.md)*
 
 - Du definierst die Ground Truth und Scorer selbst — kein LLM-as-a-Judge.
 - DE/EN-Paare, Wiederholungen und Critical-Fails funktionieren wie im Full-Benchmark.
-- Eigene Suites landen **nicht** automatisch im SME-Full-Leaderboard; du startest
+- Eigene Suites landen **nicht** automatisch im SME-Full-Vergleich; du startest
   sie gezielt mit `--suite`.
 
 ### So gehst du vor
@@ -283,7 +306,7 @@ Für Coding-Agents: kurzes Briefing in **[`suites/AGENTS.md`](suites/AGENTS.md)*
 3. **Sprachen koppeln**: denselben Task in DE und EN mit gemeinsamer `pair_id`,
    gleichem `task_type` und vergleichbaren Scorer-Gewichten.
 4. **Prüfen**: `uv run sme-bench validate suites/<meine-suite-v0.1>`.
-5. **Smoke-Run** mit einem Repeat, danach den vollen Lauf mit `--repeats 3`.
+5. **Smoke-Run** mit einem Repeat, danach den vollen Lauf mit `--repeats 2`.
 
 ```bash
 # Demo-Suite ausprobieren

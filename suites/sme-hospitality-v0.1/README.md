@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite ID** | `sme-hospitality-v0.1` |
-| **Cases** | 24 (12 DE/EN pairs) |
+| **Cases** | 16 (8 DE/EN pairs) |
 | **Languages** | `de-DE`, `en-GB` |
 | **Role** | Food service/hotel test suite; part of **SME Full** |
 
@@ -21,11 +21,7 @@ Catering orders, reservations, guest tickets, F&B revenue, and house rules.
 | ho-missing-001 | missing_information |
 | ho-support-001 | support_routing |
 | ho-csv-001 | csv_analysis |
-| ho-grounded-001 | grounded_qa |
-| ho-grounded-002 | grounded_qa |
 | ho-grounded-003 | grounded_qa |
-| ho-meeting-001 | meeting_actions |
-| ho-meeting-002 | meeting_actions |
 
 ## Usage
 

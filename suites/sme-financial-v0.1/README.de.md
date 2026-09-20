@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite-ID** | `sme-financial-v0.1` |
-| **Fälle** | 22 (11 DE/EN-Paare) |
+| **Fälle** | 16 (8 DE/EN-Paare) |
 | **Sprachen** | `de-DE`, `en-GB` |
 | **Rolle** | Test-Suite Buchhaltung/Finance; Teil von **SME Full** |
 
@@ -21,10 +21,7 @@ Lieferantenrechnungen, Spesen, MwSt-Richtlinien, Zahlungserinnerungen und Finanz
 | fi-grounded-001 | grounded_qa |
 | fi-grounded-002 | grounded_qa |
 | fi-grounded-003 | grounded_qa |
-| fi-reply-001 | customer_reply |
 | fi-reply-002 | customer_reply |
-| fi-meeting-001 | meeting_actions |
-| fi-meeting-002 | meeting_actions |
 
 ## Verwendung
 

@@ -1,7 +1,411 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "SME-Bench Task",
-  "type": "object",
+  "$defs": {
+    "GenerationConfig": {
+      "properties": {
+        "max_tokens": {
+          "default": 512,
+          "title": "Max Tokens",
+          "type": "integer"
+        },
+        "temperature": {
+          "default": 0.0,
+          "title": "Temperature",
+          "type": "number"
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Seed"
+        },
+        "response_format": {
+          "default": "text",
+          "enum": [
+            "text",
+            "json",
+            "classification",
+            "tool_call"
+          ],
+          "title": "Response Format",
+          "type": "string"
+        }
+      },
+      "title": "GenerationConfig",
+      "type": "object"
+    },
+    "Message": {
+      "properties": {
+        "role": {
+          "enum": [
+            "system",
+            "user",
+            "assistant",
+            "tool"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "content": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content"
+        },
+        "fixture": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fixture"
+        },
+        "tool_call_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Call Id"
+        },
+        "tool_calls": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ToolCall"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Calls"
+        }
+      },
+      "required": [
+        "role"
+      ],
+      "title": "Message",
+      "type": "object"
+    },
+    "ScorerSpec": {
+      "properties": {
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "weight": {
+          "default": 1.0,
+          "title": "Weight",
+          "type": "number"
+        },
+        "critical": {
+          "default": false,
+          "title": "Critical",
+          "type": "boolean"
+        },
+        "must_pass": {
+          "default": false,
+          "title": "Must Pass",
+          "type": "boolean"
+        },
+        "params": {
+          "additionalProperties": true,
+          "title": "Params",
+          "type": "object"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "ScorerSpec",
+      "type": "object"
+    },
+    "TaskRationale": {
+      "properties": {
+        "difficulty": {
+          "default": "",
+          "title": "Difficulty",
+          "type": "string"
+        },
+        "verification": {
+          "default": "",
+          "title": "Verification",
+          "type": "string"
+        }
+      },
+      "title": "TaskRationale",
+      "type": "object"
+    },
+    "ToolCall": {
+      "description": "A parsed or authored function/tool call.",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Id"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "arguments": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Arguments"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ToolCall",
+      "type": "object"
+    },
+    "ToolSpec": {
+      "description": "OpenAI-style tool definition attached to a case.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "parameters": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parameters"
+        },
+        "schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Schema"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ToolSpec",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "pair_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pair Id"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "language": {
+      "title": "Language",
+      "type": "string"
+    },
+    "category": {
+      "enum": [
+        "document_extraction",
+        "customer_service",
+        "grounded_qa",
+        "sales_operations",
+        "data_analysis",
+        "process_ops",
+        "privacy_security",
+        "meeting_operations",
+        "commerce",
+        "tool_use"
+      ],
+      "title": "Category",
+      "type": "string"
+    },
+    "task_type": {
+      "title": "Task Type",
+      "type": "string"
+    },
+    "difficulty": {
+      "enum": [
+        "easy",
+        "normal",
+        "hard"
+      ],
+      "title": "Difficulty",
+      "type": "string"
+    },
+    "risk": {
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "title": "Risk",
+      "type": "string"
+    },
+    "review_status": {
+      "enum": [
+        "draft",
+        "reviewed",
+        "approved"
+      ],
+      "title": "Review Status",
+      "type": "string"
+    },
+    "data_classification": {
+      "enum": [
+        "synthetic",
+        "anonymized",
+        "confidential"
+      ],
+      "title": "Data Classification",
+      "type": "string"
+    },
+    "tags": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Tags",
+      "type": "array"
+    },
+    "messages": {
+      "items": {
+        "$ref": "#/$defs/Message"
+      },
+      "title": "Messages",
+      "type": "array"
+    },
+    "generation": {
+      "$ref": "#/$defs/GenerationConfig"
+    },
+    "expected": {
+      "default": null,
+      "title": "Expected"
+    },
+    "oracle_output": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Oracle Output"
+    },
+    "rationale": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TaskRationale"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "tools": {
+      "items": {
+        "$ref": "#/$defs/ToolSpec"
+      },
+      "title": "Tools",
+      "type": "array"
+    },
+    "tool_choice": {
+      "default": "auto",
+      "enum": [
+        "auto",
+        "none",
+        "required"
+      ],
+      "title": "Tool Choice",
+      "type": "string"
+    },
+    "scorers": {
+      "items": {
+        "$ref": "#/$defs/ScorerSpec"
+      },
+      "title": "Scorers",
+      "type": "array"
+    },
+    "pass_threshold": {
+      "default": 0.85,
+      "title": "Pass Threshold",
+      "type": "number"
+    },
+    "partial_threshold": {
+      "default": 0.65,
+      "title": "Partial Threshold",
+      "type": "number"
+    }
+  },
   "required": [
     "schema_version",
     "id",
@@ -9,33 +413,13 @@
     "language",
     "category",
     "task_type",
+    "difficulty",
+    "risk",
+    "review_status",
+    "data_classification",
     "messages",
     "scorers"
   ],
-  "properties": {
-    "schema_version": {
-      "type": "string"
-    },
-    "id": {
-      "type": "string"
-    },
-    "pair_id": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "title": {
-      "type": "string"
-    },
-    "language": {
-      "type": "string"
-    },
-    "category": {
-      "type": "string"
-    },
-    "task_type": {
-      "type": "string"
-    }
-  }
+  "title": "BenchmarkTask",
+  "type": "object"
 }

@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite-ID** | `sme-trades-v0.1` |
-| **Fälle** | 22 (11 DE/EN-Paare) |
+| **Fälle** | 14 (7 DE/EN-Paare) |
 | **Sprachen** | `de-DE`, `en-GB` |
 | **Rolle** | Test-Suite Handwerk/Bau; Teil von **SME Full** |
 
@@ -14,7 +14,6 @@ Längere Fixtures: Aufmaß-Mails, Materialbestellungen, Handwerkerrechnungen, Ba
 
 | Pair ID | Task-Typ |
 | --- | --- |
-| tr-invoice-001 | invoice_extraction |
 | tr-order-001 | order_extraction |
 | tr-order-002 | order_extraction |
 | tr-missing-001 | missing_information |
@@ -22,9 +21,6 @@ Längere Fixtures: Aufmaß-Mails, Materialbestellungen, Handwerkerrechnungen, Ba
 | tr-grounded-001 | grounded_qa |
 | tr-grounded-002 | grounded_qa |
 | tr-grounded-003 | grounded_qa |
-| tr-meeting-001 | meeting_actions |
-| tr-meeting-002 | meeting_actions |
-| tr-process-quote-001 | process_readiness |
 
 ## Verwendung
 

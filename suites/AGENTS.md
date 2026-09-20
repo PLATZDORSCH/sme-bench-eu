@@ -16,10 +16,13 @@ Larger domain example: [`sme-trades-v0.1/`](sme-trades-v0.1/)
 
 - Deterministic scorers only — no LLM-as-a-Judge.
 - Every case in **both** `cases/de-DE/` and `cases/en-GB/` with shared `pair_id`.
-- Message body: either `content` **or** `fixture`, never both/neither.
+- Message body: either `content` **or** `fixture`, never both/neither (assistant may have `tool_calls` instead).
 - Paths stay inside the suite root; fixtures/schemas are relative to that root.
 - Synthetic / anonymized data only — no real secrets or PII.
 - Custom suites are **not** part of SME Full; run with `--suite suites/<id>`.
+- Oracle (`expected` or `oracle_output`) must pass; `""` / `{}` / `[]` must not.
+- Canary header + `rationale: {difficulty, verification}` on approved cases.
+- `category` must be one of the closed taxonomy values.
 
 ## Workflow
 
@@ -36,4 +39,4 @@ Larger domain example: [`sme-trades-v0.1/`](sme-trades-v0.1/)
 
 - Invent scorer types not documented in AUTHORING_SUITES.
 - Put absolute paths or files outside the suite tree into case YAML.
-- Merge custom suites into SME Full / official leaderboard without an explicit project decision.
+- Merge custom suites into SME Full / the official comparison without an explicit project decision.

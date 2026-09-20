@@ -1,0 +1,12 @@
+Stichtag: 2026-06-18. Nur offene Rechnungen (Restbetrag > 0).
+Fälligkeit, die auf Wochenende oder Feiertag fällt, verschiebt auf den nächsten Werktag.
+Feiertage: 2026-05-01, 2026-05-25, 2026-06-04.
+Mahnstufe: 0 = nicht überfällig, 1 = 1–14 Tage, 2 = 15–30 Tage, 3 = über 30 Tage.
+days_overdue = Stichtag minus effektive Fälligkeit, 0 wenn nicht überfällig.
+
+RE-D1 fällig 2026-05-15 Betrag 1000 bezahlt 0
+RE-D2 fällig 2026-06-04 Betrag 400 bezahlt 0
+RE-D3 fällig 2026-06-13 Betrag 250 bezahlt 0
+RE-D4 fällig 2026-06-20 Betrag 180 bezahlt 0
+RE-D5 fällig 2026-05-20 Betrag 800 bezahlt 400
+RE-D6 fällig 2026-06-01 Betrag 120 bezahlt 120

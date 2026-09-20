@@ -1,0 +1,8 @@
+Need: 40 m² insulation board, quote must be valid today. Today: 2026-07-20.
+
+AlphaSupply: 12.00 EUR/m², shipping 40.00, valid until 2026-07-31. No volume discount.
+BetaCraft: lump sum 500.00 including shipping, valid until 2026-07-19 (expired).
+GammaWerk: 11.00 EUR/m², shipping 90.00, valid until 2026-08-01.
+  Volume discount 20.00 EUR from 40 m².
+
+Pick the cheapest still-valid offer including shipping after discount.

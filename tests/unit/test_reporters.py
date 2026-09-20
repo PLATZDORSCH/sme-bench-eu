@@ -203,7 +203,7 @@ def test_failures_report_labels_two_of_three_as_mostly_successful(tmp_path: Path
     text = path.read_text(encoding="utf-8")
     assert "## Überwiegend erfolgreich" in text
     assert "**überwiegend erfolgreich**" in text
-    assert "2/3 pass" in text
+    assert "die meisten Repeats, aber nicht alle" in text
 
 
 def test_failures_report_dedupes_duplicate_repeats(tmp_path: Path) -> None:
@@ -278,7 +278,7 @@ def test_print_summary_includes_tps() -> None:
     print_summary(summary, model="test-model", suite_label="Test Suite", console=console)
     text = buffer.getvalue()
     assert "Output tokens/s" in text
-    assert "SME Rank Score" in text
+    assert "SME Readiness Score" in text
     assert "88.0" in text
     assert "42.5 tok/s" in text
     assert "40.0" in text
@@ -314,7 +314,7 @@ def test_write_summary_markdown_includes_tps(tmp_path: Path) -> None:
     path = tmp_path / "summary.de.md"
     write_summary_markdown(path, summary, model="test-model", lang="de")
     text = path.read_text(encoding="utf-8")
-    assert "**SME Rank Score: 88.0 / 100**" in text
+    assert "**SME Readiness Score: 88.0 / 100**" in text
     assert "SME Core Score: 90.0 / 100" in text
     assert "SME Core Score: **90.0 / 100**" not in text
     assert "Output tokens/s (Ø): 55.0 tok/s" in text

@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from sme_bench.models import GenerationConfig, ScorerSpec
-from sme_bench.scoring import evaluate_attempt
+from sme_bench.models import GenerationConfig, ScorerSpec, ToolCall, ToolSpec
+from sme_bench.scoring import evaluate_attempt, is_format_only_failure
 from tests.unit.conftest import make_task
 
 
@@ -392,6 +392,30 @@ def test_json_fields_contains_match() -> None:
     _, _, _, passed, _, _, _ = evaluate_attempt(
         task,
         '{"actions":[{"owner":"Chef Nora"},{"owner":"Service Lead Kai"}]}',
+    )
+    assert passed
+
+
+def test_json_fields_percent_contains_in_prose() -> None:
+    task = make_task(
+        expected={"answer": "7%"},
+        scorers=[
+            ScorerSpec(
+                type="json_fields",
+                weight=1.0,
+                params={
+                    "fields": ["answer"],
+                    "match": "contains",
+                    "case_insensitive": True,
+                    "field_normalize": {"answer": "percent"},
+                },
+            )
+        ],
+        generation=GenerationConfig(response_format="json"),
+    )
+    _, _, _, passed, _, _, _ = evaluate_attempt(
+        task,
+        '{"answer":"Der ermäßigte Steuersatz von 7 % gilt für Bücher."}',
     )
     assert passed
 
@@ -912,3 +936,44 @@ def test_set_equality_token_subset_accepts_english_third_person() -> None:
     )
     _, _, _, passed, _, _, _ = evaluate_attempt(task, output)
     assert passed
+
+
+def test_tool_call_scorers() -> None:
+    task = make_task(
+        tools=[ToolSpec(name="get_stock", description="d", parameters={})],
+        expected={"arguments": {"sku": "SKU-1"}},
+        scorers=[
+            ScorerSpec(
+                type="tool_call",
+                weight=1.0,
+                params={"name": "get_stock", "arguments_fields": ["sku"], "exactly_one": True},
+            ),
+            ScorerSpec(type="tool_name_valid", weight=0, critical=True),
+        ],
+    )
+    calls = [ToolCall(name="get_stock", arguments={"sku": "SKU-1"})]
+    _results, _w, _e, passed, _p, critical, _parsed = evaluate_attempt(task, "", tool_calls=calls)
+    assert passed and not critical
+
+    no_call = make_task(
+        tools=[ToolSpec(name="get_stock", description="d")],
+        scorers=[ScorerSpec(type="no_tool_call", weight=1.0, critical=True)],
+    )
+    _, _, _, passed, _, critical, _ = evaluate_attempt(no_call, "ok", tool_calls=calls)
+    assert not passed and critical
+
+
+def test_format_only_failure() -> None:
+    task = make_task(
+        language="de-DE",
+        expected={"a": 1},
+        scorers=[
+            ScorerSpec(type="json_fields", weight=1.0, params={"fields": ["a"]}),
+            ScorerSpec(type="language", weight=0, must_pass=True),
+        ],
+    )
+    results, _w, _e, passed, _partial, critical, _p = evaluate_attempt(
+        task, '{"a": 1, "note": "The invoice is ready and the amount is due."}'
+    )
+    assert not passed
+    assert is_format_only_failure(passed=passed, critical=critical, task=task, results=results)

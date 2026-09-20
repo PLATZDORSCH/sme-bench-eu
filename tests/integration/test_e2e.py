@@ -124,7 +124,7 @@ def test_validate_test_suite() -> None:
 def test_help_lists_commands() -> None:
     result = RUNNER.invoke(app, ["--help"])
     assert result.exit_code == 0
-    for cmd in ("doctor", "list", "validate", "run", "report", "compare"):
+    for cmd in ("doctor", "list", "validate", "run", "report", "compare", "saturation"):
         assert cmd in result.output
 
 
@@ -273,10 +273,10 @@ def test_compare_cmd(mock_base_url: str, tmp_path: Path) -> None:
 
     result = RUNNER.invoke(app, ["compare", str(run_a), str(run_b)])
     assert result.exit_code == 0, result.output
-    assert "SME Rank Score" in result.output
+    assert "SME Readiness Score" in result.output
     assert "SME Core Score" in result.output
     assert "Attempt Pass Rate" in result.output
-    assert "Leaderboard" in result.output
+    assert "Modellvergleich" in result.output
 
     meta_b = json.loads((run_b / "metadata.json").read_text(encoding="utf-8"))
     meta_b["suite_hash"] = "different-hash"
@@ -287,6 +287,212 @@ def test_compare_cmd(mock_base_url: str, tmp_path: Path) -> None:
 
     allowed = RUNNER.invoke(app, ["compare", str(run_a), str(run_b), "--allow-suite-mismatch"])
     assert allowed.exit_code == 0, allowed.output
+
+
+def test_tool_case_against_mock(mock_base_url: str, tmp_path: Path) -> None:
+    suite = tmp_path / "tool-suite"
+    (suite / "cases" / "de-DE").mkdir(parents=True)
+    (suite / "cases" / "en-GB").mkdir(parents=True)
+    (suite / "suite.yaml").write_text(
+        "schema_version: '1.0'\n"
+        "id: tool-suite\n"
+        "name: Tool suite\n"
+        "version: 0.1.0\n"
+        "languages: [de-DE, en-GB]\n"
+        "case_globs: ['cases/**/*.yaml']\n",
+        encoding="utf-8",
+    )
+    case = """
+schema_version: '1.0'
+id: {tid}
+pair_id: tool-stock-001
+title: Stock lookup
+language: {lang}
+category: tool_use
+task_type: stock_lookup
+difficulty: normal
+risk: low
+review_status: draft
+data_classification: synthetic
+tags: []
+messages:
+  - role: system
+    content: {sys}
+  - role: user
+    content: SKU-1 Bestand?
+tools:
+  - name: get_stock
+    description: Lagerbestand
+    parameters:
+      type: object
+      properties:
+        sku: {{type: string}}
+      required: [sku]
+tool_choice: required
+generation:
+  max_tokens: 128
+  temperature: 0
+  response_format: tool_call
+expected:
+  name: get_stock
+  arguments:
+    sku: SKU-1
+scorers:
+  - type: tool_call
+    weight: 1.0
+    params:
+      name: get_stock
+      arguments_fields: [sku]
+      exactly_one: true
+  - type: language
+    weight: 0
+    must_pass: true
+pass_threshold: 0.85
+partial_threshold: 0.65
+""".strip()
+    (suite / "cases/de-DE/de-tool-stock-001.yaml").write_text(
+        case.format(tid="de-tool-stock-001", lang="de-DE", sys="Antworte auf Deutsch."),
+        encoding="utf-8",
+    )
+    (suite / "cases/en-GB/en-tool-stock-001.yaml").write_text(
+        case.format(tid="en-tool-stock-001", lang="en-GB", sys="Respond in English."),
+        encoding="utf-8",
+    )
+    out = tmp_path / "run"
+    result = RUNNER.invoke(
+        app,
+        [
+            "run",
+            "--base-url",
+            mock_base_url,
+            "--model",
+            "mock-model",
+            "--suite",
+            str(suite),
+            "--repeats",
+            "1",
+            "--no-warmup",
+            "--output",
+            str(out),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    rows = [
+        json.loads(line)
+        for line in (out / "attempts.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert rows
+    assert all(row["passed"] for row in rows)
+    assert all(row["tool_calls"][0]["name"] == "get_stock" for row in rows)
+
+
+def test_tool_env_loop_two_turns(mock_base_url: str, tmp_path: Path) -> None:
+    suite = tmp_path / "tool-loop"
+    (suite / "cases/de-DE").mkdir(parents=True)
+    (suite / "cases/en-GB").mkdir(parents=True)
+    (suite / "suite.yaml").write_text(
+        "schema_version: '1.0'\n"
+        "id: tool-loop\n"
+        "name: Tool loop\n"
+        "version: 0.1.0\n"
+        "languages: [de-DE, en-GB]\n"
+        "case_globs: ['cases/**/*.yaml']\n",
+        encoding="utf-8",
+    )
+    case = """
+schema_version: '1.0'
+id: {tid}
+pair_id: tool-loop-001
+title: Live stock loop
+language: {lang}
+category: tool_use
+task_type: stock_lookup
+difficulty: normal
+risk: low
+review_status: draft
+data_classification: synthetic
+tags: []
+messages:
+  - role: system
+    content: {sys}
+  - role: user
+    content: SKU-1 Bestand?
+tools:
+  - name: get_stock
+    description: Lagerbestand
+    parameters:
+      type: object
+      properties:
+        sku: {{type: string}}
+      required: [sku]
+tool_choice: auto
+tool_env:
+  max_turns: 4
+  noise: false
+  handlers:
+    - tool: get_stock
+      response: {{qty: 14, sku: SKU-1}}
+generation:
+  max_tokens: 128
+  temperature: 0
+  response_format: text
+expected:
+  tool_calls:
+    - name: get_stock
+      arguments: {{sku: SKU-1}}
+scorers:
+  - type: trace_calls
+    weight: 0.5
+    params:
+      calls:
+        - name: get_stock
+  - type: contains
+    weight: 0.5
+    params:
+      terms: ['14']
+      case_insensitive: true
+pass_threshold: 0.85
+partial_threshold: 0.65
+""".strip()
+    (suite / "cases/de-DE/de-tool-loop-001.yaml").write_text(
+        case.format(tid="de-tool-loop-001", lang="de-DE", sys="Antworte auf Deutsch."),
+        encoding="utf-8",
+    )
+    (suite / "cases/en-GB/en-tool-loop-001.yaml").write_text(
+        case.format(tid="en-tool-loop-001", lang="en-GB", sys="Respond in English."),
+        encoding="utf-8",
+    )
+    out = tmp_path / "run-loop"
+    result = RUNNER.invoke(
+        app,
+        [
+            "run",
+            "--base-url",
+            mock_base_url,
+            "--model",
+            "mock-model",
+            "--suite",
+            str(suite),
+            "--repeats",
+            "1",
+            "--no-warmup",
+            "--output",
+            str(out),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    rows = [
+        json.loads(line)
+        for line in (out / "attempts.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert rows
+    assert all(row["turns_used"] >= 2 for row in rows)
+    assert all(row["tool_trace"] for row in rows)
+    assert all(row["passed"] for row in rows)
+    meta = json.loads((out / "metadata.json").read_text(encoding="utf-8"))
+    assert "capabilities" in (meta.get("runtime") or {})
 
 
 def test_doctor_cli(mock_base_url: str) -> None:

@@ -1,0 +1,18 @@
+Process: intake → credit_check → pick → pack → ship → invoice
+
+Preconditions:
+- pick requires stock_reserved
+- pack requires pick_complete
+- ship requires pack_complete AND address_confirmed
+- invoice requires shipped
+
+Current state:
+stock_reserved=true
+pick_complete=true
+pack_complete=false
+address_confirmed=false
+shipped=false
+
+Choose next_step from: complete_pack, confirm_address, release_shipment, issue_invoice.
+ready=true only if the order can be shipped.
+missing = every still-unmet token that blocks ship (English snake_case).

@@ -1,0 +1,18 @@
+{
+  "type": "object",
+  "required": [
+    "payable",
+    "documents"
+  ],
+  "properties": {
+    "payable": {
+      "type": "number"
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

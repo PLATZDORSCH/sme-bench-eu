@@ -1,0 +1,6 @@
+Kunde: Werkstatt Süd
+Währung: EUR
+Packregel: 1 Karton SKU-NUT-M8 = 12 Stück. qty immer in Stück, nicht in Kartons.
+
+Mail 1: 3 Kartons SKU-NUT-M8.
+Mail 2: nur noch 2 Kartons, plus 6 lose Stück derselben SKU.

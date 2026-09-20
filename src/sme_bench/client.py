@@ -13,7 +13,7 @@ from typing import Any
 
 import aiohttp
 
-from sme_bench.models import RequestResult
+from sme_bench.models import RequestResult, ToolCall, ToolSpec
 from sme_bench.utils import normalize_base_url, redact_secrets, separate_thinking_content
 
 
@@ -125,12 +125,14 @@ class OpenAICompatibleClient:
         self,
         *,
         model: str,
-        messages: list[dict[str, str]],
+        messages: list[dict[str, Any]],
         max_tokens: int = 512,
         temperature: float = 0.0,
         seed: int | None = None,
         response_format: str | None = None,
         extra_body: dict[str, Any] | None = None,
+        tools: list[ToolSpec] | None = None,
+        tool_choice: str | None = None,
         on_first_response: Any | None = None,
         on_first_token: Any | None = None,
     ) -> RequestResult:
@@ -149,6 +151,20 @@ class OpenAICompatibleClient:
             payload["seed"] = seed
         if response_format == "json":
             payload["response_format"] = {"type": "json_object"}
+        if tools:
+            payload["tools"] = [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": spec.name,
+                        "description": spec.description,
+                        "parameters": spec.parameters or {"type": "object", "properties": {}},
+                    },
+                }
+                for spec in tools
+            ]
+            if tool_choice:
+                payload["tool_choice"] = tool_choice
         if extra_body:
             for key, value in extra_body.items():
                 if key in {"model", "messages", "stream"}:
@@ -211,6 +227,7 @@ class OpenAICompatibleClient:
         buffer = ""
         content_parts: list[str] = []
         reasoning_parts: list[str] = []
+        tool_acc: dict[int, dict[str, str]] = {}
 
         try:
             async with self.session.post(url, json=payload) as resp:
@@ -249,6 +266,7 @@ class OpenAICompatibleClient:
                             result=result,
                             content_parts=content_parts,
                             reasoning_parts=reasoning_parts,
+                            tool_acc=tool_acc,
                             on_first_token=on_first_token,
                         )
                 # Flush remaining buffer lines
@@ -265,6 +283,7 @@ class OpenAICompatibleClient:
                                         result=result,
                                         content_parts=content_parts,
                                         reasoning_parts=reasoning_parts,
+                                        tool_acc=tool_acc,
                                         on_first_token=on_first_token,
                                     )
                                 except json.JSONDecodeError:
@@ -307,6 +326,15 @@ class OpenAICompatibleClient:
             result.output_text = ""
         if reasoning_text:
             result.reasoning_text = reasoning_text
+        result.tool_calls = [
+            ToolCall(
+                id=parts.get("id") or None,
+                name=parts.get("name") or "",
+                arguments=parts.get("arguments") or "",
+            )
+            for _idx, parts in sorted(tool_acc.items())
+            if parts.get("name")
+        ]
         result.end_monotonic = time.monotonic()
         result.completed_at = datetime.now(UTC)
         return result
@@ -333,6 +361,7 @@ class OpenAICompatibleClient:
         result: RequestResult,
         content_parts: list[str],
         reasoning_parts: list[str],
+        tool_acc: dict[int, dict[str, str]],
         on_first_token: Any | None,
     ) -> None:
         if "usage" in event and event["usage"]:
@@ -345,7 +374,9 @@ class OpenAICompatibleClient:
             return
         choice = choices[0]
         if choice.get("finish_reason"):
-            result.finish_reason = choice["finish_reason"]
+            incoming = choice["finish_reason"]
+            if incoming != "stop" or result.finish_reason not in {"tool_calls", "function_call"}:
+                result.finish_reason = incoming
 
         delta = choice.get("delta") or {}
         message = choice.get("message") or {}
@@ -359,19 +390,76 @@ class OpenAICompatibleClient:
                 result.token_timestamps.append(result.first_token_monotonic)
 
         for source in (delta, message):
+            self._accumulate_tool_calls(source.get("tool_calls") or [], tool_acc, result)
             chunk = _text_from_content_field(source.get("content"))
             if not chunk:
                 continue
             content_parts.append(chunk)
+            if result.first_answer_monotonic is None:
+                result.first_answer_monotonic = time.monotonic()
             self._note_token(
                 result=result, on_first_token=on_first_token, content_parts=content_parts
             )
+
+    def _accumulate_tool_calls(
+        self,
+        chunks: list[Any],
+        tool_acc: dict[int, dict[str, str]],
+        result: RequestResult,
+    ) -> None:
+        for item in chunks:
+            if not isinstance(item, dict):
+                continue
+            index = int(item.get("index") or 0)
+            slot = tool_acc.setdefault(index, {"id": "", "name": "", "arguments": ""})
+            if item.get("id"):
+                slot["id"] = str(item["id"])
+            function = item.get("function") or {}
+            if function.get("name"):
+                slot["name"] += str(function["name"])
+            if function.get("arguments"):
+                slot["arguments"] += str(function["arguments"])
+            if result.first_token_monotonic is None:
+                result.first_token_monotonic = time.monotonic()
+                result.token_timestamps.append(result.first_token_monotonic)
+            if result.first_answer_monotonic is None and (slot["name"] or slot["arguments"]):
+                result.first_answer_monotonic = time.monotonic()
 
 
 async def _maybe_await(cb: Any) -> None:
     result = cb()
     if asyncio.iscoroutine(result):
         await result
+
+
+async def probe_capabilities(
+    client: OpenAICompatibleClient,
+    *,
+    model: str,
+) -> dict[str, Any]:
+    """Probe whether the endpoint accepts ``tool_choice=required``."""
+    ping = ToolSpec(
+        name="capability_ping",
+        description="Diagnostic ping used only to test tool_choice=required.",
+        parameters={"type": "object", "properties": {}, "additionalProperties": False},
+    )
+    result = await client.chat_completion(
+        model=model,
+        messages=[{"role": "user", "content": "Call capability_ping with no arguments."}],
+        max_tokens=64,
+        temperature=0,
+        tools=[ping],
+        tool_choice="required",
+    )
+    accepted = result.error_type is None and (result.http_status or 200) < 400
+    if result.http_status in {400, 422}:
+        accepted = False
+    return {
+        "tool_choice_required": accepted,
+        "http_status": result.http_status,
+        "error_type": result.error_type,
+        "error_message": result.error_message,
+    }
 
 
 async def run_doctor(
@@ -391,6 +479,7 @@ async def run_doctor(
         "streaming_ok": False,
         "first_token_ok": False,
         "usage_available": False,
+        "tool_choice_required": False,
         "latency_s": None,
         "error": None,
     }
@@ -427,6 +516,12 @@ async def run_doctor(
                         "Stream completed without visible content "
                         "(empty delta.content / reasoning fallback)"
                     )
+            try:
+                caps = await probe_capabilities(client, model=model)
+                report["tool_choice_required"] = bool(caps.get("tool_choice_required"))
+                report["capabilities"] = caps
+            except Exception as exc:  # noqa: BLE001
+                report["capabilities_error"] = redact_secrets(str(exc))
     except Exception as exc:  # noqa: BLE001
         report["error"] = redact_secrets(str(exc))
     return report

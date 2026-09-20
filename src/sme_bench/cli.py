@@ -172,7 +172,7 @@ def run_cmd(
         "--task-ids",
         help="Comma-separated task ids to run (partial delta run)",
     ),
-    repeats: int = typer.Option(3, "--repeats"),
+    repeats: int = typer.Option(2, "--repeats"),
     concurrency: int = typer.Option(1, "--concurrency"),
     seed: int = typer.Option(42, "--seed"),
     timeout: float = typer.Option(
@@ -215,10 +215,13 @@ def run_cmd(
         "--dashboard/--no-dashboard",
         help="Live run dashboard (default: on in TTY, off when piped)",
     ),
+    engine: str | None = typer.Option(None, "--engine", help="Serving engine (vLLM, Ollama, …)"),
+    hardware: str | None = typer.Option(None, "--hardware", help="GPU / host description"),
+    quantization: str | None = typer.Option(None, "--quantization", help="e.g. q4_k_m, fp8"),
 ) -> None:
     """Run the benchmark against an OpenAI-compatible endpoint.
 
-    Default target is **SME Full** (Core + all domain packs, ~196 cases).
+    Default target is **SME Full** (Core + domain packs + Advanced + Expert + Tools + Dialog + Long-Context + Agentic, 284 cases).
     Pass ``--suite PATH`` to run only one pack (e.g. Core alone).
     """
     print_startup_banner(console)
@@ -286,6 +289,9 @@ def run_cmd(
         emit_progress=emit_progress,
         warmup=not no_warmup,
         dashboard=dashboard,
+        engine=engine,
+        hardware=hardware,
+        quantization=quantization,
     )
     try:
         run_dir = _run_async(run_benchmark(config, loaded))
@@ -320,6 +326,7 @@ def catalog_cmd(
         loaded.tasks,
         suite_id=loaded.manifest.id,
         suite_version=loaded.manifest.version,
+        canary=loaded.manifest.canary,
     )
     console.print(f"Wrote {len(loaded.tasks)} case docs to {out}")
 
@@ -339,6 +346,11 @@ def regrade_cmd(
     ),
     dry_run: bool = typer.Option(False, "--dry-run", help="Only print compatibility plan"),
     no_reports: bool = typer.Option(False, "--no-reports", help="Skip report generation"),
+    repeats: int | None = typer.Option(
+        None,
+        "--repeats",
+        help="Keep only the first N repeats (e.g. 2) and set metadata.repeats",
+    ),
 ) -> None:
     """Copy attempts and re-score with the current suite (source run stays unchanged)."""
     source = source.resolve()
@@ -388,6 +400,7 @@ def regrade_cmd(
             target_dir=output,
             legacy_allowlist=compat,
             write_reports=not no_reports,
+            repeats=repeats,
         )
     except FileExistsError as exc:
         console.print(f"[red]{exc}[/red]")
@@ -598,6 +611,28 @@ def report_cmd(
         console.print(f"Reports updated in {run_dir}")
 
 
+@app.command("saturation")
+def saturation_cmd(
+    run_dirs: list[Path] = typer.Argument(..., help="One or more run directories"),
+    output: Path = typer.Option(
+        Path("suites/compatibility/saturation.json"),
+        "--output",
+        "-o",
+        help="JSON or Markdown path",
+    ),
+) -> None:
+    """Classify pairs as saturated, discriminating, or unsolved across runs."""
+    from sme_bench.saturation import saturation_report, write_saturation_report
+
+    report = saturation_report(run_dirs)
+    write_saturation_report(report, output)
+    counts = report["counts"]
+    console.print(
+        f"Wrote {output}: saturated={counts['saturated']} "
+        f"discriminating={counts['discriminating']} unsolved={counts['unsolved']}"
+    )
+
+
 @app.command("compare")
 def compare_cmd(
     run_dirs: list[Path] = typer.Argument(..., help="Two or more run directories"),
@@ -636,12 +671,12 @@ def compare_cmd(
             console.print(f"  {m.get('run_id')}: {m.get('suite_hash')}")
         raise typer.Exit(code=1)
 
-    # Primary leaderboard line: Rank Score is the ranking metric.
+    # Primary comparison line: Readiness Score (JSON key sme_rank_score).
     rank_bits = [
         f"[bold]{m.get('model', m.get('run_id'))}: {s.get('sme_rank_score', 0):.1f}[/bold]"
         for m, s in zip(metas, summaries, strict=True)
     ]
-    console.print("SME-Bench Leaderboard · [bold]SME Rank Score[/bold]")
+    console.print("SME-Bench Modellvergleich · [bold]SME Readiness Score[/bold]")
     console.print("  " + "  ·  ".join(rank_bits))
     console.print()
 
@@ -650,7 +685,8 @@ def compare_cmd(
     for m in metas:
         table.add_column(str(m.get("model", m.get("run_id"))))
     rows = [
-        ("SME Rank Score", "sme_rank_score", False, True),
+        ("SME Readiness Score", "sme_rank_score", False, True),
+        ("Readiness tier", "readiness_tier", False, False),
         ("SME Core Score", "sme_core_score", False, False),
         ("Attempt Pass Rate", "attempt_pass_rate", True, False),
         ("Attempt Partial Rate", "attempt_partial_rate", True, False),
@@ -663,7 +699,9 @@ def compare_cmd(
     for label, key, is_rate, bold in rows:
         values = []
         for s in summaries:
-            if key in {"sme_core_score", "sme_rank_score"}:
+            if key == "readiness_tier":
+                val = str((s.get("readiness") or {}).get("tier") or "—")
+            elif key in {"sme_core_score", "sme_rank_score"}:
                 val = f"{s.get(key, 0):.1f}"
             elif (raw := s.get("overall", {}).get(key)) is None:
                 val = "—"

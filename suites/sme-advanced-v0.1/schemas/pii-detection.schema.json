@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "required": [
+    "pii_types"
+  ],
+  "properties": {
+    "pii_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

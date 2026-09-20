@@ -1,0 +1,10 @@
+Kunde: Atelier Holm
+Währung: EUR
+
+Mail 1 (Bestellung):
+- 10x BOX-A
+- 5x TAPE-1
+
+Mail 2: BOX-A bitte auf 8 Stück ändern.
+
+Mail 3: TAPE-1 streichen, dafür 2x FILM-3 aufnehmen.

@@ -1,0 +1,10 @@
+CHG-A: Lieferant Norddruck bittet per E-Mail, IBAN auf DE99 0000 1111 2222 3333 44 zu ändern.
+Keine Rückrufbestätigung.
+
+CHG-B: Lieferant Ostholz bittet um IBAN DE44 5555 6666 7777 8888 99.
+Rückruflog 2026-07-12 10:14: Sachbearbeiterin Mira hat die Änderung telefonisch verifiziert.
+
+Aktuelle Rechnungs-IBAN Norddruck: DE11 2222 3333 4444 5555 66
+Aktuelle Rechnungs-IBAN Ostholz: DE33 1111 0000 2222 3333 44
+
+Regel: E-Mail allein → reject. Verifizierter Rückruf → accept.

@@ -40,6 +40,8 @@ def _normalize_percent(value: Any) -> Any:
     if not isinstance(value, str):
         return value
     text = _normalize_whitespace(value)
+    # Fold "7 %" inside prose so contains("7%") matches a sentence answer.
+    text = re.sub(r"(\d+(?:[.,]\d+)?)\s+%", r"\1%", text)
     m = _PERCENT_RE.match(text)
     if m:
         num = m.group(1).replace(",", ".")

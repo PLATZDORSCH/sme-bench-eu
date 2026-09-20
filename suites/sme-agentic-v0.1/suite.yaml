@@ -1,0 +1,19 @@
+schema_version: '1.0'
+id: sme-agentic-v0.1
+name: SME Agentic
+version: 0.14.1
+description: 'Live mock-tool loops: chains, recovery, exactly-once, authorization, pagination'
+languages:
+- de-DE
+- en-GB
+default_repeats: 2
+default_pass_threshold: 0.85
+default_partial_threshold: 0.65
+case_globs:
+- cases/**/*.yaml
+category_weights:
+  tool_use: 1.0
+canary: a41f0c3e-7d8b-4e19-9c2a-5f6b8d1e0a77
+provenance:
+  type: synthetic
+  notes: Deterministic mock handlers, no live APIs.

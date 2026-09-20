@@ -1,0 +1,10 @@
+Customer: Atelier Holm
+Currency: EUR
+
+Mail 1 (order):
+- 10x BOX-A
+- 5x TAPE-1
+
+Mail 2: please change BOX-A to 8 units.
+
+Mail 3: drop TAPE-1 and add 2x FILM-3.

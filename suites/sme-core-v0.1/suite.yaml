@@ -1,13 +1,13 @@
 schema_version: '1.0'
 id: sme-core-v0.1
 name: SME Core Benchmark
-version: 0.10.3
-description: 12 Task-Typen × 3 Varianten (DE/EN) mit Rauschen, Alternativformaten
-  und Härtegraden
+version: 0.13.0
+description: Discriminating core SME tasks (DE/EN) after removing saturated variants; noise and
+  edge cases retained where they still separate models
 languages:
 - de-DE
 - en-GB
-default_repeats: 3
+default_repeats: 2
 default_pass_threshold: 0.85
 default_partial_threshold: 0.65
 case_globs:
@@ -16,7 +16,6 @@ category_weights:
   document_extraction: 1.0
   customer_service: 1.0
   sales_operations: 1.0
-  commerce: 1.0
   data_analysis: 1.0
   meeting_operations: 1.0
   grounded_qa: 1.0
@@ -24,4 +23,5 @@ category_weights:
   process_ops: 1.0
 provenance:
   type: synthetic
-  notes: Synthetisch; alle 72 Fälle approved (Inhalt 0.2.0, Pack-ID v0.1).
+  notes: Synthetisch; 42 approved cases after 0.13.0 retirement (Pack-ID v0.1).
+canary: 432cad87-06aa-4ab2-8e05-3fb3195b722c

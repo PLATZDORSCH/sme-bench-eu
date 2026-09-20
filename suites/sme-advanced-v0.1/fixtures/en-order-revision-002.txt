@@ -1,0 +1,6 @@
+Customer: South Workshop
+Currency: EUR
+Pack rule: 1 carton of SKU-NUT-M8 = 12 pieces. qty is always pieces, not cartons.
+
+Mail 1: 3 cartons SKU-NUT-M8.
+Mail 2: only 2 cartons, plus 6 loose pieces of the same SKU.

@@ -10,6 +10,7 @@ from sme_bench.client import (
     run_doctor,
     uses_max_completion_tokens,
 )
+from sme_bench.models import ToolSpec
 from tests.fixtures.mock_server import start_mock_server
 
 
@@ -72,6 +73,23 @@ async def test_streaming_and_usage(mock_base_url: str) -> None:
     assert result.ttfr is not None and result.ttft is not None
     assert result.prompt_tokens == 12
     assert result.reasoning_text == "think"
+
+
+@pytest.mark.asyncio
+async def test_tool_call_streaming_fragments(mock_base_url: str) -> None:
+    async with OpenAICompatibleClient(base_url=mock_base_url, retries=0) as client:
+        result = await client.chat_completion(
+            model="mock-model",
+            messages=[{"role": "user", "content": "stock?"}],
+            tools=[ToolSpec(name="get_stock", description="Lookup stock", parameters={})],
+            tool_choice="required",
+        )
+    assert result.error_type is None
+    assert len(result.tool_calls) == 1
+    assert result.tool_calls[0].name == "get_stock"
+    assert result.tool_calls[0].parsed_arguments() == {"sku": "SKU-1"}
+    assert result.finish_reason == "tool_calls"
+    assert result.ttfa is not None
 
 
 @pytest.mark.asyncio

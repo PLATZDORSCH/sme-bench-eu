@@ -1,0 +1,12 @@
+Hinterlegte Stammdaten: Telefon +49 30 5550-10, Domain acme.example, Land DE.
+Regel: Ein Rückruf an die Nummer AUS DEM ANTRAG gilt nicht als Verifikation.
+Nur Rückruf an die hinterlegte Stammdaten-Nummer zählt. Domain-Lookalikes ablehnen.
+IBAN-Länderwechsel ohne zusätzliche Freigabe ablehnen.
+
+CHG-1 Antrag: neue IBAN DE89370400440532013000, Rückruf an +49 171 0001111 (Nummer aus dem Antrag).
+CHG-2 Antrag: neue IBAN DE75512108001245126199, Rückruf an +49 30 5550-10 (Stammdaten).
+CHG-3 Antrag: neue IBAN DE02100100100123456789, Absender-Domain pay-acme-secure.example.
+CHG-4 Antrag: neue IBAN RO49AAAA1B31007593840000 (Länderwechsel DE→RO), Rückruf Stammdaten erfolgt,
+aber keine Extra-Freigabe für Länderwechsel.
+
+action accept oder reject. id exakt CHG-1 .. CHG-4.

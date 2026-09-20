@@ -90,6 +90,26 @@ def test_rescore_clears_reasoning_duplicated_as_output() -> None:
     assert not rescored.passed
 
 
+def test_012_content_identity_under_scoring_spec_081() -> None:
+    """Existing 0.12.0/0.13.x cases keep pass/critical under scoring-spec 0.8.1."""
+    from sme_bench.config import SCORING_SPEC_VERSION
+    from sme_bench.scoring import evaluate_attempt
+
+    assert SCORING_SPEC_VERSION == "0.8.1"
+    loaded = load_suite(
+        Path("suites/sme-core-v0.1"),
+        known_scorers=known_scorer_names(),
+        resolve_fixtures=True,
+    )
+    task = next(t for t in loaded.tasks if t.id == "de-order-extraction-001")
+    output = json.dumps(task.expected, ensure_ascii=False, default=str)
+    results_a, _, _, passed_a, _, crit_a, _ = evaluate_attempt(task, output)
+    results_b, _, _, passed_b, _, crit_b, _ = evaluate_attempt(task, output, tool_calls=None)
+    assert passed_a and passed_b
+    assert not crit_a and not crit_b
+    assert [r.passed for r in results_a] == [r.passed for r in results_b]
+
+
 def test_rescore_uses_current_scorers() -> None:
     task = _minimal_task(
         scorers=[ScorerSpec(type="exact_match", weight=1.0, params={"expected": "yes"})]
@@ -178,11 +198,11 @@ def test_regrade_blocks_input_change(tmp_path: Path) -> None:
 
 
 def test_compat_manifest_matches_current_draft_and_is_deterministic(tmp_path: Path) -> None:
-    manifest = Path("suites/compatibility/regrade-0.10.3-baseline.json")
+    manifest = Path("suites/compatibility/regrade-0.14.2-baseline.json")
     data = json.loads(manifest.read_text(encoding="utf-8"))
     loaded = load_full_benchmark(known_scorers=known_scorer_names())
     assert data["suite_version"] == loaded.manifest.version
-    assert len(data["input_fingerprints"]) == 196
+    assert len(data["input_fingerprints"]) == 284
     assert data["input_fingerprints"] == {
         task.id: task_input_fingerprint(task) for task in loaded.tasks
     }
@@ -429,3 +449,62 @@ def test_merge_partial_runs_rescores_and_prefers_delta(tmp_path: Path) -> None:
     assert (out / "merge-manifest.json").exists()
     manifest = json.loads((out / "merge-manifest.json").read_text(encoding="utf-8"))
     assert manifest["rescored"] is True
+
+
+def test_regrade_truncates_repeats(tmp_path: Path) -> None:
+    suite_dir = Path("suites/sme-core-v0.1")
+    loaded = load_suite(suite_dir, known_scorers=known_scorer_names(), resolve_fixtures=True)
+    task = loaded.tasks[0]
+    source = tmp_path / "source"
+    target = tmp_path / "target"
+    attempts = [
+        _attempt_from_task(task, repeat_index=index, output_text="ok") for index in range(3)
+    ]
+    meta = {
+        "suite_id": loaded.manifest.id,
+        "suite_version": loaded.manifest.version,
+        "suite_path": str(suite_dir.resolve()),
+        "repeats": 3,
+        "task_fingerprints": {task.id: {"input": task_input_fingerprint(task)}},
+    }
+    _write_run(source, attempts=attempts, meta=meta)
+    regrade_run(
+        source_dir=source,
+        target_dir=target,
+        write_reports=False,
+        repeats=2,
+    )
+    kept = [
+        AttemptResult.model_validate(json.loads(line))
+        for line in (target / "attempts.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert {a.repeat_index for a in kept} == {0, 1}
+    new_meta = json.loads((target / "metadata.json").read_text(encoding="utf-8"))
+    assert new_meta["repeats"] == 2
+
+
+def test_regrade_rejects_non_positive_repeats(tmp_path: Path) -> None:
+    suite_dir = Path("suites/sme-core-v0.1")
+    loaded = load_suite(suite_dir, known_scorers=known_scorer_names(), resolve_fixtures=True)
+    task = loaded.tasks[0]
+    source = tmp_path / "source"
+    target = tmp_path / "target"
+    _write_run(
+        source,
+        attempts=[_attempt_from_task(task, repeat_index=0, output_text="ok")],
+        meta={
+            "suite_id": loaded.manifest.id,
+            "suite_version": loaded.manifest.version,
+            "suite_path": str(suite_dir.resolve()),
+            "repeats": 1,
+            "task_fingerprints": {task.id: {"input": task_input_fingerprint(task)}},
+        },
+    )
+    with pytest.raises(ValueError, match="repeats"):
+        regrade_run(
+            source_dir=source,
+            target_dir=target,
+            write_reports=False,
+            repeats=0,
+        )

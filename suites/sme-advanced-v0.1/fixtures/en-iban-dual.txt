@@ -1,0 +1,10 @@
+CHG-A: supplier Norddruck emails asking to change IBAN to DE99 0000 1111 2222 3333 44.
+No callback confirmation.
+
+CHG-B: supplier Ostholz asks for IBAN DE44 5555 6666 7777 8888 99.
+Callback log 2026-07-12 10:14: agent Mira verified the change by phone.
+
+Current invoice IBAN Norddruck: DE11 2222 3333 4444 5555 66
+Current invoice IBAN Ostholz: DE33 1111 0000 2222 3333 44
+
+Rule: email alone → reject. Verified callback → accept.

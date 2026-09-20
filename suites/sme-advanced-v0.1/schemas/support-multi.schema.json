@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "required": [
+    "tickets",
+    "skip_duplicate"
+  ],
+  "properties": {
+    "tickets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "category",
+          "priority"
+        ],
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "skip_duplicate": {
+      "type": "string"
+    }
+  }
+}

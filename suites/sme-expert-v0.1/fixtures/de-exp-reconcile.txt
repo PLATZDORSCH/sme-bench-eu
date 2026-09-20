@@ -1,0 +1,29 @@
+Stichtag: 2026-06-18. Nur EUR-Buchungen zählen. CHF-Zeilen ignorieren.
+Skonto 2 % nur wenn Zahlungseingang am oder vor dem Skonto-Datum liegt.
+Sammelüberweisung teilt den Betrag auf die genannten Rechnungen; unberechtigt
+abgezogenes Skonto lässt die Differenz offen (partial).
+
+Offene Rechnungen (Brutto EUR):
+RE-4101 1000.00  Skonto bis 2026-06-10
+RE-4102  500.00  Skonto bis 2026-06-10
+RE-4103  800.00  Skonto bis 2026-06-05
+RE-4104  250.00  kein Skonto
+RE-4105  180.00  kein Skonto
+RE-4106   90.00  kein Skonto
+RE-4107  620.00  kein Skonto
+RE-4108  140.00  kein Skonto
+RE-4109   75.00  kein Skonto
+RE-4110 1000.00  kein Skonto
+RE-4111  330.00  kein Skonto
+RE-4112  210.00  kein Skonto
+
+Kontoauszug:
+2026-06-09  +2254.00 EUR  Sammel RE-4101 RE-4102 RE-4103 Skonto 2%
+2026-06-12  +250.00 EUR   RE-4104
+2026-06-13  +250.00 EUR   RE-4104 (Zahlung erneut)
+2026-06-14  +180.00 EUR   RE-4105
+2026-06-15  -180.00 EUR   RE-4105 Rückbuchung Bank
+2026-06-16  +90.00 EUR    RE-4106
+2026-06-17  +200.00 CHF   Spende / ignore
+2026-06-17  +50.00 EUR    BAR ohne Rechnungsnummer
+2026-06-18  +33.00 EUR    UNKNOWN

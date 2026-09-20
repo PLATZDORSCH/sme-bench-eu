@@ -117,6 +117,84 @@ async def chat_handler(request: web.Request) -> web.Response:
                     )
                 )
                 await asyncio.sleep(0)
+        elif messages and messages[-1].get("role") == "tool":
+            tool_text = messages[-1].get("content") or ""
+            followup = (
+                "ART-4412: 14 on hand in HH-01. "
+                f"Grounded on tool result ({tool_text[:40]})."
+            )
+            await resp.write(
+                _sse(json.dumps({"choices": [{"delta": {"content": followup}, "index": 0}]}))
+            )
+        elif body.get("tools"):
+            await resp.write(
+                _sse(
+                    json.dumps(
+                        {
+                            "choices": [
+                                {
+                                    "delta": {
+                                        "tool_calls": [
+                                            {
+                                                "index": 0,
+                                                "id": "call_1",
+                                                "function": {"name": "get_st"},
+                                            }
+                                        ]
+                                    },
+                                    "index": 0,
+                                }
+                            ]
+                        }
+                    )
+                )
+            )
+            await resp.write(
+                _sse(
+                    json.dumps(
+                        {
+                            "choices": [
+                                {
+                                    "delta": {
+                                        "tool_calls": [
+                                            {
+                                                "index": 0,
+                                                "function": {
+                                                    "name": "ock",
+                                                    "arguments": '{"sku":"SKU-1"',
+                                                },
+                                            }
+                                        ]
+                                    },
+                                    "index": 0,
+                                }
+                            ]
+                        }
+                    )
+                )
+            )
+            await resp.write(
+                _sse(
+                    json.dumps(
+                        {
+                            "choices": [
+                                {
+                                    "delta": {
+                                        "tool_calls": [
+                                            {
+                                                "index": 0,
+                                                "function": {"arguments": "}"},
+                                            }
+                                        ]
+                                    },
+                                    "finish_reason": "tool_calls",
+                                    "index": 0,
+                                }
+                            ]
+                        }
+                    )
+                )
+            )
         else:
             await resp.write(
                 _sse(

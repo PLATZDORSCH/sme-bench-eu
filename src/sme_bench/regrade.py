@@ -17,7 +17,7 @@ from sme_bench.reporters.failures import write_failures_reports, write_success_r
 from sme_bench.reporters.json_reporter import write_summary_json
 from sme_bench.reporters.markdown import write_summary_reports
 from sme_bench.scorers.base import known_scorer_names
-from sme_bench.scoring import apply_partial_grade, evaluate_attempt
+from sme_bench.scoring import apply_partial_grade, evaluate_attempt, is_format_only_failure
 from sme_bench.statistics import aggregate, dedupe_attempts
 from sme_bench.task_loader import LoadedSuite, load_suite_from_metadata
 from sme_bench.utils import is_thinking_dump, separate_thinking_content
@@ -202,12 +202,12 @@ def _rescore_source_text(attempt: AttemptResult) -> str:
 
 
 def rescore_attempt(attempt: AttemptResult, task: BenchmarkTask) -> AttemptResult:
-    if attempt.infrastructure_error:
+    if attempt.infrastructure_error or attempt.excluded_reason:
         return attempt
     source = _rescore_source_text(attempt)
     answer_text, reasoning = separate_thinking_content(source)
     score_results, weighted, effective, passed, partial, critical, parsed = evaluate_attempt(
-        task, answer_text
+        task, answer_text, tool_calls=attempt.tool_calls, tool_trace=attempt.tool_trace
     )
     updates: dict[str, Any] = {
         "parsed_output": parsed,
@@ -217,6 +217,9 @@ def rescore_attempt(attempt: AttemptResult, task: BenchmarkTask) -> AttemptResul
         "passed": passed,
         "partial": partial,
         "critical_failure": critical,
+        "format_only_failure": is_format_only_failure(
+            passed=passed, critical=critical, task=task, results=score_results
+        ),
         "output_text": answer_text,
     }
     if reasoning:
@@ -259,8 +262,14 @@ def regrade_run(
     target_dir: Path,
     legacy_allowlist: Path | None = None,
     write_reports: bool = True,
+    repeats: int | None = None,
 ) -> tuple[Path, RegradePlan]:
-    """Copy a run, re-score compatible attempts; source directory is never modified."""
+    """Copy a run, re-score compatible attempts; source directory is never modified.
+
+    ``repeats`` keeps only attempts with ``repeat_index < repeats`` and writes
+    that value into target metadata so a 3-repeat source can merge with a
+    2-repeat delta.
+    """
     source_dir = source_dir.resolve()
     target_dir = target_dir.resolve()
     if target_dir.exists() and any(target_dir.iterdir()):
@@ -287,6 +296,11 @@ def regrade_run(
     )
     plan.target_dir = target_dir
 
+    if repeats is not None and (
+        not isinstance(repeats, int) or isinstance(repeats, bool) or repeats < 1
+    ):
+        raise ValueError("repeats must be a positive integer")
+
     if not plan.can_proceed:
         return target_dir, plan
 
@@ -306,6 +320,8 @@ def regrade_run(
     rescored: list[AttemptResult] = []
     for attempt in _load_attempts(source_dir):
         if attempt.task_id not in ok_ids:
+            continue
+        if repeats is not None and attempt.repeat_index >= repeats:
             continue
         task = tasks_by_id.get(attempt.task_id)
         if task is None:
@@ -341,6 +357,8 @@ def regrade_run(
     )
     if loaded.member_suites:
         new_meta["member_suites"] = loaded.member_suites
+    if repeats is not None:
+        new_meta["repeats"] = repeats
     (target_dir / "metadata.json").write_text(
         json.dumps(new_meta, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",

@@ -383,3 +383,16 @@ def resolve_suite_path(meta: dict[str, Any]) -> Path | None:
         if candidate.is_dir():
             return candidate
     return None
+
+
+def estimate_token_count(text: str) -> int:
+    """Best-effort token count; uses tiktoken when the optional extra is installed."""
+    if not text:
+        return 0
+    try:
+        import tiktoken
+
+        enc = tiktoken.get_encoding("cl100k_base")
+        return len(enc.encode(text))
+    except Exception:  # noqa: BLE001
+        return max(1, len(text) // 4)

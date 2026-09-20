@@ -4,6 +4,125 @@
 
 <!-- Add notes here; move into a version section at release. -->
 
+## 0.11.2
+
+### Harness 0.11.2
+
+- Display name **SME Readiness Score** (JSON key `sme_rank_score` unchanged). Website comparison page is `/results`; `/leaderboard` redirects
+- `readiness` object on the run summary: `tier` (`ready` / `supervised` / `not_recommended` / `inconclusive`) plus `reasons`. Caps: any critical failure → not recommended; language break → supervised at most; completion below 95 % → inconclusive
+- Scoring-spec stays **0.8.1**. Existing runs stay readable; the website computes the tier when `summary.json` has no `readiness` field
+
+### Benchmark (SME Full content 0.14.2)
+
+- `sme-dialog-v0.1` `dialog-clarify-001` (DE/EN): the first user turn now states the delivery address, so `delivery_date` is the only field the customer leaves open. The 0.14.1 rerun answered `delivery_address`, which the dialog never ruled out. Only these two input fingerprints change; 0.14.1 runs are completed via `sme-bench run --task-ids de-dialog-clarify-001,en-dialog-clarify-001` plus `merge-run`
+- Authoring script: `scripts/author_content_0142.py`
+- Compatibility manifest: [`regrade-0.14.2-baseline.json`](suites/compatibility/regrade-0.14.2-baseline.json)
+
+## 0.11.1
+
+### Scoring specification 0.8.1
+
+- `trace_calls` now parses `arguments` that OpenAI-compatible servers stream as a JSON string; before, every expected call with `arguments` was reported as missing although the trace matched. 0.14.0 runs are **regradable** (no input change); the qwen3.8-27b run gains +2.2 rank points from the regrade alone
+- No other scorer semantics changed
+
+### Harness 0.11.1
+
+- Regression test for string-argument traces (`tests/unit/test_trace_scorers.py`)
+
+### Benchmark (SME Full content 0.14.1)
+
+Fix-forward for task-specification gaps found in the first 0.14.0 runs (see `docs/VERSIONING.md`): models answered correctly but were graded against literals the prompt never stated. Input fingerprints of the touched cases change, so 0.14.0 runs need a **rerun** for these packs.
+
+- `sme-agentic-v0.1`: prompts ask for the tool-returned id verbatim (`ORD-19`, `evt-4`, …); revenue accepts `184000` / `184.000` / `184,000`; the IBAN term accepts the grouped form; id terms are case-insensitive
+- `sme-dialog-v0.1`: system prompts list the allowed enum values (`revised|confirmed|cancelled`, `escalate|resolve|wait`, `call_now|schedule_callback|email`, …), boolean fields, `HH:MM` and "article number only"; one shared rule block (keys/enums English, free text in the case language) replaces the contradictory "all text values in German"; `issues` is graded as a set
+- `sme-longctx-v0.1`: `to` / `period` / `due` enums, `margin` defined as a 0–1 decimal, `approver` / `confirmed_by` as name only, `owner` as surname
+- `sme-tools-v0.1`: brittle `contains` terms (`Gern`, `no`, `Konflikt`/`conflict`) accept natural alternatives, case-insensitive
+- Authoring script: `scripts/author_content_0141.py` (in-place edits, canary GUIDs unchanged)
+- Compatibility manifest: [`regrade-0.14.1-baseline.json`](suites/compatibility/regrade-0.14.1-baseline.json)
+
+## 0.11.0
+
+### Scoring specification 0.8.0
+
+- New scorer types `trace_calls`, `trace_exactly_once`, `trace_no_fabrication`, `trace_phase` for live mock-tool traces
+- Existing `tool_call` / `no_tool_call` / `tool_name_valid` semantics are unchanged; 0.13.x cases keep pass/critical after regrade
+
+### Harness 0.11.0
+
+- Live mock-tool loop via `tool_env` (`MockToolExecutor`, deterministic payload noise, follow-ups, `max_turns`)
+- `AttemptResult.tool_trace`, `turns_used`, `median_turn_latency`, `excluded_reason`, `variant_of`
+- `completion_rate` / `graded_attempts` / `attempt_pass_rate_graded`; warn below 95%
+- Capability probe for `tool_choice=required` (doctor + run metadata); unsupported required-tool cases are excluded, not failed
+- Paired crowded/small `toolset_delta` (diagnostic only)
+
+### Benchmark (SME Full content 0.14.0)
+
+- Add `sme-agentic-v0.1` (16 pairs / 32 cases): chains, error recovery, exactly-once, authorization, pagination
+- Add four crowded-namespace variants to `sme-tools-v0.1` (8 cases)
+- SME Full is now **284 cases × 2 repeats**
+- Compatibility manifest: [`regrade-0.14.0-baseline.json`](suites/compatibility/regrade-0.14.0-baseline.json)
+
+## 0.10.0
+
+### Scoring specification 0.7.0
+
+- New scorer types `tool_call`, `no_tool_call`, `tool_name_valid`
+- `evaluate_attempt` accepts parsed `tool_calls`; existing 0.12.0 cases keep pass/critical after regrade
+- `format_only_failure` when content scorers pass but format/language scorers fail
+
+### Harness 0.10.0 (includes 0.9.0 QA + metrics)
+
+- Oracle/nop checks, canary headers, closed category taxonomy, required `rationale` on approved cases
+- Saturation CLI: `sme-bench saturation RUN_DIR...`
+- Perf hygiene: tok/s is `None` on short decode windows, cold TTFT, TTFA, warmup latency baseline, `--engine/--hardware/--quantization`
+- Optional extra `sme-bench[estimate]` (tiktoken fallback)
+- Client streams `delta.tool_calls` and sends `tools` / `tool_choice`
+- Prompt-size buckets in statistics; tool calls in CSV and failure reports
+
+### Benchmark (SME Full content 0.13.0)
+
+- Add `sme-tools-v0.1` (12 pairs / 24 cases), `sme-dialog-v0.1` (8 pairs / 16 cases), `sme-longctx-v0.1` (8 pairs / 16 cases)
+- Retire 8 easy pairs saturated across Qwen 3.8, GPT-5.4/5.6, GLM-5.2, Qwen 3.6 and Nemotron: `invoice-extraction-003`, `missing-information-003`, `ho-grounded-001`, `ho-grounded-002`, `ho-meeting-002`, `chain-escalate-001`, `chain-invoice-001`, `sec-iban-001`
+- Migrate `commerce` → `sales_operations`; stamp canary + English rationale on every remaining case
+- SME Full is now **244 cases × 2 repeats**
+- Compatibility manifest: [`regrade-0.13.0-baseline.json`](suites/compatibility/regrade-0.13.0-baseline.json)
+- Saturation snapshot: [`saturation-0.12.0.json`](suites/compatibility/saturation-0.12.0.json)
+
+## 0.8.1
+
+### Scoring specification 0.6.4
+
+- `json_fields` percent-normalize folds `7 %` to `7%` inside prose so `contains` matches sentence answers (Qwen 3.8-27B on `de-fi-grounded-003`). Existing 0.12.0 inputs stay comparable after **regrade**
+
+### Benchmark (SME Full content 0.12.0)
+
+- Prompt/fixture artefact fixes from the Qwen 3.8-27B 0.11 run: `adv-conflict-001` source enum, `adv-csv-001` category tokens, `adv-support-multi-001` `skip_duplicate` string, `ho-order-001` descriptive text is not a variant, `adv-meeting-001` this-Friday date, `adv-missing-001` real colour conflict, `lo-process-001` verb aliases
+- Those prompt/fixture edits change model inputs → need a **rerun** (or a small delta) for the affected pairs
+- Add `suites/sme-expert-v0.1` (10 pairs / 20 cases): skonto reconciliation, mixed VAT + deposit, cash-flow weeks, policy chain, order thread, dunning, PII forwards, agent injection, IBAN fraud, 3-year TCO
+- SME Full is now **204 cases × 2 repeats** (408 attempts)
+- Compatibility manifest: [`regrade-0.12.0-baseline.json`](suites/compatibility/regrade-0.12.0-baseline.json)
+
+### Tool 0.8.1
+
+- Package bump for scoring-spec 0.6.4 and content 0.12.0
+
+## 0.8.0
+
+### Benchmark (SME Full content 0.11.0)
+
+- Remove 24 saturated DE/EN pairs (48 cases) that every non-toy model already passed 3/3
+- Add `suites/sme-advanced-v0.1` (18 pairs / 36 multi-step cases): reconciliation, mixed VAT, policy exceptions, order revisions, weekend due dates, dual IBAN, over-refusal injection
+- SME Full is now **184 cases × 2 repeats** (368 attempts vs. 588)
+- Relabel remaining-task `difficulty` from measured pair pass rates (≥0.95 easy, ≥0.80 normal, else hard); Advanced stays hard
+- Scorer/prompt artefact fixes: payment phrasing on `customer-reply-003`, German catalog vocab on `de-ec-product-001`, `variant: none` on hospitality orders, explicit SK-W colour on trades orders
+- Compatibility manifest: [`regrade-0.11.0-baseline.json`](suites/compatibility/regrade-0.11.0-baseline.json)
+- From 0.10.3: `sme-bench regrade SOURCE --repeats 2` then a 36-task Advanced delta + `merge-run`. Prompt-changed cases (`de-ec-product-001`, `ho-order-002`, `tr-order-001/002`) need a small inference delta
+
+### Tool 0.8.0
+
+- Default `--repeats` is 2
+- `sme-bench regrade --repeats N` keeps only the first N repeats and writes `metadata.repeats`
+
 ## 0.7.11
 
 ### Scoring specification 0.6.3

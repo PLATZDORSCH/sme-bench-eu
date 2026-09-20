@@ -1,0 +1,18 @@
+Vorrang: [R-1] Eine gegengezeichnete Sondervereinbarung schlägt die AGB.
+[R-2] E-Mail-Zusagen ohne Gegenzeichnung haben keinen Vorrang vor AGB oder Sondervereinbarung.
+[R-3] Distraktor: Kulanzentscheidungen der Buchhaltung sind nicht bindend.
+
+AGB (Stand 2025):
+[A-1] Storno weniger als 14 Tage vor Start: 30 % der Auftragssumme.
+[A-2] Storno 14 Tage oder mehr: 10 %.
+
+Sondervereinbarung S-88, gegengezeichnet 2026-05-01, gilt nur für Projekt P-9:
+[S-1] Projekt P-9 Auftragssumme 8000 EUR, Start 2026-07-01.
+[S-2] Storno weniger als 14 Tage vor Start: 15 % statt 30 %.
+[S-3] Die 15-%-Regel ersetzt A-1 für P-9 vollständig.
+
+E-Mail 2026-06-01 von Vertrieb (nicht gegengezeichnet):
+[E-1] „Gebühr erlassen, wenn P-9 bis 20. Juni storniert wird.“
+
+Heute: 2026-06-18. Vorgang: Kunde storniert Projekt P-9.
+Frage: Welche Stornogebühr in EUR? Drei tragende Abschnitts-IDs zitieren.

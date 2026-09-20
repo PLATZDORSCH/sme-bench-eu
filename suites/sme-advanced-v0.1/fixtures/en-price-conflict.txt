@@ -1,0 +1,5 @@
+Precedence: a still-valid signed quote overrides the price list.
+
+2026 price list: Widget-A = 12.50 EUR each.
+Quote Q-88 dated 2026-06-01, valid until 2026-08-31, signed: Widget-A = 11.00 EUR each.
+Today: 2026-07-15. Quantity 8 units.

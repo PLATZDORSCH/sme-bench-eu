@@ -1,0 +1,7 @@
+One mail, three issues:
+
+1) Invoice RE-220 has the wrong amount — please correct, payment is blocked (billing, high).
+2) Parcel #DHL-88 has been out for delivery for 4 days (shipping, medium).
+3) The printer fault is the same as ticket T-902 — do not open a new ticket.
+
+Existing ticket T-902: technical / medium, open.

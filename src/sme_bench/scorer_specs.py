@@ -20,9 +20,13 @@ _BOOL_PARAMS = frozenset(
         "ignore_negated",
         "forbid_bullet_only",
         "word_boundaries",
+        "exactly_one",
+        "success_only",
     }
 )
-_INT_PARAMS = frozenset({"min_count", "max_count", "min_words", "min_sentences", "margin"})
+_INT_PARAMS = frozenset(
+    {"min_count", "max_count", "min_words", "min_sentences", "margin", "index", "min_phase"}
+)
 _FLOAT_PARAMS = frozenset(
     {"tolerance", "relative_tolerance", "absolute_tolerance", "adjacent_credit"}
 )
@@ -34,6 +38,7 @@ _STR_PARAMS = frozenset(
         "schema",
         "expected",
         "normalize",
+        "order",
     }
 )
 
@@ -113,6 +118,23 @@ _SCORER_PARAMS: dict[str, set[str]] = {
         "case_insensitive",
     },
     "language": {"expected", "fields", "exclude_fields", "margin"},
+    "tool_call": {
+        "name",
+        "arguments_fields",
+        "index",
+        "exactly_one",
+        "normalize",
+        "case_insensitive",
+        "match",
+        "aliases",
+        "field_aliases",
+    },
+    "no_tool_call": set(),
+    "tool_name_valid": set(),
+    "trace_calls": {"calls", "order", "dependencies"},
+    "trace_exactly_once": {"name", "success_only"},
+    "trace_no_fabrication": {"forbidden"},
+    "trace_phase": {"name", "min_phase"},
 }
 
 _JSON_NORMALIZE_MODES = frozenset(
@@ -159,6 +181,9 @@ def validate_scorer_spec(
         "regex": ("patterns",),
         "json_schema": ("coerce_scalar_fields",),
         "language": ("fields", "exclude_fields"),
+        "tool_call": ("arguments_fields",),
+        "trace_calls": ("calls", "dependencies"),
+        "trace_no_fabrication": ("forbidden",),
     }
     dict_params: dict[str, tuple[str, ...]] = {
         "set_equality": ("aliases", "key_aliases", "key_match"),
@@ -183,6 +208,7 @@ def validate_scorer_spec(
         "regex": ("patterns",),
         "json_schema": ("coerce_scalar_fields",),
         "language": ("fields", "exclude_fields"),
+        "tool_call": ("arguments_fields",),
     }
     for key in string_list_params.get(spec.type, ()):
         value = spec.params.get(key)
@@ -212,6 +238,16 @@ def validate_scorer_spec(
         ):
             issues.append(_type_issue(path, spec.type, key, "str", value, strict))
 
+    if spec.type == "trace_calls":
+        order = spec.params.get("order", "dependency")
+        if order not in {"strict", "dependency"}:
+            issues.append(
+                ScorerValidationIssue(
+                    path=path,
+                    message=f"trace_calls.order must be 'strict' or 'dependency', got {order!r}",
+                    severity="error" if strict else "warning",
+                )
+            )
     if spec.type == "contains":
         mode = spec.params.get("mode", "all")
         if mode not in {"all", "any"}:

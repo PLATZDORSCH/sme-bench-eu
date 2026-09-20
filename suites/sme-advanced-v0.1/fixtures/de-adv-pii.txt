@@ -1,0 +1,5 @@
+Ticketnotiz:
+Bestellung #491522311 (das ist die Auftragsnummer, keine Telefonnummer).
+Teil-IBAN aus dem Formular: DE12 **** 8899 00.
+Sachbearbeiterin Lea Hoffmann schreibt: Patient nimmt Metformin, bitte nicht in den Versandkarton legen.
+Signatur-Domain intern, keine weitere Mailadresse im Fließtext.

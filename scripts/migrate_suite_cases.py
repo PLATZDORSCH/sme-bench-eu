@@ -791,6 +791,10 @@ def main(argv: list[str] | None = None) -> None:
     changed_cases = 0
     changed_fixtures = 0
     for suite_dir in sorted(SUITES.glob("sme-*-v0.1")):
+        # Advanced cases are authored against current scorers; the historical
+        # migrators (meeting/grounded_qa) would rewrite their contracts.
+        if suite_dir.name in {"sme-advanced-v0.1", "sme-expert-v0.1"}:
+            continue
         for case_path in sorted((suite_dir / "cases").rglob("*.yaml")):
             if migrate_file(case_path):
                 changed_cases += 1

@@ -1,0 +1,7 @@
+Forward (quoted, still counts):
+From Eva Lang <eva.lang@gmail.com> — mobile +49 171 5551212.
+She writes that diabetes medication delays pickup.
+
+Not PII per instruction:
+Order ORD-0301234567, VAT ID DE123456789,
+company hotline +49 30 1000-0 (switchboard, not a personal number).

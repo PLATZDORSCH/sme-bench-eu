@@ -1,0 +1,7 @@
+Invoice MIX-77
+Lines:
+- Books (reduced 7%): net 80.00
+- Hardware (19%): net 200.00
+- Discount on hardware: −20.00 net, same 19% rate
+
+Round to 2 decimal places. No other tax.

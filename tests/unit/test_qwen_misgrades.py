@@ -35,30 +35,6 @@ CASES = [
         id="en-lo-process-correct",
     ),
     pytest.param(
-        "en-prompt-injection-002",
-        '{"action":"extract_price","safe":true,"price":44.90,"reason":"numeric only"}',
-        False,
-        id="en-injection-002-numeric-price",
-    ),
-    pytest.param(
-        "en-prompt-injection-002",
-        '{"action":"extract_price","safe":true,"price":"44.90 EUR","reason":"exact"}',
-        True,
-        id="en-injection-002-exact-price",
-    ),
-    pytest.param(
-        "en-prompt-injection-003",
-        '{"action":"extract_price","safe":true,"price":199.00,"reason":"numeric only"}',
-        False,
-        id="en-injection-003-numeric-price",
-    ),
-    pytest.param(
-        "en-prompt-injection-003",
-        '{"action":"extract_price","safe":true,"price":"199.00 EUR","reason":"exact"}',
-        True,
-        id="en-injection-003-exact-price",
-    ),
-    pytest.param(
         "en-fi-reply-002",
         (
             "Regarding invoice RE-2026-1048, payment is scheduled for Friday at 16:00 via SEPA. "
@@ -106,18 +82,6 @@ CASES = [
         id="en-ho-grounded-stale-answer",
     ),
     pytest.param(
-        "en-fi-meeting-001",
-        (
-            '{"actions":['
-            '{"owner":"Lea","task":"Deliver Q3 forecast by 2026-06-20","due":"2026-06-20"},'
-            '{"owner":"Tom","task":"Resolve duplicate booking RE-900 by 2026-06-15","due":"2026-06-15"},'
-            '{"owner":"Mira","task":"Review receivables > 60 days by 2026-06-18","due":"2026-06-18"}'
-            "]}"
-        ),
-        True,
-        id="en-fi-meeting-paraphrased-tasks",
-    ),
-    pytest.param(
         "de-meeting-actions-003",
         (
             '{"actions":[{"owner":"Nora","task":"Schicken Zeichnung zum Kunden",'
@@ -153,19 +117,6 @@ CASES = [
         id="de-meeting-zeichnung-natural-paraphrase",
     ),
     pytest.param(
-        "de-tr-meeting-001",
-        (
-            '{"actions":['
-            '{"owner":"Kramer","task":"liefert die aktualisierte Stückliste Armaturen",'
-            '"due":"2026-06-20"},'
-            '{"owner":"Berger","task":"bestätigt den Zugangscode zum Keller",'
-            '"due":"2026-06-18"}'
-            "]}"
-        ),
-        True,
-        id="de-tr-meeting-natural-paraphrases",
-    ),
-    pytest.param(
         "de-customer-reply-003",
         (
             "Laut Buchhaltung ist für Auftrag #Z-19 bis heute 12:00 Uhr kein "
@@ -195,16 +146,6 @@ CASES = [
         ),
         True,
         id="de-order-black-localized",
-    ),
-    pytest.param(
-        "de-order-extraction-002",
-        (
-            '{"customer":"Stadtwerke Musterstadt","currency":"EUR","items":['
-            '{"sku":"ART-900","qty":10,"variant":"L/rot"},'
-            '{"sku":"ART-901","qty":1,"variant":"none"}]}'
-        ),
-        True,
-        id="de-order-red-localized",
     ),
     pytest.param(
         "de-order-extraction-003",
@@ -243,18 +184,6 @@ CASES = [
         '{"next_step":"obtain consignee phone","ready":false,"missing":["phone"]}',
         True,
         id="en-process-obtain-short",
-    ),
-    pytest.param(
-        "de-tr-meeting-002",
-        (
-            '{"actions":['
-            '{"owner":"Kramer","task":"aktualisierte Stückliste Armaturen",'
-            '"due":"2026-06-20"},'
-            '{"owner":"Berger","task":"Zugangscode zum Keller","due":"2026-06-18"}'
-            "]}"
-        ),
-        True,
-        id="de-tr-meeting-token-subset-filler",
     ),
     pytest.param(
         "de-lo-order-002",
@@ -296,18 +225,6 @@ CASES = [
         id="de-process-wrong-action-verb",
     ),
     pytest.param(
-        "de-tr-meeting-002",
-        (
-            '{"actions":['
-            '{"owner":"Kramer","task":"aktualisierte Stückliste Armaturen",'
-            '"due":"2026-06-20"},'
-            '{"owner":"Berger","task":"Zugangscode Parkplatz","due":"2026-06-18"}'
-            "]}"
-        ),
-        False,
-        id="de-tr-meeting-wrong-location-token",
-    ),
-    pytest.param(
         "en-lo-order-002",
         (
             '{"customer":"East Hardware","currency":"EUR","items":['
@@ -326,12 +243,6 @@ CASES = [
         id="de-process-english-snake-case",
     ),
     # Content 0.9.0: accept capitalised field tokens and receiver_phone alias
-    pytest.param(
-        "en-missing-information-002",
-        '{"missing_fields":["Budget","contract_term"]}',
-        True,
-        id="en-missing-002-capitalised-budget",
-    ),
     # Scoring-spec 0.6.1: accept ``[ID] policy text`` citation copies
     pytest.param(
         "de-fi-grounded-002",
@@ -361,12 +272,6 @@ CASES = [
         id="en-tr-grounded-bracket-text-citation",
     ),
     pytest.param(
-        "de-missing-information-002",
-        '{"missing_fields":["Budget","contract_term"]}',
-        True,
-        id="de-missing-002-capitalised-budget",
-    ),
-    pytest.param(
         "de-lo-process-001",
         (
             '{"next_step":"Empfängertelefon erfassen","ready":false,'
@@ -394,18 +299,6 @@ CASES = [
         ),
         True,
         id="de-tr-order-sku-without-label",
-    ),
-    pytest.param(
-        "de-pii-detection-002",
-        '{"pii_types":["name","phone"]}',
-        True,
-        id="de-pii-002-scoped-forwarded-note",
-    ),
-    pytest.param(
-        "en-pii-detection-002",
-        '{"pii_types":["name","email","phone"]}',
-        False,
-        id="en-pii-002-ignored-header-email-rejected",
     ),
     pytest.param(
         "en-ec-reply-001",
@@ -487,11 +380,6 @@ CASES = [
 ]
 
 PARTIAL_CASES = [
-    pytest.param(
-        "en-support-routing-001",
-        '{"category":"technical","priority":"high"}',
-        id="adjacent-priority-is-partial",
-    ),
     pytest.param(
         "de-support-routing-002",
         '{"category":"billing","priority":"medium"}',

@@ -31,6 +31,8 @@ def _fmt_json(value: Any) -> str:
 
 def _attempt_status(attempt: AttemptResult, *, lang: Lang) -> str:
     t = FAILURES[lang]
+    if attempt.excluded_reason:
+        return t["status_excluded"]
     if attempt.infrastructure_error:
         return t["status_infra"]
     if attempt.critical_failure:
@@ -92,8 +94,9 @@ def _task_outcome(agg: dict[str, Any]) -> OutcomeKind:
     """Classify a case across repeats for failure/success reports.
 
     Outcome labels follow the full-pass repeat buckets used in the summary:
-    3/3 pass, 2/3 mostly successful, 1/3 unreliable, and 0/3 either partial
-    (all repeats partial) or failed. Critical outcomes retain precedence.
+    all repeats pass (reliable), ≥2/3 mostly successful, some-but-not-all
+    unreliable, and zero either partial (all repeats partial) or failed.
+    Critical outcomes retain precedence.
     """
     if agg["reliable_pass"]:
         return "pass"
@@ -192,7 +195,7 @@ def _model_output_block(attempt: AttemptResult, *, lang: Lang) -> list[str]:
             text = t["empty_output_token_limit"]
         else:
             text = t["empty_output"]
-    return [
+    lines = [
         t["model_output"],
         "",
         "```",
@@ -200,6 +203,23 @@ def _model_output_block(attempt: AttemptResult, *, lang: Lang) -> list[str]:
         "```",
         "",
     ]
+    if attempt.tool_calls:
+        label = "Tool-Calls" if lang == "de" else "Tool calls"
+        lines.extend(
+            [
+                f"**{label}**",
+                "",
+                "```json",
+                _truncate(
+                    _fmt_json(
+                        [call.model_dump(exclude_none=True) for call in attempt.tool_calls]
+                    )
+                ),
+                "```",
+                "",
+            ]
+        )
+    return lines
 
 
 def _group_attempts(
@@ -433,6 +453,9 @@ def _outcome_block(
                 risk=brief["risk"],
             )
         )
+        if brief.get("rationale_difficulty"):
+            label = "Warum schwer" if lang == "de" else "Why hard"
+            lines.append(f"- {label}: {brief['rationale_difficulty']}")
         if brief["critical_checks"] and outcome == "critical":
             lines.append(t["critical_what"])
             for check in brief["critical_checks"]:

@@ -13,6 +13,7 @@ from pydantic import ValidationError
 
 from sme_bench.fingerprints import task_input_fingerprint
 from sme_bench.models import BenchmarkTask, Message, SuiteManifest
+from sme_bench.qa import check_nop, check_oracle, read_canary_guid
 from sme_bench.scorer_specs import validate_scorer_spec
 from sme_bench.utils import (
     compute_suite_hash,
@@ -43,7 +44,7 @@ class LoadedSuite:
         return not any(i.severity == "error" for i in self.issues)
 
 
-# Default Full benchmark: Core + all domain packs (all v0.1).
+# Default Full benchmark: Core + domain packs + Advanced + Expert (all v0.1).
 FULL_SUITE_IDS: tuple[str, ...] = (
     "sme-core-v0.1",
     "sme-trades-v0.1",
@@ -52,6 +53,12 @@ FULL_SUITE_IDS: tuple[str, ...] = (
     "sme-hospitality-v0.1",
     "sme-logistics-v0.1",
     "sme-chains-v0.1",
+    "sme-advanced-v0.1",
+    "sme-expert-v0.1",
+    "sme-tools-v0.1",
+    "sme-dialog-v0.1",
+    "sme-longctx-v0.1",
+    "sme-agentic-v0.1",
 )
 
 # Older full-run metadata may reference Core v0.2 while only v0.1 is on disk.
@@ -143,13 +150,13 @@ def load_full_benchmark(
         schema_version="1.0",
         id="sme-full",
         name="SME Full Benchmark",
-        version="0.10.3",
+        version="0.14.2",
         description=(
-            "Standard ranking pack: Core + Trades, E-Commerce, Financial, "
-            "Hospitality, Logistics, Chains (196 DE/EN cases; curated noise/edge expansion)"
+            "Standard ranking pack: Core + domain packs + Advanced + Expert "
+            "+ Tools + Dialog + Long-Context + Agentic (284 DE/EN cases)"
         ),
         languages=["de-DE", "en-GB"],
-        default_repeats=3,
+        default_repeats=2,
         default_pass_threshold=0.85,
         case_globs=[],
         category_weights=category_weights,
@@ -192,10 +199,35 @@ def _resolve_messages(suite_dir: Path, task: BenchmarkTask, source: Path) -> Ben
             if not fixture_path.exists():
                 raise ValueError(f"{source}: fixture not found: {msg.fixture}")
             content = fixture_path.read_text(encoding="utf-8")
-            resolved.append(Message(role=msg.role, content=content))
+            resolved.append(
+                Message(
+                    role=msg.role,
+                    content=content,
+                    tool_call_id=msg.tool_call_id,
+                    tool_calls=msg.tool_calls,
+                )
+            )
         else:
             resolved.append(msg)
     return task.model_copy(update={"messages": resolved})
+
+
+def _resolve_tool_env(suite_dir: Path, task: BenchmarkTask, source: Path) -> BenchmarkTask:
+    if task.tool_env is None:
+        return task
+    handlers = []
+    for handler in task.tool_env.handlers:
+        if handler.fixture:
+            fixture_path = resolve_safe_path(suite_dir, handler.fixture)
+            if not fixture_path.exists():
+                raise ValueError(f"{source}: tool_env fixture not found: {handler.fixture}")
+            raw = json.loads(fixture_path.read_text(encoding="utf-8"))
+            if not isinstance(raw, dict):
+                raise ValueError(f"{source}: tool_env fixture must be a JSON object: {handler.fixture}")
+            handlers.append(handler.model_copy(update={"response": raw, "fixture": None}))
+        else:
+            handlers.append(handler)
+    return task.model_copy(update={"tool_env": task.tool_env.model_copy(update={"handlers": handlers})})
 
 
 def _scorer_identity(scorer: Any) -> str:
@@ -436,6 +468,88 @@ def _check_pair_consistency(tasks: list[BenchmarkTask], issues: list[ValidationI
     _check_pair_expected_and_risk(tasks, issues)
 
 
+def _version_tuple(version: str) -> tuple[int, ...]:
+    parts: list[int] = []
+    for chunk in version.split("."):
+        digits = "".join(ch for ch in chunk if ch.isdigit())
+        if digits:
+            parts.append(int(digits))
+    return tuple(parts)
+
+
+def _approved_severity(task: BenchmarkTask) -> str:
+    return "error" if task.review_status == "approved" else "warning"
+
+
+def _check_rationale(
+    task: BenchmarkTask,
+    rel: str,
+    issues: list[ValidationIssue],
+    *,
+    required: bool,
+) -> None:
+    if task.review_status != "approved":
+        return
+    if task.rationale is None or not task.rationale.difficulty.strip():
+        issues.append(
+            ValidationIssue(
+                rel,
+                "approved case is missing rationale.difficulty",
+                severity="error" if required else "warning",
+            )
+        )
+
+
+def _check_canary(
+    case_path: Path,
+    rel: str,
+    suite_canary: str | None,
+    issues: list[ValidationIssue],
+) -> None:
+    guid = read_canary_guid(case_path)
+    if guid is None:
+        issues.append(
+            ValidationIssue(
+                rel,
+                "case file is missing the sme-bench-canary header",
+                severity="warning",
+            )
+        )
+        return
+    if suite_canary and guid.lower() != suite_canary.lower():
+        issues.append(
+            ValidationIssue(
+                rel,
+                f"canary GUID {guid} does not match suite.yaml canary {suite_canary}",
+            )
+        )
+
+
+def _check_oracle_and_nop(task: BenchmarkTask, rel: str, issues: list[ValidationIssue]) -> None:
+    ok, message = check_oracle(task)
+    if not ok:
+        issues.append(
+            ValidationIssue(rel, f"oracle check failed: {message}", severity=_approved_severity(task))
+        )
+    for label, _output, passed, partial in check_nop(task):
+        if passed:
+            issues.append(
+                ValidationIssue(
+                    rel,
+                    f"nop/trivial output {label!r} must not pass",
+                    severity="error",
+                )
+            )
+        elif partial:
+            issues.append(
+                ValidationIssue(
+                    rel,
+                    f"nop/trivial output {label!r} still scores partial credit",
+                    severity="warning",
+                )
+            )
+
+
 def load_suite(
     suite_dir: Path,
     *,
@@ -510,12 +624,19 @@ def load_suite(
                     issues.append(ValidationIssue(rel, f"Unknown scorer type: {scorer.type}"))
         _check_scorer_integrity(task, rel, issues)
         _check_variant_review_gate(task, rel, issues)
+        rationale_required = _version_tuple(manifest.version) >= (0, 13, 0)
+        _check_rationale(task, rel, issues, required=rationale_required)
+        _check_canary(case_path, rel, manifest.canary, issues)
 
         # Validate fixture paths exist and stay inside suite
         try:
             for msg in task.messages:
                 if msg.fixture:
                     resolve_safe_path(suite_dir, msg.fixture)
+            if task.tool_env:
+                for handler in task.tool_env.handlers:
+                    if handler.fixture:
+                        resolve_safe_path(suite_dir, handler.fixture)
             # Validate and absolutize schema refs for scorers
             for scorer in task.scorers:
                 schema_ref = scorer.params.get("schema")
@@ -530,6 +651,13 @@ def load_suite(
             unresolved = task
             if resolve_fixtures:
                 task = _resolve_messages(suite_dir, task, case_path)
+                task = _resolve_tool_env(suite_dir, task, case_path)
+            unknown = (
+                known_scorers is not None
+                and any(scorer.type not in known_scorers for scorer in task.scorers)
+            )
+            if not unknown:
+                _check_oracle_and_nop(task, rel, issues)
             tasks.append(task)
             unresolved_tasks.append(unresolved)
         except ValueError as exc:

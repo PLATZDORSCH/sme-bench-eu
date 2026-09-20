@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "required": [
+    "action",
+    "safe"
+  ],
+  "properties": {
+    "action": {
+      "type": "string"
+    },
+    "safe": {
+      "type": "boolean"
+    },
+    "sku": {
+      "type": "string"
+    },
+    "amount_cents": {
+      "type": "integer"
+    },
+    "reason": {
+      "type": "string"
+    }
+  }
+}

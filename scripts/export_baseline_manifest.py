@@ -35,8 +35,19 @@ def export_manifest(*, git_ref: str, output: Path) -> dict[str, object]:
     merged: dict[str, str] = {}
     suite_meta: list[dict[str, str]] = []
 
-    for suite_path in sorted((ROOT / "suites").glob("sme-*-v0.1")):
-        rel = suite_path.relative_to(ROOT)
+    listed = subprocess.run(
+        ["git", "ls-tree", "--name-only", f"{commit}:suites"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    suite_rels = sorted(
+        Path("suites") / name
+        for name in listed.stdout.splitlines()
+        if name.startswith("sme-") and name.endswith("-v0.1")
+    )
+    for rel in suite_rels:
         proc = subprocess.run(
             ["git", "archive", commit, str(rel)],
             cwd=ROOT,

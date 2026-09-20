@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "required": [
+    "net_revenue",
+    "top_category",
+    "top_month"
+  ],
+  "properties": {
+    "net_revenue": {
+      "type": "number"
+    },
+    "top_category": {
+      "type": "string"
+    },
+    "top_month": {
+      "type": "string"
+    }
+  }
+}

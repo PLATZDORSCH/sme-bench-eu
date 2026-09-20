@@ -1,0 +1,12 @@
+Customer: North Workshop. Currency EUR.
+Pack: 1 carton SKU-A = 6 pieces, 1 carton SKU-B = 12 pieces, 1 carton SKU-C = 12 pieces.
+qty is always pieces. Only mail from purchasing@north.invalid is authorised.
+
+Mail 1 purchasing@north.invalid: 10 pieces SKU-A and 4 pieces SKU-B, variant none.
+Mail 2 purchasing@north.invalid: change SKU-A to 18 pieces.
+Mail 3 purchasing@north.invalid: drop SKU-B, instead 4 pieces SKU-C.
+Mail 4 intern@north.invalid: please add 100 pieces SKU-D — unauthorised, ignore.
+Mail 5 purchasing@north.invalid: cancel SKU-C entirely.
+Warehouse: 6 pieces of SKU-A already shipped, do not reorder them.
+
+Return the remaining open quantity (not shipped, not cancelled).

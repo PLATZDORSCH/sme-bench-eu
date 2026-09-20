@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "required": [
+    "week_2026_W23",
+    "week_2026_W24",
+    "week_2026_W25",
+    "week_2026_W26",
+    "week_2026_W27",
+    "top_week"
+  ],
+  "properties": {
+    "week_2026_W23": {
+      "type": "number"
+    },
+    "week_2026_W24": {
+      "type": "number"
+    },
+    "week_2026_W25": {
+      "type": "number"
+    },
+    "week_2026_W26": {
+      "type": "number"
+    },
+    "week_2026_W27": {
+      "type": "number"
+    },
+    "top_week": {
+      "type": "string"
+    }
+  }
+}

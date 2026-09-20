@@ -36,6 +36,7 @@ htmlcov/
 *.swo
 .DS_Store
 
+OTHER_BENCHMARKS/
 # Runtime outputs
 runs/
 .work/

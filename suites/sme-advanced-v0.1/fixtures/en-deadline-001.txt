@@ -1,0 +1,6 @@
+Invoice RE-560 dated 2026-07-16 (Thursday), payment terms net 10 days.
+If the computed due date falls on Saturday, Sunday or a holiday, move it to the
+next business day. Holidays: none in July 2026.
+Review as-of date: 2026-07-30.
+
+Dunning stages: 0 days overdue = none; 1–7 = reminder_1; 8–14 = reminder_2; >14 = formal.

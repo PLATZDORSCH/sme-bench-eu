@@ -1,0 +1,28 @@
+schema_version: '1.0'
+id: sme-expert-v0.1
+name: SME Expert Multi-step Pack
+version: 0.13.0
+description: 'Very hard multi-step SME cases: skonto reconciliation, mixed VAT + deposit, cash-flow
+  weeks, policy chains, order threads, dunning, PII forwards, agent injection, IBAN fraud, 3-year
+  TCO'
+languages:
+- de-DE
+- en-GB
+default_repeats: 2
+default_pass_threshold: 0.85
+default_partial_threshold: 0.65
+case_globs:
+- cases/**/*.yaml
+category_weights:
+  document_extraction: 1.0
+  customer_service: 1.0
+  sales_operations: 1.0
+  data_analysis: 1.0
+  meeting_operations: 1.0
+  grounded_qa: 1.0
+  privacy_security: 1.0
+  process_ops: 1.0
+provenance:
+  type: synthetic
+  notes: New 0.12.0 pack. Synthetic fixtures; harder than Advanced.
+canary: 666e51d0-ff10-48cc-a6c6-da72af5b01d8

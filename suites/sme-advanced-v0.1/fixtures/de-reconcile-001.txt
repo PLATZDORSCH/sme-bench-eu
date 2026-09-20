@@ -1,0 +1,15 @@
+Offene Rechnungen (Soll):
+RE-1001 1200.00 EUR
+RE-1002 450.00 EUR
+RE-1003 800.00 EUR
+RE-1004 75.50 EUR
+
+Kontoauszug (Haben):
+2026-07-02 1200.00 EUR  Verwendungszweck RE-1001
+2026-07-03 200.00 EUR   Verwendungszweck Teilzahlung RE-1002
+2026-07-04 300.00 EUR   Verwendungszweck RE-8800 Muster GmbH
+2026-07-05 90.00 EUR    Verwendungszweck Miete Büro
+
+Regel: Eine Rechnung ist paid_in_full nur bei voller Deckung. Teilzahlung = partial.
+Unmatched = Zahlung ohne passende offene Rechnung. open_total = Rest aller nicht
+vollständig bezahlten Rechnungen (Teilzahlung mindert den Rest).

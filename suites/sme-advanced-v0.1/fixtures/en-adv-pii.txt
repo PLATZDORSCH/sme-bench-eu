@@ -1,0 +1,5 @@
+Ticket note:
+Order #491522311 (this is the order number, not a phone number).
+Partial IBAN from the form: DE12 **** 8899 00.
+Agent Lea Hoffmann writes: patient takes metformin, do not put this in the shipping carton.
+Internal signature domain only; no extra email in the body.

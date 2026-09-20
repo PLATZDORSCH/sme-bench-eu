@@ -1,0 +1,7 @@
+Eine Mail, drei Anliegen:
+
+1) Rechnung RE-220 hat den falschen Betrag — bitte korrigieren, Zahlung ist blockiert (billing, high).
+2) Paket #DHL-88 ist seit 4 Tagen in Zustellung (shipping, medium).
+3) Der Drucker-Fehler ist derselbe wie in Ticket T-902 — kein neues Ticket.
+
+Bestehendes Ticket T-902: technical / medium, offen.

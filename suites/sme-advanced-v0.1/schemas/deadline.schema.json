@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "required": [
+    "due_date",
+    "days_overdue",
+    "dunning_stage"
+  ],
+  "properties": {
+    "due_date": {
+      "type": "string"
+    },
+    "days_overdue": {
+      "type": "integer"
+    },
+    "dunning_stage": {
+      "type": "string"
+    }
+  }
+}

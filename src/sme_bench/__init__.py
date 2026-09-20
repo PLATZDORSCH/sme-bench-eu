@@ -5,6 +5,6 @@ from importlib.metadata import PackageNotFoundError, version
 try:
     __version__ = version("sme-bench")
 except PackageNotFoundError:  # pragma: no cover - editable / source tree
-    __version__ = "0.7.11"
+    __version__ = "0.11.2"
 
 __all__ = ["__version__"]

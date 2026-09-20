@@ -101,4 +101,6 @@ def task_brief(task: BenchmarkTask, *, lang: Lang = "de") -> dict[str, Any]:
         "scorers": scorer_summary(task, lang=lang),
         "has_critical_scorer": any(s.critical for s in task.scorers)
         or any(s.type == "forbidden_terms" for s in task.scorers),
+        "rationale_difficulty": task.rationale.difficulty if task.rationale else "",
+        "rationale_verification": task.rationale.verification if task.rationale else "",
     }

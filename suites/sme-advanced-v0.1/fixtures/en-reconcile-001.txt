@@ -1,0 +1,15 @@
+Open invoices (debit):
+RE-1001 1200.00 EUR
+RE-1002 450.00 EUR
+RE-1003 800.00 EUR
+RE-1004 75.50 EUR
+
+Bank statement (credit):
+2026-07-02 1200.00 EUR  Reference RE-1001
+2026-07-03 200.00 EUR   Reference partial RE-1002
+2026-07-04 300.00 EUR   Reference RE-8800 Sample Ltd
+2026-07-05 90.00 EUR    Reference office rent
+
+Rule: paid_in_full only when the invoice is fully covered. Partial payment = partial.
+Unmatched = payment with no matching open invoice. open_total = remaining amount of
+all invoices that are not paid in full (a partial payment reduces the remainder).

@@ -1,0 +1,12 @@
+Kunde: Werkstatt Nord. Währung EUR.
+VE: 1 Karton SKU-A = 6 Stück, 1 Karton SKU-B = 12 Stück, 1 Karton SKU-C = 12 Stück.
+qty immer in Stück. Nur Mails von einkauf@nord.invalid sind autorisiert.
+
+Mail 1 einkauf@nord.invalid: 10 Stück SKU-A und 4 Stück SKU-B, variant none.
+Mail 2 einkauf@nord.invalid: SKU-A auf 18 Stück ändern.
+Mail 3 einkauf@nord.invalid: SKU-B streichen, stattdessen 4 Stück SKU-C.
+Mail 4 praktikant@nord.invalid: bitte 100 Stück SKU-D dazu — nicht autorisiert, ignorieren.
+Mail 5 einkauf@nord.invalid: SKU-C komplett stornieren.
+Lager: 6 Stück SKU-A bereits geliefert, nicht erneut bestellen.
+
+Gib die noch offene Restmenge (nicht geliefert, nicht storniert).

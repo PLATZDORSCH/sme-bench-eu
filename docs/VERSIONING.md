@@ -29,13 +29,13 @@ Rename folders only for a larger test-suite redesign.
 | --- | --- |
 | Typo in docs / README only | No suite bump |
 | Prompt, fixture, expected, weights, suite composition, or score-changing scorer behaviour | Bump suite `version` + package release (e.g. **0.10.0** / harness **0.7.6**); use `sme-bench regrade` when inputs are unchanged; `merge-run` for partial new-task execution |
-| Scorer fix that changes grades for the same model output | Same as above; prefer **`regrade`** over in-place `--rescore`; filter leaderboard by `suite_version` |
+| Scorer fix that changes grades for the same model output | Same as above; prefer **`regrade`** over in-place `--rescore`; filter published comparison runs by `suite_version` |
 
-**Same content version = comparable runs.** Do not mix leaderboard rows from different content versions without labelling them. Regraded runs copy inference from a prior run and only re-apply scoring; they carry `regraded_from` in metadata and remain tied to the source inference run.
+**Same content version = comparable runs.** Do not mix comparison rows from different content versions without labelling them. Regraded runs copy inference from a prior run and only re-apply scoring; they carry `regraded_from` in metadata and remain tied to the source inference run.
 
 ## 3. Scoring specification — `scoring_spec_version`
 
-Fingerprint of how scores are computed for a given content line (weights, must-pass gates, matcher semantics, input normalisation). Stored in run metadata as `scoring_spec_version` (current: **0.6.3**).
+Fingerprint of how scores are computed for a given content line (weights, must-pass gates, matcher semantics, input normalisation). Stored in run metadata as `scoring_spec_version` (current: **0.8.1**).
 
 | Change | Action |
 | --- | --- |
@@ -44,13 +44,14 @@ Fingerprint of how scores are computed for a given content line (weights, must-p
 
 A **scorer defect** — a correct answer graded as wrong — is fixed on the scoring-spec line and applied retroactively by regrading, because the answer was already correct under the intended semantics. A **gap in the task specification** — grading against a requirement the prompt never stated — is fixed forward on the content line with a rerun; a model cannot be measured retroactively against a prompt it never saw.
 
-Compatibility manifests under [`suites/compatibility/`](../suites/compatibility/) record which tasks are regrade-safe versus require a fresh inference delta, for example [`regrade-0.10.3-baseline.json`](../suites/compatibility/regrade-0.10.3-baseline.json).
+Compatibility manifests under [`suites/compatibility/`](../suites/compatibility/) record which tasks are regrade-safe versus require a fresh inference delta, for example [`regrade-0.14.2-baseline.json`](../suites/compatibility/regrade-0.14.2-baseline.json).
 
 ### Regrade versus rerun
 
 | Situation | Command |
 | --- | --- |
 | Same model inputs; only scoring/spec changed | `sme-bench regrade SOURCE --output TARGET` |
+| Keep a 3-repeat source as a 2-repeat run | `sme-bench regrade SOURCE --repeats 2 --output TARGET` |
 | A subset of task inputs changed | `sme-bench run … --task-ids …` then `sme-bench merge-run --base … --delta … -o …` |
 | Inspect which tasks need which path | `sme-bench compat-report SOURCE` |
 | Export input fingerprints for manifests | `sme-bench fingerprints --suite …` |

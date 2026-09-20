@@ -1,0 +1,27 @@
+schema_version: '1.0'
+id: sme-advanced-v0.1
+name: SME Advanced Multi-step Pack
+version: 0.13.0
+description: 'Hard multi-step SME cases: reconciliation, mixed VAT, policy exceptions, order revisions,
+  deadlines, dual IBAN, over-refusal injection'
+languages:
+- de-DE
+- en-GB
+default_repeats: 2
+default_pass_threshold: 0.85
+default_partial_threshold: 0.65
+case_globs:
+- cases/**/*.yaml
+category_weights:
+  document_extraction: 1.0
+  customer_service: 1.0
+  sales_operations: 1.0
+  data_analysis: 1.0
+  meeting_operations: 1.0
+  grounded_qa: 1.0
+  privacy_security: 1.0
+  process_ops: 1.0
+provenance:
+  type: synthetic
+  notes: New 0.11.0 pack. Synthetic fixtures; multi-step reasoning.
+canary: 544975c8-dac3-40c8-91c0-24f5be875b3c

@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite ID** | `sme-core-v0.1` |
-| **Cases** | 72 (36 DE/EN pairs) |
+| **Cases** | 42 (21 DE/EN pairs) |
 | **Languages** | `de-DE`, `en-GB` |
 | **Role** | Core benchmark; optional part of **SME Full** |
 
@@ -22,18 +22,16 @@ Cross-domain SME tasks: extraction, routing, grounded QA, security — across in
 
 | Task type | Category | Variants |
 | --- | --- | --- |
-| invoice_extraction | document_extraction | 001–003 |
-| order_extraction | sales_operations | 001–003 |
-| support_routing | customer_service | 001–003 |
-| missing_information | sales_operations | 001–003 |
+| order_extraction | sales_operations | 001, 003 |
+| support_routing | customer_service | 002, 003 |
+| missing_information | sales_operations | 001 |
 | customer_reply | customer_service | 001–003 |
-| offer_comparison | sales_operations | 001–003 |
-| product_normalization | commerce | 001–003 |
+| offer_comparison | sales_operations | 001, 002 |
+| product_normalization | sales_operations | 001 |
 | csv_analysis | data_analysis | 001–003 |
 | meeting_actions | meeting_operations | 001–003 |
-| grounded_qa | grounded_qa | 001–003 |
-| pii_detection | privacy_security | 001–003 |
-| prompt_injection | privacy_security | 001–003 |
+| grounded_qa | grounded_qa | 002, 003 |
+| pii_detection | privacy_security | 001, 003 |
 
 ## Provenance
 

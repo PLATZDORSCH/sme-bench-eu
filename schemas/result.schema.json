@@ -1,25 +1,389 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "SME-Bench Attempt Result",
-  "type": "object",
-  "required": [
-    "task_id",
-    "repeat_index",
-    "passed",
-    "effective_score"
-  ],
+  "$defs": {
+    "ScoreResult": {
+      "properties": {
+        "scorer": {
+          "title": "Scorer",
+          "type": "string"
+        },
+        "score": {
+          "title": "Score",
+          "type": "number"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "critical_failure": {
+          "default": false,
+          "title": "Critical Failure",
+          "type": "boolean"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message"
+        },
+        "details": {
+          "additionalProperties": true,
+          "title": "Details",
+          "type": "object"
+        }
+      },
+      "required": [
+        "scorer",
+        "score",
+        "passed"
+      ],
+      "title": "ScoreResult",
+      "type": "object"
+    },
+    "ToolCall": {
+      "description": "A parsed or authored function/tool call.",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Id"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "arguments": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Arguments"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ToolCall",
+      "type": "object"
+    }
+  },
   "properties": {
     "task_id": {
+      "title": "Task Id",
+      "type": "string"
+    },
+    "pair_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pair Id"
+    },
+    "language": {
+      "title": "Language",
+      "type": "string"
+    },
+    "category": {
+      "title": "Category",
+      "type": "string"
+    },
+    "task_type": {
+      "title": "Task Type",
+      "type": "string"
+    },
+    "difficulty": {
+      "title": "Difficulty",
+      "type": "string"
+    },
+    "risk": {
+      "title": "Risk",
       "type": "string"
     },
     "repeat_index": {
+      "title": "Repeat Index",
       "type": "integer"
     },
-    "passed": {
-      "type": "boolean"
+    "output_text": {
+      "default": "",
+      "title": "Output Text",
+      "type": "string"
+    },
+    "parsed_output": {
+      "anyOf": [
+        {},
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parsed Output"
+    },
+    "score_results": {
+      "items": {
+        "$ref": "#/$defs/ScoreResult"
+      },
+      "title": "Score Results",
+      "type": "array"
+    },
+    "weighted_score": {
+      "default": 0.0,
+      "title": "Weighted Score",
+      "type": "number"
     },
     "effective_score": {
+      "default": 0.0,
+      "title": "Effective Score",
       "type": "number"
+    },
+    "passed": {
+      "default": false,
+      "title": "Passed",
+      "type": "boolean"
+    },
+    "partial": {
+      "default": false,
+      "title": "Partial",
+      "type": "boolean"
+    },
+    "critical_failure": {
+      "default": false,
+      "title": "Critical Failure",
+      "type": "boolean"
+    },
+    "format_only_failure": {
+      "default": false,
+      "title": "Format Only Failure",
+      "type": "boolean"
+    },
+    "ttfr": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ttfr"
+    },
+    "ttft": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ttft"
+    },
+    "ttfa": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ttfa"
+    },
+    "total_latency": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Total Latency"
+    },
+    "generation_tps": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Generation Tps"
+    },
+    "tps_unreliable": {
+      "default": false,
+      "title": "Tps Unreliable",
+      "type": "boolean"
+    },
+    "tokens_estimated": {
+      "default": false,
+      "title": "Tokens Estimated",
+      "type": "boolean"
+    },
+    "prompt_tokens": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Prompt Tokens"
+    },
+    "completion_tokens": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Completion Tokens"
+    },
+    "cost": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cost"
+    },
+    "infrastructure_error": {
+      "default": false,
+      "title": "Infrastructure Error",
+      "type": "boolean"
+    },
+    "error_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error Type"
+    },
+    "error_message": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error Message"
+    },
+    "finish_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Finish Reason"
+    },
+    "retry_count": {
+      "default": 0,
+      "title": "Retry Count",
+      "type": "integer"
+    },
+    "started_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Started At"
+    },
+    "completed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Completed At"
+    },
+    "reasoning_text": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reasoning Text"
+    },
+    "tool_calls": {
+      "items": {
+        "$ref": "#/$defs/ToolCall"
+      },
+      "title": "Tool Calls",
+      "type": "array"
     }
-  }
+  },
+  "required": [
+    "task_id",
+    "language",
+    "category",
+    "task_type",
+    "difficulty",
+    "risk",
+    "repeat_index"
+  ],
+  "title": "AttemptResult",
+  "type": "object"
 }

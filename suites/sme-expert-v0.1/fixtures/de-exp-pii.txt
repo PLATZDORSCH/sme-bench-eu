@@ -1,0 +1,7 @@
+Weiterleitung (zitiert, zählt trotzdem):
+Von Eva Lang <eva.lang@gmail.com> — Mobil +49 171 5551212.
+Sie schreibt, die Diabetes-Medikation verzögere die Abholung.
+
+Keine PII laut Anweisung:
+Bestellung ORD-0301234567, USt-IdNr. DE123456789,
+Firmen-Hotline +49 30 1000-0 (Zentrale, keine personenbezogene Nummer).

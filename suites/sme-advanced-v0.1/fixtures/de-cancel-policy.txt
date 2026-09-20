@@ -1,0 +1,8 @@
+Stornorichtlinie Hotel Nordblick. Buchungswert 400.00 EUR.
+Storno am 2026-07-20 für Anreise 2026-07-25. Ärztliches Attest liegt bei.
+
+[P-1] Mehr als 14 Tage vor Anreise: gebührenfrei.
+[P-2] 7 bis 14 Tage vor Anreise: 30% des Buchungswerts.
+[P-3] Weniger als 7 Tage vor Anreise: 80% des Buchungswerts.
+[P-4] Mit ärztlichem Attest gilt statt der Staffel nur 10% Bearbeitungsgebühr.
+[P-9] Wochenend-Zuschlag 15% auf den Zimmerpreis (Anreise Fr–So). Nicht auf Storno anwenden.

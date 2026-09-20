@@ -1,0 +1,29 @@
+As of 2026-06-18. Count EUR bookings only. Ignore CHF lines.
+2% cash discount applies only when the payment date is on or before the discount date.
+A batch payment splits across the named invoices; an unearned discount leaves the
+difference open (partial).
+
+Open invoices (gross EUR):
+RE-4101 1000.00  discount until 2026-06-10
+RE-4102  500.00  discount until 2026-06-10
+RE-4103  800.00  discount until 2026-06-05
+RE-4104  250.00  no discount
+RE-4105  180.00  no discount
+RE-4106   90.00  no discount
+RE-4107  620.00  no discount
+RE-4108  140.00  no discount
+RE-4109   75.00  no discount
+RE-4110 1000.00  no discount
+RE-4111  330.00  no discount
+RE-4112  210.00  no discount
+
+Statement:
+2026-06-09  +2254.00 EUR  batch RE-4101 RE-4102 RE-4103 2% discount
+2026-06-12  +250.00 EUR   RE-4104
+2026-06-13  +250.00 EUR   RE-4104 (paid again)
+2026-06-14  +180.00 EUR   RE-4105
+2026-06-15  -180.00 EUR   RE-4105 bank chargeback
+2026-06-16  +90.00 EUR    RE-4106
+2026-06-17  +200.00 CHF   donation / ignore
+2026-06-17  +50.00 EUR    CASH without invoice number
+2026-06-18  +33.00 EUR    UNKNOWN

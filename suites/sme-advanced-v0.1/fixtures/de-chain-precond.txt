@@ -1,0 +1,18 @@
+Prozess: intake → credit_check → pick → pack → ship → invoice
+
+Vorbedingungen:
+- pick braucht stock_reserved
+- pack braucht pick_complete
+- ship braucht pack_complete UND address_confirmed
+- invoice braucht shipped
+
+Aktueller Zustand:
+stock_reserved=true
+pick_complete=true
+pack_complete=false
+address_confirmed=false
+shipped=false
+
+Wähle next_step aus: complete_pack, confirm_address, release_shipment, issue_invoice.
+ready=true nur wenn versendet werden kann.
+missing = alle noch unerfüllten Tokens, die ship blockieren (engl. snake_case).

@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from sme_bench.utils import normalize_base_url
 
-SCORING_SPEC_VERSION = "0.6.3"
+SCORING_SPEC_VERSION = "0.8.1"
 
 
 class PricingConfig(BaseModel):
@@ -30,7 +30,7 @@ class RunConfig(BaseModel):
     difficulty: list[str] | None = None
     tags: list[str] | None = None
     task_ids: list[str] | None = None
-    repeats: int = 3
+    repeats: int = 2
     concurrency: int = 1
     seed: int = 42
     timeout: float = 300.0
@@ -46,6 +46,9 @@ class RunConfig(BaseModel):
     emit_progress: str | None = None
     warmup: bool = True
     dashboard: bool | None = None
+    engine: str | None = None
+    hardware: str | None = None
+    quantization: str | None = None
 
     @field_validator("base_url")
     @classmethod

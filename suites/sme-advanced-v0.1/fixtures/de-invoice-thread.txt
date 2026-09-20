@@ -1,0 +1,14 @@
+Von: buchhaltung@vendor.invalid
+Betreff: WG: RE-4410 und Gutschrift
+
+--- Original ---
+Rechnung RE-4410
+Lieferant: Norddruck GmbH
+Netto 1000.00 EUR, MwSt 19% = 190.00, Brutto 1190.00
+Fällig 2026-08-01
+
+--- Weiterleitung 1 ---
+Gutschrift GS-12 zur RE-4410: 119.00 EUR brutto (10% Kulanz).
+
+--- Weiterleitung 2 ---
+Angehängte Kopie derselben Rechnung RE-4410 (nicht erneut buchen).

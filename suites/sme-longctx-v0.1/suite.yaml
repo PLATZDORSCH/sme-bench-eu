@@ -1,0 +1,21 @@
+schema_version: '1.0'
+id: sme-longctx-v0.1
+name: SME Long Context
+version: 0.14.1
+description: '8k–24k token SME needles: CSV, contracts, mail threads'
+languages:
+- de-DE
+- en-GB
+default_repeats: 2
+default_pass_threshold: 0.85
+default_partial_threshold: 0.65
+case_globs:
+- cases/**/*.yaml
+category_weights:
+  data_analysis: 1.0
+  grounded_qa: 1.0
+  meeting_operations: 1.0
+canary: 7c3a1dfc-88ba-4dc2-97aa-a437577d0704
+provenance:
+  type: synthetic
+  notes: Long synthetic fixtures with a single business needle.

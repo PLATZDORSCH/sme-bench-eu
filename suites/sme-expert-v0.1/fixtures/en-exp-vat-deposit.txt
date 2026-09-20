@@ -1,0 +1,9 @@
+Invoice RE-VD-01. 10% discount allocated by net per VAT rate.
+Subtract deposit already paid 500.00 EUR. Round each rate to 2 decimals.
+
+Lines (net before discount):
+- Books / print   net 200.00  VAT 7%
+- Widget goods    net 1000.00 VAT 19%
+- Consulting      net 400.00  VAT 0% reverse charge
+
+Return net_7, vat_7, net_19, vat_19, net_0, vat_0 and amount_due after discount and deposit.

@@ -1,6 +1,6 @@
 [project]
 name = "sme-bench"
-version = "0.7.11"
+version = "0.11.2"
 description = "Benchmark for language models on realistic SME business tasks (DE/EN)"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -47,6 +47,9 @@ Issues = "https://github.com/PLATZDORSCH/sme-bench-eu/issues"
 Changelog = "https://github.com/PLATZDORSCH/sme-bench-eu/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
+estimate = [
+    "tiktoken>=0.7.0",
+]
 dev = [
     "mypy>=1.8.0",
     "pytest>=8.0.0",

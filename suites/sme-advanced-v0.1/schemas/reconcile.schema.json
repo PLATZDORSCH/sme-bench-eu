@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "required": [
+    "paid_in_full",
+    "partial",
+    "unpaid",
+    "unmatched_count",
+    "open_total"
+  ],
+  "properties": {
+    "paid_in_full": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "partial": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "unpaid": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "unmatched_count": {
+      "type": "integer"
+    },
+    "open_total": {
+      "type": "number"
+    }
+  }
+}

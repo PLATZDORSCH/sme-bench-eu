@@ -1,0 +1,20 @@
+schema_version: '1.0'
+id: sme-tools-v0.1
+name: SME Tools
+version: 0.14.1
+description: 'Tool-use pack: ERP, booking, CRM, tickets, refunds, negatives, hallucinations, crowded-namespace
+  variants'
+languages:
+- de-DE
+- en-GB
+default_repeats: 2
+default_pass_threshold: 0.85
+default_partial_threshold: 0.65
+case_globs:
+- cases/**/*.yaml
+category_weights:
+  tool_use: 1.0
+canary: c2c1d42b-4e66-4e82-8f8c-eaa09ebc91bd
+provenance:
+  type: synthetic
+  notes: Simulated tool results; no live APIs.

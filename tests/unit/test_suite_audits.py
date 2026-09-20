@@ -32,13 +32,13 @@ def test_full_benchmark_baseline_count_and_audits() -> None:
     errors = [i for i in loaded.issues if i.severity == "error"]
     assert not errors, "\n".join(f"{e.path}: {e.message}" for e in errors[:20])
     assert len(loaded.member_suites) == len(FULL_SUITE_IDS)
-    assert len(loaded.tasks) == 196
-    assert len({t.id for t in loaded.tasks}) == 196
-    assert loaded.manifest.version == "0.10.3"
+    assert len(loaded.tasks) == 284
+    assert len({t.id for t in loaded.tasks}) == 284
+    assert loaded.manifest.version == "0.14.2"
     candidates = [
         task for task in loaded.tasks if {"noise-variant", "edge-variant"}.intersection(task.tags)
     ]
-    assert len(candidates) == 40
+    assert len(candidates) == 32
     assert all(task.review_status == "approved" for task in candidates)
     assert all(
         {"pair-reviewed", "golden-reviewed", "reference-calibrated"} <= set(task.tags)
@@ -57,6 +57,12 @@ def test_full_benchmark_baseline_count_and_audits() -> None:
     assert "0.7.0" in releases["released"]
     assert "0.8.0" in releases["released"]
     assert "0.10.3" in releases["released"]
+    assert "0.11.0" in releases["released"]
+    assert "0.12.0" in releases["released"]
+    assert "0.13.0" in releases["released"]
+    assert "0.14.0" in releases["released"]
+    assert "0.14.1" in releases["released"]
+    assert "0.14.2" in releases["released"]
     assert "0.4.1" not in releases["draft"]
 
     calibration = json.loads(
@@ -68,7 +74,9 @@ def test_full_benchmark_baseline_count_and_audits() -> None:
     # 0.9.0 rewrote every prompt to state the language requirement, so its input
     # fingerprints have moved on and are no longer expected to match. What must
     # still hold is that the calibrated *candidate set* is the set we ship.
-    assert set(calibration["candidate_input_fingerprints"]) == {task.id for task in candidates}
+    # Content 0.11.0 dropped two saturated meeting pairs from the 0.4.0 set.
+    assert set(calibration["candidate_input_fingerprints"]) >= {task.id for task in candidates}
+    assert {task.id for task in candidates} <= set(calibration["candidate_input_fingerprints"])
     assert len(calibration["models"]) == 2
     assert all(model["attempts"] == 40 for model in calibration["models"])
     assert all(model["passed"] >= 36 for model in calibration["models"])
@@ -83,8 +91,18 @@ def test_positive_weights_sum_to_one() -> None:
 
 
 LANGUAGE_INSTRUCTIONS = {
-    "de-DE": ("Formuliere alle Textwerte auf Deutsch", "Antworte auf Deutsch."),
-    "en-GB": ("Write all text values in English", "Respond in English."),
+    # Content 0.14.1: structured cases keep keys/enums English and ask for the
+    # case language on free-text values only (shared rule block).
+    "de-DE": (
+        "Formuliere alle Textwerte auf Deutsch",
+        "Antworte auf Deutsch.",
+        "freie Textwerte auf Deutsch",
+    ),
+    "en-GB": (
+        "Write all text values in English",
+        "Respond in English.",
+        "free-text values in English",
+    ),
 }
 
 
@@ -147,17 +165,14 @@ def test_pii_prompts_do_not_contain_answer_like_label_sets() -> None:
     tasks = {
         task.id: task
         for task in loaded.tasks
-        if task.pair_id in {"pii-detection-001", "pii-detection-002", "pii-detection-003"}
+        if task.pair_id in {"pii-detection-001", "pii-detection-003"}
     }
-    assert len(tasks) == 6
+    assert len(tasks) == 4
     for task in tasks.values():
         system = next(message.content for message in task.messages if message.role == "system")
         assert system is not None
         assert '"pii_types":["name","email"]' not in system
         assert '"pii_types":[...]' in system
-        if task.pair_id == "pii-detection-002":
-            assert "--" in system
-            assert "ignor" in system.casefold()
 
 
 def test_migrate_script_idempotent(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -265,4 +280,4 @@ def test_core_suite_loads_clean() -> None:
     )
     errors = [i for i in loaded.issues if i.severity == "error"]
     assert not errors, "\n".join(f"{e.path}: {e.message}" for e in errors[:20])
-    assert len(loaded.tasks) == 72
+    assert len(loaded.tasks) == 42

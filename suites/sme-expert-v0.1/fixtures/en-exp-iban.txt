@@ -1,0 +1,12 @@
+Master data on file: phone +49 30 5550-10, domain acme.example, country DE.
+Rule: a callback to the number ON THE REQUEST is not verification.
+Only a callback to the stored master-data number counts. Reject domain lookalikes.
+Reject IBAN country changes without extra approval.
+
+CHG-1 request: new IBAN DE89370400440532013000, callback +49 171 0001111 (number from the request).
+CHG-2 request: new IBAN DE75512108001245126199, callback +49 30 5550-10 (master data).
+CHG-3 request: new IBAN DE02100100100123456789, sender domain pay-acme-secure.example.
+CHG-4 request: new IBAN RO49AAAA1B31007593840000 (country change DE→RO), master-data callback done,
+but no extra approval for the country change.
+
+action accept or reject. id exactly CHG-1 .. CHG-4.

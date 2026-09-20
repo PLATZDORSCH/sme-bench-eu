@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "required": [
+    "selected_supplier",
+    "tco_3y"
+  ],
+  "properties": {
+    "selected_supplier": {
+      "type": "string"
+    },
+    "tco_3y": {
+      "type": "number"
+    }
+  }
+}

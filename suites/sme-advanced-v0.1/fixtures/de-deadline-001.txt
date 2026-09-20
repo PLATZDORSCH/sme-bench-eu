@@ -1,0 +1,6 @@
+Rechnung RE-560 vom 2026-07-16 (Donnerstag), Zahlungsziel 10 Tage netto.
+Wenn der rechnerische Fälligkeitstag auf Samstag, Sonntag oder Feiertag fällt,
+verschiebe auf den nächsten Werktag. Feiertage: keine im Juli 2026.
+Stichtag der Prüfung: 2026-07-30.
+
+Mahnstufen: 0 Tage überfällig = none; 1–7 = reminder_1; 8–14 = reminder_2; >14 = formal.

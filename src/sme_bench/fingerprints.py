@@ -8,6 +8,7 @@ from typing import Any
 
 from sme_bench.config import SCORING_SPEC_VERSION
 from sme_bench.models import BenchmarkTask
+from sme_bench.tool_env import tool_env_fingerprint_payload
 
 
 def _stable_json(value: Any) -> str:
@@ -23,6 +24,13 @@ def task_input_fingerprint(task: BenchmarkTask) -> str:
         ],
         "generation": task.generation.model_dump(),
     }
+    if task.tools:
+        payload["tools"] = [spec.model_dump(by_alias=True) for spec in task.tools]
+    if task.tool_choice != "auto":
+        payload["tool_choice"] = task.tool_choice
+    env_payload = tool_env_fingerprint_payload(task.tool_env)
+    if env_payload is not None:
+        payload["tool_env"] = env_payload
     return hashlib.sha256(_stable_json(payload).encode("utf-8")).hexdigest()
 
 

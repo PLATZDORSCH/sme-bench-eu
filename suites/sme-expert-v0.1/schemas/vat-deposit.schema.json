@@ -1,0 +1,35 @@
+{
+  "type": "object",
+  "required": [
+    "net_7",
+    "vat_7",
+    "net_19",
+    "vat_19",
+    "net_0",
+    "vat_0",
+    "amount_due"
+  ],
+  "properties": {
+    "net_7": {
+      "type": "number"
+    },
+    "vat_7": {
+      "type": "number"
+    },
+    "net_19": {
+      "type": "number"
+    },
+    "vat_19": {
+      "type": "number"
+    },
+    "net_0": {
+      "type": "number"
+    },
+    "vat_0": {
+      "type": "number"
+    },
+    "amount_due": {
+      "type": "number"
+    }
+  }
+}

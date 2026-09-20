@@ -1,0 +1,18 @@
+Precedence: [R-1] A countersigned addendum beats the GTC.
+[R-2] Email promises without countersignature do not outrank GTC or addendum.
+[R-3] Distractor: courtesy decisions by accounting are not binding.
+
+GTC (2025):
+[A-1] Cancel less than 14 days before start: 30% of the order total.
+[A-2] Cancel 14 days or more: 10%.
+
+Addendum S-88, countersigned 2026-05-01, applies only to project P-9:
+[S-1] Project P-9 order total 8000 EUR, start 2026-07-01.
+[S-2] Cancel less than 14 days before start: 15% instead of 30%.
+[S-3] The 15% rule fully replaces A-1 for P-9.
+
+Email 2026-06-01 from sales (not countersigned):
+[E-1] “Fee waived if P-9 is cancelled by 20 June.”
+
+Today: 2026-06-18. Event: customer cancels project P-9.
+Question: cancellation fee in EUR? Cite the three supporting section IDs.

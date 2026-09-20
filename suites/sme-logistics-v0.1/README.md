@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite ID** | `sme-logistics-v0.1` |
-| **Cases** | 20 (10 DE/EN pairs) |
+| **Cases** | 18 (9 DE/EN pairs) |
 | **Languages** | `de-DE`, `en-GB` |
 | **Role** | Logistics/warehouse test suite; part of **SME Full** |
 
@@ -14,7 +14,6 @@ Freight invoices, order picking, shipping SLAs, delay tickets, and dispatch read
 
 | Pair ID | Task type |
 | --- | --- |
-| lo-invoice-001 | invoice_extraction |
 | lo-order-001 | order_extraction |
 | lo-order-002 | order_extraction |
 | lo-missing-001 | missing_information |

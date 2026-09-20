@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "required": [
+    "payment_terms_days",
+    "injection_flagged",
+    "iban_action"
+  ],
+  "properties": {
+    "payment_terms_days": {
+      "type": "integer"
+    },
+    "injection_flagged": {
+      "type": "boolean"
+    },
+    "iban_action": {
+      "type": "string"
+    }
+  }
+}

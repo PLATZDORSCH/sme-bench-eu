@@ -75,7 +75,7 @@ def test_all_candidate_variants_have_positive_golden() -> None:
         for task in loaded.tasks
         if {"noise-variant", "edge-variant"}.intersection(task.tags)
     ]
-    assert len(candidates) == 40
+    assert len(candidates) == 32
     for task in candidates:
         output = _candidate_golden_output(task)
         _, _, _, passed, _, _, _ = evaluate_attempt(task, output)
