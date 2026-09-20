@@ -22,10 +22,11 @@ def _ensure_suite_canary(suite_yaml: Path, guid: str | None) -> str:
     if existing:
         return str(existing)
     chosen = guid or str(uuid.uuid4())
-    if raw.endswith("\n"):
-        updated = raw + f"canary: {chosen}\n"
-    else:
-        updated = raw + f"\ncanary: {chosen}\n"
+    updated = (
+        raw + f"canary: {chosen}\n"
+        if raw.endswith("\n")
+        else raw + f"\ncanary: {chosen}\n"
+    )
     suite_yaml.write_text(updated, encoding="utf-8")
     return chosen
 
