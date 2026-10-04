@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite ID** | `sme-hospitality-v0.1` |
-| **Cases** | 16 (8 DE/EN pairs) |
+| **Cases** | 10 (5 DE/EN pairs) |
 | **Languages** | `de-DE`, `en-GB` |
 | **Role** | Food service/hotel test suite; part of **SME Full** |
 

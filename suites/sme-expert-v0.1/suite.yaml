@@ -1,10 +1,9 @@
 schema_version: '1.0'
 id: sme-expert-v0.1
 name: SME Expert Multi-step Pack
-version: 0.13.0
-description: 'Very hard multi-step SME cases: skonto reconciliation, mixed VAT + deposit, cash-flow
-  weeks, policy chains, order threads, dunning, PII forwards, agent injection, IBAN fraud, 3-year
-  TCO'
+version: 0.16.1
+description: 'Very hard multi-step SME cases: skonto reconciliation, mixed VAT + deposit, cash-flow weeks,
+  policy chains, order threads, dunning, PII forwards, agent injection, IBAN fraud, 3-year TCO'
 languages:
 - de-DE
 - en-GB

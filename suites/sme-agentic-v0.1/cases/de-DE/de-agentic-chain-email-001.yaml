@@ -89,8 +89,9 @@ title: Kontakt dann Mail
 language: de-DE
 messages:
 - role: system
-  content: Antworte auf Deutsch. Löse den Kontakt auf und sende dann die Mail. JSON-Schlüssel bleiben
-    englisch.
+  content: Antworte auf Deutsch. Löse den Kontakt auf und sende dann die Mail mit den angegebenen Inhalten;
+    frage nicht nach. JSON-Schlüssel bleiben englisch.
 - role: user
-  content: Schick Priya die Q3-Zusammenfassung per Mail.
+  content: 'Schick Priya die Q3-Zusammenfassung per Mail. Betreff: Q3-Zusammenfassung. Inhalt: Umsatz
+    184000 EUR, Marge stabil, Ausblick positiv.'
 oracle_output: Die Q3-Zusammenfassung wurde an priya@example.com gesendet.

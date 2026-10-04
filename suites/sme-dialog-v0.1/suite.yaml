@@ -1,7 +1,7 @@
 schema_version: '1.0'
 id: sme-dialog-v0.1
 name: SME Dialog
-version: 0.14.2
+version: 0.15.1
 description: Multi-turn customer threads with revisions, clarification, escalation
 languages:
 - de-DE

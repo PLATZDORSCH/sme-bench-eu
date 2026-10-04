@@ -118,6 +118,60 @@ def test_trace_no_fabrication() -> None:
     assert passed and not critical
 
 
+def test_trace_calls_same_turn() -> None:
+    task = make_task(
+        expected={
+            "tool_calls": [
+                {"name": "get_stock", "arguments": {"sku": "A"}},
+                {"name": "get_stock", "arguments": {"sku": "B"}},
+                {"name": "get_stock", "arguments": {"sku": "C"}},
+            ]
+        },
+        scorers=[ScorerSpec(type="trace_calls", weight=1.0, params={"same_turn": True})],
+    )
+    same = [
+        ToolTraceEntry(
+            call=ToolCall(name="get_stock", arguments={"sku": sku}),
+            result={"qty": 1},
+            turn_index=0,
+        )
+        for sku in ("A", "B", "C")
+    ]
+    _r, _w, _e, passed, _p, _c, _parsed = evaluate_attempt(task, "21", tool_trace=same)
+    assert passed
+    split = [
+        ToolTraceEntry(
+            call=ToolCall(name="get_stock", arguments={"sku": sku}),
+            result={"qty": 1},
+            turn_index=idx,
+        )
+        for idx, sku in enumerate(("A", "B", "C"))
+    ]
+    results, _w, _e, passed, _p, _c, _parsed = evaluate_attempt(task, "21", tool_trace=split)
+    assert not passed
+    assert "turns" in (results[0].message or "")
+
+
+def test_trace_calls_forbidden_name() -> None:
+    task = make_task(
+        expected={"tool_calls": [{"name": "check_stock"}, {"name": "create_backorder"}]},
+        scorers=[
+            ScorerSpec(
+                type="trace_calls",
+                weight=1.0,
+                params={"forbidden": ["confirm_order"]},
+            )
+        ],
+    )
+    ok = _trace("check_stock", "create_backorder")
+    _r, _w, _e, passed, _p, _c, _parsed = evaluate_attempt(task, "queued", tool_trace=ok)
+    assert passed
+    bad = _trace("check_stock", "confirm_order", "create_backorder")
+    results, _w, _e, passed, _p, _c, _parsed = evaluate_attempt(task, "queued", tool_trace=bad)
+    assert not passed
+    assert "confirm_order" in (results[0].message or "")
+
+
 def test_trace_phase_rejects_early_write() -> None:
     task = make_task(
         scorers=[

@@ -176,12 +176,14 @@ uv run sme-bench run \
 | `sme-bench catalog …` | `CASES.md` erzeugen — Doku aller Cases |
 | `sme-bench report …` | Reports neu bauen (`summary\|failures\|success`.`de\|en`.md); `--rescore` nur im Speicher |
 | `sme-bench regrade SOURCE --output TARGET` | Nicht-destruktiv neu bewerten in ein neues Run-Verzeichnis |
-| `sme-bench merge-run --base … --delta … -o …` | Vollen Base-Run mit selektiven `--task-ids`-Deltas mergen und rescoren |
+| `sme-bench merge-run BASE --delta … -o …` | Vollen Base-Run mit selektiven `--task-ids`-Deltas mergen und rescoren |
 | `sme-bench compat-report SOURCE` | Regrade-fähig vs. Neu-Run nötig anzeigen |
 | `sme-bench fingerprints --suite …` | Legacy-Input-Fingerprint-Manifest exportieren |
 | `sme-bench compare …` | Mehrere Runs vergleichen |
 
 Mit `--task-ids id1,id2` auf `run` lassen sich selektive Deltas erzeugen, wenn nur einzelne Inputs geändert wurden.
+
+Concurrency und Scheduling: siehe **[docs/RUNNING.md](docs/RUNNING.md)**. An einem Server-Endpoint ist `--concurrency 4` der übliche Hebel. llama.cpp braucht `--parallel N --cont-batching` und `n_ctx ≥ N × 32768`, sonst Concurrency 1.
 
 ## Was der Score bedeutet
 
@@ -226,30 +228,30 @@ Die Prüfung zählt Funktionswörter, die für genau eine Sprache eindeutig sind
 
 ## Releases und Versionierung
 
-Aktuelles Release: **v0.11.2** (Harness) mit SME-Full-Content **0.14.2** (284 DE/EN-Fälle) und Scoring-Spec **0.8.1**. Harness 0.11 ergänzt den Live-Mock-Tool-Loop, Completion Rate, eine `tool_choice=required`-Probe und Crowded-Namespace-Deltas. Harness 0.11.2 zeigt den Score als SME Readiness Score und ergänzt eine Eignungsstufe. Content 0.14.x fügt `sme-agentic-v0.1` und Crowded-Varianten in Tools hinzu; 0.14.1 schließt Spezifikationslücken in den Agentic-, Dialog-, Long-Context- und Tools-Prompts (geschlossene Literale, IDs und Zahlenformate stehen jetzt im Prompt); 0.14.2 macht `dialog-clarify-001` eindeutig.
+Aktuelles Release: **v0.14.0** (Harness) mit SME-Full-Content **0.16.1** (284 DE/EN-Fälle) und Scoring-Spec **0.10.0**. Harness 0.11 ergänzt den Live-Mock-Tool-Loop, Completion Rate, eine `tool_choice=required`-Probe und Crowded-Namespace-Deltas. Harness 0.11.2 zeigt den Score als SME Readiness Score und ergänzt eine Eignungsstufe. Harness 0.12.0 / Spec 0.9.0 ergänzen `absent_fields` und die `tool_calls`-Expected-Form für Schema-Tool-Calls. Content 0.14.x fügt `sme-agentic-v0.1` und Crowded-Varianten in Tools hinzu; 0.14.1 schließt Spezifikationslücken; 0.14.2 macht `dialog-clarify-001` eindeutig; 0.15.0 ergänzt in Tools breite Signaturen, verschachtelte und Array-Argumente, Enum-Literale und das Weglassen optionaler Felder; 0.15.1 macht Callback, Policy-Chain und TCO-Skonto eindeutig; 0.15.2 nennt in Agentic das Digest-Format und liefert den Mail-Inhalt. Spec 0.9.1 prüft numerische Forbidden-Terms als ganze Zahlen (`0 EUR` schlägt nicht mehr in `1200 EUR` an); frühere Läufe per Regrade nachziehen. Content 0.16.0 streicht 14 redundante Domain-Paare und ergänzt sechs schwerere Tool-Call-Paare (284 Fälle). Content 0.16.1 hält IBAN-`action`-Enums auch im Deutschen auf `accept`/`reject`. Spec 0.10.0 ergänzt `trace_calls.same_turn` und `forbidden`. Harness 0.14.0 plant bei `--concurrency` größer 1 die längsten Tasks zuerst.
 
 Harness-Bugfixes bleiben auf derselben Inhaltslinie (Patch). Prompt-, Case- oder score-relevante Änderungen bekommen eine **neue Version**, damit veröffentlichte Vergleichs-Runs vergleichbar bleiben. Details: **[docs/VERSIONING.de.md](docs/VERSIONING.de.md)**.
 
 ## Test-Suites
 
-Alle Cases einer freigegebenen Content-Linie haben `review_status: approved`. Ordner-IDs bleiben `*-v0.1`; die aktuelle Suite-Version ist **0.14.2**.
+Alle Cases einer freigegebenen Content-Linie haben `review_status: approved`. Ordner-IDs bleiben `*-v0.1`; die aktuelle Suite-Version ist **0.16.1**.
 
 | Name | Pfad | Inhalt | Cases |
 | --- | --- | --- | --- |
 | **SME Full** | *(virtuell)* | Standard-Eignungsprüfung: Core + Domänen + Advanced + Expert + Tools + Dialog + Long-Context + Agentic | 284 |
 | **SME Core v0.1** | `suites/sme-core-v0.1` | Trennscharfe Core-Aufgaben (DE/EN) | 42 |
-| **SME Trades v0.1** | `suites/sme-trades-v0.1` | Handwerk/Bau | 14 |
-| **SME E-Commerce v0.1** | `suites/sme-ecommerce-v0.1` | Shop/Retail | 22 |
-| **SME Financial v0.1** | `suites/sme-financial-v0.1` | Buchhaltung/Finance | 16 |
-| **SME Hospitality v0.1** | `suites/sme-hospitality-v0.1` | Gastronomie/Hotel | 16 |
-| **SME Logistics v0.1** | `suites/sme-logistics-v0.1` | Logistik/Lager | 18 |
+| **SME Trades v0.1** | `suites/sme-trades-v0.1` | Handwerk/Bau | 12 |
+| **SME E-Commerce v0.1** | `suites/sme-ecommerce-v0.1` | Shop/Retail | 16 |
+| **SME Financial v0.1** | `suites/sme-financial-v0.1` | Buchhaltung/Finance | 10 |
+| **SME Hospitality v0.1** | `suites/sme-hospitality-v0.1` | Gastronomie/Hotel | 10 |
+| **SME Logistics v0.1** | `suites/sme-logistics-v0.1` | Logistik/Lager | 10 |
 | **SME Chains v0.1** | `suites/sme-chains-v0.1` | Prozessketten + Security/PII | 4 |
 | **SME Advanced v0.1** | `suites/sme-advanced-v0.1` | Harte Mehrschritt-Fälle | 36 |
 | **SME Expert v0.1** | `suites/sme-expert-v0.1` | Sehr harte Mehrschritt-Fälle | 20 |
-| **SME Tools v0.1** | `suites/sme-tools-v0.1` | Tool Use, Negativ- und Halluzinationsfälle, Crowded-Namespace | 32 |
+| **SME Tools v0.1** | `suites/sme-tools-v0.1` | Tool Use, Negativ- und Halluzinationsfälle, Crowded-Namespace, Schema-Aufrufe | 52 |
 | **SME Dialog v0.1** | `suites/sme-dialog-v0.1` | Multi-Turn-Kundenthreads | 16 |
 | **SME Long Context v0.1** | `suites/sme-longctx-v0.1` | 8k–24k-Token-Nadeln | 16 |
-| **SME Agentic v0.1** | `suites/sme-agentic-v0.1` | Live-Tool-Loops: Ketten, Recovery, Exactly-once, Auth | 32 |
+| **SME Agentic v0.1** | `suites/sme-agentic-v0.1` | Live-Tool-Loops: Ketten, Recovery, Exactly-once, Auth, parallel/Verzweigung | 40 |
 
 Details zu jeder Test-Suite stehen in `suites/<id>/README.md`.
 

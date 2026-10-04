@@ -90,12 +90,12 @@ def test_rescore_clears_reasoning_duplicated_as_output() -> None:
     assert not rescored.passed
 
 
-def test_012_content_identity_under_scoring_spec_081() -> None:
-    """Existing 0.12.0/0.13.x cases keep pass/critical under scoring-spec 0.8.1."""
+def test_012_content_identity_under_scoring_spec_090() -> None:
+    """Existing 0.12.0/0.13.x cases keep pass/critical under scoring-spec 0.10.0."""
     from sme_bench.config import SCORING_SPEC_VERSION
     from sme_bench.scoring import evaluate_attempt
 
-    assert SCORING_SPEC_VERSION == "0.8.1"
+    assert SCORING_SPEC_VERSION == "0.10.0"
     loaded = load_suite(
         Path("suites/sme-core-v0.1"),
         known_scorers=known_scorer_names(),
@@ -198,7 +198,7 @@ def test_regrade_blocks_input_change(tmp_path: Path) -> None:
 
 
 def test_compat_manifest_matches_current_draft_and_is_deterministic(tmp_path: Path) -> None:
-    manifest = Path("suites/compatibility/regrade-0.14.2-baseline.json")
+    manifest = Path("suites/compatibility/regrade-0.16.1-baseline.json")
     data = json.loads(manifest.read_text(encoding="utf-8"))
     loaded = load_full_benchmark(known_scorers=known_scorer_names())
     assert data["suite_version"] == loaded.manifest.version
@@ -449,6 +449,94 @@ def test_merge_partial_runs_rescores_and_prefers_delta(tmp_path: Path) -> None:
     assert (out / "merge-manifest.json").exists()
     manifest = json.loads((out / "merge-manifest.json").read_text(encoding="utf-8"))
     assert manifest["rescored"] is True
+
+
+def test_merge_partial_runs_endpoint_mismatch_needs_flag_and_same_served_name(
+    tmp_path: Path,
+) -> None:
+    from sme_bench.regrade import merge_partial_runs
+
+    loaded = load_full_benchmark(known_scorers=known_scorer_names(), resolve_fixtures=True)
+    tasks = list(loaded.tasks)
+    changed = tasks[0]
+    fps = {task.id: {"input": task_input_fingerprint(task)} for task in tasks}
+
+    def write_run(name: str, *, model: str, base_url: str, served: str, ids: list) -> Path:
+        run = tmp_path / name
+        run.mkdir()
+        (run / "metadata.json").write_text(
+            json.dumps(
+                {
+                    "run_id": name,
+                    "model": model,
+                    "served_model_name": served,
+                    "base_url": base_url,
+                    "seed": 42,
+                    "repeats": 1,
+                    "max_tokens_multiplier": 1.0,
+                    "max_tokens_floor": 8192,
+                    "extra_body": {},
+                    "suite_id": "sme-full",
+                    "suite_version": loaded.manifest.version,
+                    "task_fingerprints": {tid: fps[tid] for tid in ids},
+                }
+            ),
+            encoding="utf-8",
+        )
+        with (run / "attempts.jsonl").open("w", encoding="utf-8") as handle:
+            for task in tasks:
+                if task.id in ids:
+                    handle.write(_attempt_from_task(task, output_text="x").model_dump_json() + "\n")
+        return run
+
+    base = write_run(
+        "base",
+        model="/models/bonsai.gguf",
+        base_url="http://127.0.0.1:58795/v1",
+        served="bonsai-2-27b",
+        ids=[t.id for t in tasks],
+    )
+    delta = write_run(
+        "delta",
+        model="bonsai-2-27b",
+        base_url="http://127.0.0.1:8022/v1",
+        served="bonsai-2-27b",
+        ids=[changed.id],
+    )
+    with pytest.raises(ValueError, match="Inference settings mismatch"):
+        merge_partial_runs(
+            base_dir=base,
+            delta_dirs=[delta],
+            target_dir=tmp_path / "m1",
+            loaded=loaded,
+            write_reports=False,
+        )
+    _, meta = merge_partial_runs(
+        base_dir=base,
+        delta_dirs=[delta],
+        target_dir=tmp_path / "m2",
+        loaded=loaded,
+        write_reports=False,
+        allow_endpoint_mismatch=True,
+    )
+    assert meta["endpoint_mismatch_allowed"] is True
+
+    other = write_run(
+        "other",
+        model="bonsai-2-27b",
+        base_url="http://127.0.0.1:8022/v1",
+        served="some-other-model",
+        ids=[changed.id],
+    )
+    with pytest.raises(ValueError, match="served_model_name"):
+        merge_partial_runs(
+            base_dir=base,
+            delta_dirs=[other],
+            target_dir=tmp_path / "m3",
+            loaded=loaded,
+            write_reports=False,
+            allow_endpoint_mismatch=True,
+        )
 
 
 def test_regrade_truncates_repeats(tmp_path: Path) -> None:

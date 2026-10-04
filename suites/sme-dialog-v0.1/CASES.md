@@ -1,4 +1,4 @@
-# Case catalogue — sme-dialog-v0.1 0.14.2
+# Case catalogue — sme-dialog-v0.1 0.15.1
 
 Reference for every benchmark case: what is checked, which failures are critical?
 
@@ -42,7 +42,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Verification:** json_fields compare the final operational object.
 
 **Task (system prompt):**
-> JSON mit den Schlüsseln next_step und promised. next_step ist einer von: call_now, schedule_callback, email. promised ist die zugesagte Uhrzeit im Format HH:MM. Antworte nur mit JSON. JSON-Schlüssel …
+> JSON mit den Schlüsseln next_step und promised. next_step ist einer von: call_now, schedule_callback, email. promised ist die ursprünglich zugesagte Uhrzeit aus dem Gesprächsverlauf im Format HH:MM (…
 
 **Scorers:**
 - `json_fields` (100 %)
@@ -56,7 +56,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Verification:** json_fields compare the final operational object.
 
 **Task (system prompt):**
-> JSON with keys next_step and promised. next_step is one of: call_now, schedule_callback, email. promised is the promised time in HH:MM format. Reply with JSON only. Keep JSON keys and the listed enum…
+> JSON with keys next_step and promised. next_step is one of: call_now, schedule_callback, email. promised is the time originally promised earlier in the conversation, HH:MM format (not the current tim…
 
 **Scorers:**
 - `json_fields` (100 %)

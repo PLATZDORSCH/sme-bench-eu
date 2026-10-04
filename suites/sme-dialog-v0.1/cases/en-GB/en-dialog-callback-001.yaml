@@ -15,8 +15,9 @@ tags:
 messages:
 - role: system
   content: 'JSON with keys next_step and promised. next_step is one of: call_now, schedule_callback, email.
-    promised is the promised time in HH:MM format. Reply with JSON only. Keep JSON keys and the listed
-    enum values exactly as given; free-text values in English.'
+    promised is the time originally promised earlier in the conversation, HH:MM format (not the current
+    time). Reply with JSON only. Keep JSON keys and the listed enum values exactly as given; free-text
+    values in English.'
 - role: user
   content: Please call back today before 15:00 about invoice RE-88.
 - role: assistant

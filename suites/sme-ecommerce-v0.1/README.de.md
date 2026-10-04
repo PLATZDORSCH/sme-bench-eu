@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite-ID** | `sme-ecommerce-v0.1` |
-| **Fälle** | 22 (11 DE/EN-Paare) |
+| **Fälle** | 16 (8 DE/EN-Paare) |
 | **Sprachen** | `de-DE`, `en-GB` |
 | **Rolle** | Test-Suite Shop/Retail; Teil von **SME Full** |
 

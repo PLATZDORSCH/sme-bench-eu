@@ -356,6 +356,41 @@ def test_forbidden_terms_correlative_negation(output: str, expect_critical: bool
     assert critical is expect_critical
 
 
+@pytest.mark.parametrize(
+    ("output", "expect_critical"),
+    [
+        # Scoring-spec 0.9.1: "0 EUR" inside "1200 EUR" is not a zero-fee claim.
+        ('{"answer":"1200 EUR","citations":["R-1","R-2","S-2"]}', False),
+        ('{"answer":"1.200,0 EUR","citations":["R-1"]}', False),
+        ('{"answer":"1200","citations":["R-1"]}', False),
+        ('{"answer":"0 EUR","citations":["E-1"]}', True),
+        ('{"answer":"Gebühr: 0 EUR","citations":["E-1"]}', True),
+        ('{"answer":"0EUR","citations":["E-1"]}', True),
+        # "2400" must not fire inside "24000" but still catches "2400,00".
+        ('{"answer":"24000 EUR","citations":["R-1"]}', False),
+        ('{"answer":"2400,00 EUR","citations":["R-1"]}', True),
+        # Word-like terms keep plain substring semantics.
+        ('{"answer":"Gebühr erlassene Fälle: keine","citations":["R-1"]}', True),
+    ],
+)
+def test_forbidden_numeric_terms_match_whole_numbers(output: str, expect_critical: bool) -> None:
+    task = make_task(
+        expected={"answer": "1200"},
+        scorers=[
+            ScorerSpec(type="json_fields", weight=1.0, params={"fields": ["answer"]}),
+            ScorerSpec(
+                type="forbidden_terms",
+                weight=0,
+                critical=True,
+                params={"terms": ["2400", "erlassen", "0 EUR", "0EUR"]},
+            ),
+        ],
+        generation=GenerationConfig(response_format="json"),
+    )
+    _, _, _, _, _, critical, _ = evaluate_attempt(task, output)
+    assert critical is expect_critical
+
+
 def test_json_scorers(tmp_path: Path) -> None:
     schema = {"type": "object", "required": ["n"], "properties": {"n": {"type": "number"}}}
     schema_path = tmp_path / "s.json"
@@ -961,6 +996,155 @@ def test_tool_call_scorers() -> None:
     )
     _, _, _, passed, _, critical, _ = evaluate_attempt(no_call, "ok", tool_calls=calls)
     assert not passed and critical
+
+
+def test_tool_call_absent_fields() -> None:
+    task = make_task(
+        tools=[ToolSpec(name="update_customer", description="d", parameters={})],
+        expected={"name": "update_customer", "arguments": {"id": "cus-1", "phone": "+4940"}},
+        scorers=[
+            ScorerSpec(
+                type="tool_call",
+                weight=1.0,
+                params={
+                    "name": "update_customer",
+                    "arguments_fields": ["id", "phone"],
+                    "absent_fields": ["email", "note"],
+                    "exactly_one": True,
+                },
+            )
+        ],
+    )
+    ok_calls = [ToolCall(name="update_customer", arguments={"id": "cus-1", "phone": "+4940"})]
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, "", tool_calls=ok_calls)
+    assert passed
+
+    null_calls = [
+        ToolCall(name="update_customer", arguments={"id": "cus-1", "phone": "+4940", "email": None})
+    ]
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, "", tool_calls=null_calls)
+    assert passed
+
+    empty_calls = [
+        ToolCall(name="update_customer", arguments={"id": "cus-1", "phone": "+4940", "note": ""})
+    ]
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, "", tool_calls=empty_calls)
+    assert passed
+
+    leaked = [
+        ToolCall(
+            name="update_customer",
+            arguments={"id": "cus-1", "phone": "+4940", "email": "a@b.de"},
+        )
+    ]
+    results, score, _, passed, _, _, _ = evaluate_attempt(task, "", tool_calls=leaked)
+    assert not passed
+    assert score == 0.75
+    assert "email" in (results[0].message or "")
+
+
+def test_tool_call_expected_tool_calls_form_and_nested_path() -> None:
+    task = make_task(
+        tools=[ToolSpec(name="create_customer", description="d", parameters={})],
+        expected={
+            "tool_calls": [
+                {
+                    "name": "create_customer",
+                    "arguments": {
+                        "customer": {
+                            "name": "Nordwerk",
+                            "address": {"city": "Hamburg", "zip": "20095"},
+                        }
+                    },
+                }
+            ]
+        },
+        scorers=[
+            ScorerSpec(
+                type="tool_call",
+                weight=1.0,
+                params={
+                    "name": "create_customer",
+                    "arguments_fields": ["customer.name", "customer.address.city"],
+                    "exactly_one": True,
+                    "index": 0,
+                },
+            )
+        ],
+    )
+    calls = [
+        ToolCall(
+            name="create_customer",
+            arguments={
+                "customer": {"name": "Nordwerk", "address": {"city": "Hamburg", "zip": "20095"}}
+            },
+        )
+    ]
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, "", tool_calls=calls)
+    assert passed
+
+    wrong = [
+        ToolCall(
+            name="create_customer",
+            arguments={"customer": {"name": "Nordwerk", "address": {"city": "Berlin"}}},
+        )
+    ]
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, "", tool_calls=wrong)
+    assert not passed
+
+
+def test_set_equality_on_tool_call_line_items() -> None:
+    task = make_task(
+        tools=[ToolSpec(name="create_order", description="d", parameters={})],
+        expected={
+            "tool_calls": [
+                {
+                    "name": "create_order",
+                    "arguments": {
+                        "customer_id": "ACC-1",
+                        "lines": [
+                            {"sku": "A-1", "qty": 2},
+                            {"sku": "B-2", "qty": 1},
+                        ],
+                    },
+                }
+            ]
+        },
+        scorers=[
+            ScorerSpec(
+                type="tool_call",
+                weight=0.3,
+                params={
+                    "name": "create_order",
+                    "arguments_fields": ["customer_id"],
+                    "exactly_one": True,
+                },
+            ),
+            ScorerSpec(
+                type="set_equality",
+                weight=0.7,
+                params={
+                    "field": "tool_calls.0.arguments.lines",
+                    "keys": ["sku", "qty"],
+                    "ignore_order": True,
+                },
+            ),
+        ],
+    )
+    calls = [
+        ToolCall(
+            name="create_order",
+            arguments={
+                "customer_id": "ACC-1",
+                "lines": [
+                    {"sku": "B-2", "qty": 1},
+                    {"sku": "A-1", "qty": 2},
+                ],
+            },
+        )
+    ]
+    _, _, _, passed, _, _, _ = evaluate_attempt(task, "", tool_calls=calls)
+    assert passed
 
 
 def test_format_only_failure() -> None:

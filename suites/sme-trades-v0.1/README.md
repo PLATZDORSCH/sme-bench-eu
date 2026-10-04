@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite ID** | `sme-trades-v0.1` |
-| **Cases** | 14 (7 DE/EN pairs) |
+| **Cases** | 12 (6 DE/EN pairs) |
 | **Languages** | `de-DE`, `en-GB` |
 | **Role** | Trades/construction test suite; part of **SME Full** |
 

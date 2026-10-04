@@ -4,11 +4,11 @@
 | --- | --- |
 | **Status** | freigegeben (`review_status: approved`) |
 | **Suite-ID** | `sme-tools-v0.1` |
-| **Fälle** | 32 (16 DE/EN-Paare) |
+| **Fälle** | 52 (26 DE/EN-Paare) |
 | **Sprachen** | `de-DE`, `en-GB` |
-| **Rolle** | Tool-Use-Pack; Teil von **SME Full** ab Inhalt 0.13.0, Crowded-Varianten in 0.14.0 |
+| **Rolle** | Tool-Use-Pack; Teil von **SME Full** ab Inhalt 0.13.0, Crowded-Varianten in 0.14.0, Schema-Aufrufe in 0.15.0 |
 
-ERP-Bestand, Termin, CRM, Ticket, Erstattung, Negativfälle, Halluzinationen, plus vier Crowded-Namespace-Paare.
+ERP-Bestand, Termin, CRM, Ticket, Erstattung, Negativfälle, Halluzinationen, vier Crowded-Namespace-Paare plus breite Signaturen, verschachtelte Objekte, Positions-Arrays, Enum-Literale und Weglassen optionaler Felder.
 
 ## Aufgabentypen
 
@@ -30,3 +30,13 @@ ERP-Bestand, Termin, CRM, Ticket, Erstattung, Negativfälle, Halluzinationen, pl
 | tools-booking-001-crowded | toolset_crowded |
 | tools-crm-001-crowded | toolset_crowded |
 | tools-refund-001-crowded | toolset_crowded |
+| tools-wide-customer-001 | wide_signature |
+| tools-wide-offer-001 | wide_signature |
+| tools-nested-address-001 | nested_argument |
+| tools-array-order-001 | array_argument |
+| tools-array-timesheet-001 | array_argument |
+| tools-enum-ticket-001 | enum_literal |
+| tools-enum-date-001 | enum_literal |
+| tools-omit-update-001 | optional_omission |
+| tools-date-arith-001 | date_arithmetic |
+| tools-unit-convert-001 | unit_conversion |

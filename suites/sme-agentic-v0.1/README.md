@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite ID** | `sme-agentic-v0.1` |
-| **Cases** | 32 (16 DE/EN pairs) |
+| **Cases** | 40 (20 DE/EN pairs) |
 | **Languages** | `de-DE`, `en-GB` |
 | **Role** | Live tool-loop pack; part of **SME Full** from content 0.14.0 |
 
@@ -30,6 +30,10 @@
 | agentic-auth-mail-001 | authorize_write |
 | agentic-chain-crm-001 | tool_chain |
 | agentic-page-digest-001 | pagination |
+| agentic-parallel-lookup-001 | parallel_calls |
+| agentic-branch-stock-001 | result_branching |
+| agentic-longctx-args-001 | longctx_arguments |
+| agentic-ask-before-call-001 | ambiguity_clarification |
 
 ## Usage
 

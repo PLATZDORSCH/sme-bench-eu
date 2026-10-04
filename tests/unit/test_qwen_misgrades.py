@@ -426,6 +426,8 @@ def test_qwen_misgrade_regressions(
     output: str,
     expect_pass: bool,
 ) -> None:
+    if task_id not in tasks_by_id:
+        pytest.skip(f"{task_id} retired in content 0.16.0")
     task = tasks_by_id[task_id]
     _, _, _, passed, _, critical, _ = evaluate_attempt(task, output)
     if expect_pass:
@@ -440,6 +442,8 @@ def test_qwen_misgrade_partial_regressions(
     task_id: str,
     output: str,
 ) -> None:
+    if task_id not in tasks_by_id:
+        pytest.skip(f"{task_id} retired in content 0.16.0")
     task = tasks_by_id[task_id]
     _, _, _, passed, partial, critical, _ = evaluate_attempt(task, output)
     assert not passed and partial and not critical, task_id

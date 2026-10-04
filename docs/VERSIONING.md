@@ -35,7 +35,7 @@ Rename folders only for a larger test-suite redesign.
 
 ## 3. Scoring specification — `scoring_spec_version`
 
-Fingerprint of how scores are computed for a given content line (weights, must-pass gates, matcher semantics, input normalisation). Stored in run metadata as `scoring_spec_version` (current: **0.8.1**).
+Fingerprint of how scores are computed for a given content line (weights, must-pass gates, matcher semantics, input normalisation). Stored in run metadata as `scoring_spec_version` (current: **0.10.0**).
 
 | Change | Action |
 | --- | --- |
@@ -44,7 +44,7 @@ Fingerprint of how scores are computed for a given content line (weights, must-p
 
 A **scorer defect** — a correct answer graded as wrong — is fixed on the scoring-spec line and applied retroactively by regrading, because the answer was already correct under the intended semantics. A **gap in the task specification** — grading against a requirement the prompt never stated — is fixed forward on the content line with a rerun; a model cannot be measured retroactively against a prompt it never saw.
 
-Compatibility manifests under [`suites/compatibility/`](../suites/compatibility/) record which tasks are regrade-safe versus require a fresh inference delta, for example [`regrade-0.14.2-baseline.json`](../suites/compatibility/regrade-0.14.2-baseline.json).
+Compatibility manifests under [`suites/compatibility/`](../suites/compatibility/) record which tasks are regrade-safe versus require a fresh inference delta, for example [`regrade-0.16.1-baseline.json`](../suites/compatibility/regrade-0.16.1-baseline.json).
 
 ### Regrade versus rerun
 
@@ -52,7 +52,7 @@ Compatibility manifests under [`suites/compatibility/`](../suites/compatibility/
 | --- | --- |
 | Same model inputs; only scoring/spec changed | `sme-bench regrade SOURCE --output TARGET` |
 | Keep a 3-repeat source as a 2-repeat run | `sme-bench regrade SOURCE --repeats 2 --output TARGET` |
-| A subset of task inputs changed | `sme-bench run … --task-ids …` then `sme-bench merge-run --base … --delta … -o …` |
+| A subset of task inputs changed | `sme-bench run … --task-ids …` then `sme-bench merge-run BASE --delta … -o …` |
 | Inspect which tasks need which path | `sme-bench compat-report SOURCE` |
 | Export input fingerprints for manifests | `sme-bench fingerprints --suite …` |
 

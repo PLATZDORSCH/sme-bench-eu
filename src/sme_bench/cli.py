@@ -423,6 +423,14 @@ def merge_run_cmd(
         help="Additional compatible run dirs with new/changed task attempts (repeatable)",
     ),
     no_reports: bool = typer.Option(False, "--no-reports", help="Skip report generation"),
+    allow_endpoint_mismatch: bool = typer.Option(
+        False,
+        "--allow-endpoint-mismatch",
+        help=(
+            "Let model id and base_url differ when served_model_name matches "
+            "(same weights behind a new alias or port)"
+        ),
+    ),
 ) -> None:
     """Merge compatible partial runs into one covering the current suite task set."""
     loaded = load_full_benchmark(known_scorers=known_scorer_names(), resolve_fixtures=True)
@@ -438,6 +446,7 @@ def merge_run_cmd(
             target_dir=output,
             loaded=loaded,
             write_reports=not no_reports,
+            allow_endpoint_mismatch=allow_endpoint_mismatch,
         )
     except (FileExistsError, ValueError, FileNotFoundError) as exc:
         console.print(f"[red]{exc}[/red]")

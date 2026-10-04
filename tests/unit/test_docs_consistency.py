@@ -16,18 +16,18 @@ ROOT = Path(__file__).resolve().parents[2]
 
 EXPECTED_SUITE_COUNTS = {
     "sme-core-v0.1": 42,
-    "sme-trades-v0.1": 14,
-    "sme-ecommerce-v0.1": 22,
-    "sme-financial-v0.1": 16,
-    "sme-hospitality-v0.1": 16,
-    "sme-logistics-v0.1": 18,
+    "sme-trades-v0.1": 12,
+    "sme-ecommerce-v0.1": 16,
+    "sme-financial-v0.1": 10,
+    "sme-hospitality-v0.1": 10,
+    "sme-logistics-v0.1": 10,
     "sme-chains-v0.1": 4,
     "sme-advanced-v0.1": 36,
     "sme-expert-v0.1": 20,
-    "sme-tools-v0.1": 32,
+    "sme-tools-v0.1": 52,
     "sme-dialog-v0.1": 16,
     "sme-longctx-v0.1": 16,
-    "sme-agentic-v0.1": 32,
+    "sme-agentic-v0.1": 40,
 }
 
 

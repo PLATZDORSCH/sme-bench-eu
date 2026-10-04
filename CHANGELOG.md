@@ -2,7 +2,83 @@
 
 ## Unreleased
 
-<!-- Add notes here; move into a version section at release. -->
+## 0.14.0
+
+### Benchmark (SME Full content 0.16.1)
+
+- `exp-iban-fraud-001`: `action` bleibt das englische Enum `accept`/`reject`; freier Text folgt der Fallsprache (wie `dialog-callback-001` in 0.15.1). gpt-oss-120b hatte die vier Anträge richtig entschieden, aber `ablehnen`/`akzeptieren` geschrieben und war deshalb kritisch
+- Authoring script: `scripts/author_content_0161.py`
+- Compatibility manifest: [`regrade-0.16.1-baseline.json`](suites/compatibility/regrade-0.16.1-baseline.json)
+- Existing 0.16.0 runs: `run --task-ids de-exp-iban-fraud-001,en-exp-iban-fraud-001` then `merge-run`
+
+### Scoring specification 0.10.0
+
+- `trace_calls` accepts `same_turn: true` (all expected calls must share `turn_index`) and `forbidden` (tool names that must not appear)
+- Additive only; 0.15.x runs stay **regradable**
+
+### Harness 0.14.0
+
+- `--concurrency > 1` schedules estimated-heavier tasks first (Expert, Advanced, Long-Context, Agentic). Concurrency 1 keeps the seeded shuffle
+- Docs: [`docs/RUNNING.md`](docs/RUNNING.md) for Atlas vs llama.cpp (`--parallel N`, `n_ctx ≥ N × 32768`)
+
+### Benchmark (SME Full content 0.16.0)
+
+- Retires 14 redundant domain pairs (28 cases) that repeat Core patterns across trades/e-commerce/finance/hospitality/logistics and were saturated or only failed on qwen3.5-0.8b / Nemotron ≥ 0.83
+- Adds 6 harder tool-call pairs (12 cases): parallel same-turn lookups, stock-result branching, long-context payment arguments, ask-before-cancel, weekday date arithmetic, cents/dozen conversion
+- Net **284 cases × 2 repeats**. Content pruning saves ~6 % wall time; concurrency is the real lever
+- Authoring script: `scripts/author_content_016.py`
+- Compatibility manifest: [`regrade-0.16.0-baseline.json`](suites/compatibility/regrade-0.16.0-baseline.json)
+- 0.15.2 runs: `sme-bench regrade` then `run --task-ids` for the 12 new ids plus `merge-run`
+- Reference: bonsai-2-27b (llama.cpp, PQ2_0) on 0.16.0 / spec 0.10.0 is **98.4 / ready** (562/568, 0 critical); all 12 new cases passed. Same three residual fails as 0.15.2 (`de-adv-policy-001`, `de-tools-refund-001-crowded`, `en-adv-order-revision-002`)
+
+## 0.13.0
+
+### Scoring specification 0.9.1
+
+- `forbidden_terms`: numeric terms match whole numbers only. `0 EUR` / `0EUR` no longer fire inside `1200 EUR` or `1.0 EUR`; `2400` no longer fires inside `24000`. Decimal tails (`2400,00`) and word-like terms (`erlassen` in `erlassene`) are unchanged
+- Scorer defect, so it is applied retroactively: the 0.15.1 bonsai-2-27b run had both repeats of `exp-policy-chain-001` (DE/EN) graded as critical although `{"answer":"1200 EUR", …}` was correct; `sme-bench regrade` moves it from **93.0 / not recommended** to **97.4 / ready**. The qwen3.8-27b run is unchanged (98.4)
+- Regrade earlier runs: `sme-bench regrade runs/<run> --output runs/<run>-spec091`
+
+### Harness 0.13.0
+
+- `merge-run --allow-endpoint-mismatch`: lets `model` and `base_url` differ between base and delta when `served_model_name` matches (same weights behind a new alias or forwarded port). The merged metadata records `endpoint_mismatch_allowed: true`
+- Docs: `merge-run` takes the base run as a positional argument (`sme-bench merge-run BASE --delta … -o …`), not `--base`
+
+### Benchmark (SME Full content 0.15.2)
+
+- `sme-agentic-v0.1` `agentic-page-digest-001` (DE/EN): the prompt now asks for every invoice id individually in one sentence starting with `Digest:`. The 0.15.1 prompt said "nenne … INV-1 bis INV-3" / "name INV-1 to INV-3", so a model that echoed it lost `INV-2` and the never-mentioned word `Digest`
+- `sme-agentic-v0.1` `agentic-chain-email-001` (DE/EN): the user message now supplies subject and body of the Q3 summary and the system prompt says not to ask back. Under 0.15.1 there was no content to send, so asking for it before `send_email` was defensible behaviour and could not fairly be graded as a missing call
+- Only these four input fingerprints change; 0.15.1 runs are completed via `sme-bench run --task-ids de-agentic-page-digest-001,en-agentic-page-digest-001,de-agentic-chain-email-001,en-agentic-chain-email-001` plus `merge-run`
+- Reference: bonsai-2-27b (llama.cpp, PQ2_0) on 0.15.2 / spec 0.9.1 passes all four pairs and lands at **98.4 / ready** (594/600, 0 critical) — level with qwen3.8-27b on 0.15.1
+- Authoring script: `scripts/author_content_0152.py`
+- Compatibility manifest: [`regrade-0.15.2-baseline.json`](suites/compatibility/regrade-0.15.2-baseline.json)
+
+## 0.12.0
+
+### Benchmark (SME Full content 0.15.1)
+
+- `sme-dialog-v0.1` `dialog-callback-001` (DE/EN): `promised` is now the time originally promised in the thread, not the current clock time. The 0.15.0 27B run answered `16:10` because the prompt said "zugesagte Uhrzeit" / "promised time"
+- `sme-expert-v0.1` `exp-policy-chain-001` (DE/EN): the prompt now names the three citation roles (addendum beats GTC; email does not; applicable cancel clause), so `exact_set` `{R-1, R-2, S-2}` is no longer an arbitrary three of five supporting ids
+- `sme-expert-v0.1` `exp-offer-tco-001` (DE/EN): Holm cash discount applies to the total invoice including shipping, matching expected `3488.80`. Repeat 1 of the 0.15.0 run discounted goods only
+- Only these six input fingerprints change; 0.15.0 runs are completed via `sme-bench run --task-ids de-dialog-callback-001,en-dialog-callback-001,de-exp-policy-chain-001,en-exp-policy-chain-001,de-exp-offer-tco-001,en-exp-offer-tco-001` plus `merge-run`
+- Authoring script: `scripts/author_content_0151.py`
+- Compatibility manifest: [`regrade-0.15.1-baseline.json`](suites/compatibility/regrade-0.15.1-baseline.json)
+
+### Scoring specification 0.9.0
+
+- `tool_call` accepts `absent_fields` (path must be missing, `null`, or `""`) and the `expected.tool_calls[{name, arguments}]` form so `set_equality` can grade `tool_calls.0.arguments.lines`
+- Existing 0.14.x cases stay **regradable**; scores for unchanged inputs do not change
+
+### Harness 0.12.0
+
+- Task-type labels for `wide_signature`, `nested_argument`, `array_argument`, `enum_literal`, `optional_omission`
+
+### Benchmark (SME Full content 0.15.0)
+
+- `sme-tools-v0.1` adds 8 DE/EN pairs (16 cases): wide customer/offer signatures, nested address object, order and timesheet arrays, enum ticket/date literals, optional-field omission. SME Full is now **300 cases × 2 repeats**
+- 0.14.2 runs stay comparable; apply `sme-bench run --task-ids …` plus `merge-run` for the new ids
+- Authoring script: `scripts/author_content_015.py`
+- Compatibility manifest: [`regrade-0.15.0-baseline.json`](suites/compatibility/regrade-0.15.0-baseline.json)
 
 ## 0.11.2
 

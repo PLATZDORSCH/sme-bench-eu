@@ -1,7 +1,7 @@
 schema_version: '1.0'
 id: sme-ecommerce-v0.1
 name: SME E-Commerce Domain Pack
-version: 0.13.0
+version: 0.16.0
 description: 'Shop-nahe Fälle: Retoure, Katalog, Warenkorb, längere Ticket-Threads'
 languages:
 - de-DE
@@ -22,6 +22,6 @@ category_weights:
   process_ops: 1.0
 provenance:
   type: synthetic
-  notes: 'Released domain pack. Synthetic fixtures. Shop/retail cases: returns threads, catalogue
-    normalisation, UGC injection.'
+  notes: 'Released domain pack. Synthetic fixtures. Shop/retail cases: returns threads, catalogue normalisation,
+    UGC injection.'
 canary: bfeaa579-86fe-4573-a7ac-91f294021a68

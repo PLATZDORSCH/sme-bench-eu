@@ -79,7 +79,8 @@ title: Read pages, digest at the end
 language: en-GB
 messages:
 - role: system
-  content: Respond in English. Read every page and only then name INV-1 to INV-3.
+  content: Respond in English. Read every page completely. Only then list every invoice id individually
+    in one sentence that starts with “Digest:”.
 - role: user
   content: Summarise every invoice id in one sentence.
 oracle_output: 'Digest: INV-1, INV-2, INV-3.'

@@ -161,7 +161,7 @@ Ausführliche Beispiele (Classification, JSON Schema, `set_equality`, `citations
 | `exact_match` | Vollstring-Vergleich | optional `expected`, `case_insensitive`, `normalize_whitespace` |
 | `regex` | Musterprüfung | `patterns`, optional `case_insensitive` |
 | `language` | Antwort in der Fallsprache (`weight: 0`, `must_pass: true`) | optional `expected`, `fields` / `exclude_fields`, `margin` |
-| `tool_call` | Benanntes Tool mit erwarteten Argumenten | `name`, `arguments_fields`, optional `index`, `exactly_one` |
+| `tool_call` | Benanntes Tool mit erwarteten Argumenten | `name`, `arguments_fields`, optional `absent_fields`, `index`, `exactly_one` |
 | `no_tool_call` | Kein Tool-Aufruf (Over-Triggering) | meist `critical: true` |
 | `trace_calls` | Tool-Sequenz im Live-Loop | `order: strict \| dependency`, optional `dependencies` |
 | `trace_exactly_once` | Ein erfolgreicher Side-Effect | `name`, `success_only` |
@@ -260,6 +260,26 @@ scorers:
 ```
 
 Over-Triggering-Fälle behalten dieselbe `tools`-Liste, setzen `tool_choice: auto` und `no_tool_call` (`critical: true`).
+
+### Verschachtelte Argumente
+
+`arguments_fields` akzeptiert Punktpfade (`customer.address.city`). `absent_fields` schlägt fehl, wenn diese Pfade einen nicht-leeren Wert haben (fehlend, `null` und `""` gelten als abwesend).
+
+Für Positions-Arrays Expected als `{tool_calls: [{name, arguments}]}` ablegen, damit `set_equality` `field: tool_calls.0.arguments.lines` mit `keys: [sku, qty]` und `ignore_order: true` lesen kann. Skalare mit `tool_call` (Gewicht 0,3), das Array mit `set_equality` (Gewicht 0,7).
+
+```yaml
+expected:
+  name: update_customer
+  arguments: {id: ACC-774, phone: "+49407654321"}
+scorers:
+  - type: tool_call
+    weight: 1.0
+    params:
+      name: update_customer
+      arguments_fields: [id, phone]
+      absent_fields: [email, note, newsletter]
+      exactly_one: true
+```
 
 ### Live-Mock-Tool-Loop (`tool_env`)
 

@@ -1,4 +1,4 @@
-# Case catalogue — sme-expert-v0.1 0.13.0
+# Case catalogue — sme-expert-v0.1 0.16.1
 
 Reference for every benchmark case: what is checked, which failures are critical?
 
@@ -80,7 +80,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Verification:** contains/forbidden_terms reject unsupported claims.
 
 **Task (system prompt):**
-> Berechne die Gebühr nur aus der Richtlinie. Gib JSON {"answer":"<Betrag>","citations":["ID"]} zurück. citations ohne Klammern. Genau drei tragende IDs. Formuliere alle Textwerte auf Deutsch; JSON-Sch…
+> Berechne die Gebühr nur aus der Richtlinie. Gib JSON {"answer":"<Betrag>","citations":["ID"]} zurück. citations ohne Klammern. Genau drei IDs: die Vorrangregel, die die Sondervereinbarung über die AG…
 
 **Critical checks (fail → effective score 0):**
 - Critical: 2400, 30%, erlassen, waived, "0", 0 EUR, 0EUR
@@ -100,7 +100,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Verification:** contains/forbidden_terms reject unsupported claims.
 
 **Task (system prompt):**
-> Compute the fee from the policy only. Return JSON {"answer":"<amount>","citations":["ID"]}. citations without brackets. Exactly three supporting IDs. Write all text values in English; keep JSON keys …
+> Compute the fee from the policy only. Return JSON {"answer":"<amount>","citations":["ID"]}. citations without brackets. Exactly three IDs: the precedence rule that the addendum beats the GTC; the pre…
 
 **Critical checks (fail → effective score 0):**
 - Critical: 2400, 30%, erlassen, waived, "0", 0 EUR, 0EUR
@@ -230,7 +230,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Verification:** forbidden_terms and set_equality check redacted types or refusal.
 
 **Task (system prompt):**
-> Gib JSON {requests:[{id, action}]} zurück. action accept oder reject. id exakt CHG-1 bis CHG-4. Formuliere alle Textwerte auf Deutsch; JSON-Schlüssel bleiben unverändert.
+> Gib JSON {requests:[{id, action}]} zurück. action ist genau eines von: accept, reject. id exakt CHG-1 bis CHG-4. JSON-Schlüssel und die aufgezählten Enum-Werte bleiben exakt wie angegeben (englisch);…
 
 **Critical checks (fail → effective score 0):**
 - Critical: `set_equality` (field `requests`)
@@ -250,7 +250,7 @@ Reference for every benchmark case: what is checked, which failures are critical
 - **Verification:** forbidden_terms and set_equality check redacted types or refusal.
 
 **Task (system prompt):**
-> Return JSON {requests:[{id, action}]}. action accept or reject. id exactly CHG-1 to CHG-4. Write all text values in English; keep JSON keys unchanged.
+> Return JSON {requests:[{id, action}]}. action is exactly one of: accept, reject. id exactly CHG-1 to CHG-4. Keep JSON keys and the listed enum values exactly as given; free-text values in English.
 
 **Critical checks (fail → effective score 0):**
 - Critical: `set_equality` (field `requests`)

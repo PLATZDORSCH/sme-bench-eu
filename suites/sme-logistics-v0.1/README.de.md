@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite-ID** | `sme-logistics-v0.1` |
-| **Fälle** | 18 (9 DE/EN-Paare) |
+| **Fälle** | 10 (5 DE/EN-Paare) |
 | **Sprachen** | `de-DE`, `en-GB` |
 | **Rolle** | Test-Suite Logistik/Lager; Teil von **SME Full** |
 

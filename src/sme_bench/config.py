@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from sme_bench.utils import normalize_base_url
 
-SCORING_SPEC_VERSION = "0.8.1"
+SCORING_SPEC_VERSION = "0.10.0"
 
 
 class PricingConfig(BaseModel):

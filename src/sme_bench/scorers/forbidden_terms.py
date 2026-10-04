@@ -21,6 +21,12 @@ Params:
     mode: ``"terms"`` (default) or ``"claims"`` — claims mode treats bare entity
         tokens more carefully and still requires an affirmative commitment
         pattern nearby when the term itself is short/entity-like.
+
+Numeric terms match whole numbers only (scoring-spec 0.9.1): a term that starts
+with a digit is not a hit when the preceding character continues a number
+(``0 EUR`` inside ``1200 EUR`` or ``1.0 EUR``), and a term that ends with a digit
+is not a hit when a digit follows (``2400`` inside ``24000``). ``2400,00`` still
+matches ``2400``; word-like terms (``erlassen`` in ``erlassene``) are unchanged.
 """
 
 from __future__ import annotations
@@ -303,6 +309,25 @@ def _has_claim_cue(haystack: str, start: int, term_len: int) -> bool:
     return bool(_CLAIM_CUES.search(window))
 
 
+def _continues_number(haystack: str, idx: int, needle: str) -> bool:
+    """True when a digit-bounded *needle* at *idx* is only part of a larger number.
+
+    ``0 EUR`` must not fire inside ``1200 EUR`` or ``1.0 EUR``; ``2400`` must not
+    fire inside ``24000``. A decimal tail (``2400,00``) is still the same number.
+    """
+    if needle[:1].isdigit():
+        before = haystack[idx - 1] if idx > 0 else ""
+        if before.isdigit():
+            return True
+        if before in ".," and idx > 1 and haystack[idx - 2].isdigit():
+            return True
+    if needle[-1:].isdigit():
+        after = haystack[idx + len(needle) : idx + len(needle) + 1]
+        if after.isdigit():
+            return True
+    return False
+
+
 def _find_forbidden_terms(
     haystack: str,
     terms: list[str],
@@ -326,6 +351,9 @@ def _find_forbidden_terms(
             idx = search_in.find(needle, start)
             if idx == -1:
                 break
+            if _continues_number(search_in, idx, needle):
+                start = idx + max(len(needle), 1)
+                continue
             if ignore_negated and _is_negated(search_in, idx, len(needle)):
                 start = idx + max(len(needle), 1)
                 continue

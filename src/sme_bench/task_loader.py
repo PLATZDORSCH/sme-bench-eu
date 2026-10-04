@@ -150,9 +150,9 @@ def load_full_benchmark(
         schema_version="1.0",
         id="sme-full",
         name="SME Full Benchmark",
-        version="0.14.2",
+        version="0.16.1",
         description=(
-            "Standard ranking pack: Core + domain packs + Advanced + Expert "
+            "Standard readiness pack: Core + domain packs + Advanced + Expert "
             "+ Tools + Dialog + Long-Context + Agentic (284 DE/EN cases)"
         ),
         languages=["de-DE", "en-GB"],

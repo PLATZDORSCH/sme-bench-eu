@@ -91,6 +91,51 @@ def _assistant_tool_message(calls: list[ToolCall], content: str = "") -> dict[st
     return item
 
 
+# Heavier suites first when a parallel window is open (longest-first).
+_SUITE_COST: dict[str, int] = {
+    "exp": 50_000,
+    "adv": 40_000,
+    "longctx": 30_000,
+    "agentic": 20_000,
+}
+
+
+def estimate_task_cost(task: BenchmarkTask) -> int:
+    """Deterministic cost from suite prefix, max_tokens and prompt size."""
+    parts = task.id.split("-")
+    prefix = parts[1] if len(parts) > 1 else ""
+    suite = _SUITE_COST.get(prefix, 10_000)
+    prompt = 0
+    for msg in task.messages:
+        if msg.content:
+            prompt += len(msg.content)
+        elif msg.fixture:
+            prompt += 80_000 if prefix == "longctx" else 2_000
+    return suite + int(task.generation.max_tokens) + prompt
+
+
+def schedule_tasks(
+    tasks: list[BenchmarkTask],
+    *,
+    concurrency: int,
+    seed: int,
+) -> list[BenchmarkTask]:
+    """Order tasks for a run.
+
+    Concurrency 1 keeps the historical seeded shuffle. Concurrency > 1 puts
+    estimated-heavier tasks first so a long Expert attempt does not sit idle
+    at the end of a parallel window. The seed only breaks ties.
+    """
+    rng = random.Random(seed)
+    if concurrency <= 1:
+        ordered = list(tasks)
+        rng.shuffle(ordered)
+        return ordered
+    keyed = [(estimate_task_cost(task), rng.random(), task.id, task) for task in tasks]
+    keyed.sort(key=lambda item: (-item[0], item[1], item[2]))
+    return [item[3] for item in keyed]
+
+
 def _median(values: list[float]) -> float | None:
     if not values:
         return None
@@ -158,9 +203,7 @@ async def run_benchmark(config: RunConfig, suite: LoadedSuite) -> Path:
     if not tasks:
         raise ValueError("No tasks matched the given filters")
 
-    rng = random.Random(config.seed)
-    ordered = list(tasks)
-    rng.shuffle(ordered)
+    ordered = schedule_tasks(tasks, concurrency=config.concurrency, seed=config.seed)
 
     run_dir = create_run_dir(config.output, config.resume)
     attempts_path = run_dir / "attempts.jsonl"

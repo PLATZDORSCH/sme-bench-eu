@@ -89,7 +89,9 @@ title: Contact then email
 language: en-GB
 messages:
 - role: system
-  content: Respond in English. Resolve the contact, then send the email.
+  content: Respond in English. Resolve the contact, then send the email with the given content; do not
+    ask back.
 - role: user
-  content: Email the Q3 summary to Priya.
+  content: 'Email the Q3 summary to Priya. Subject: Q3 summary. Body: revenue 184000 EUR, margin stable,
+    outlook positive.'
 oracle_output: The Q3 summary was sent to priya@example.com.

@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite ID** | `sme-logistics-v0.1` |
-| **Cases** | 18 (9 DE/EN pairs) |
+| **Cases** | 10 (5 DE/EN pairs) |
 | **Languages** | `de-DE`, `en-GB` |
 | **Role** | Logistics/warehouse test suite; part of **SME Full** |
 

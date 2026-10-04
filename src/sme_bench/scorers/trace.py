@@ -124,6 +124,27 @@ class TraceCallsScorer:
                 critical_failure=bool(spec.critical),
                 message=f"missing calls: {missing}",
             )
+        forbidden = {str(item) for item in (spec.params.get("forbidden") or []) if item}
+        if forbidden:
+            hits = [_entry_name(entry) for entry in entries if _entry_name(entry) in forbidden]
+            if hits:
+                return ScoreResult(
+                    scorer=self.name,
+                    score=0.0,
+                    passed=False,
+                    critical_failure=bool(spec.critical),
+                    message=f"forbidden calls: {hits}",
+                )
+        if spec.params.get("same_turn"):
+            turns = {int(entries[idx].get("turn_index") or 0) for idx in used_indexes}
+            if len(turns) != 1:
+                return ScoreResult(
+                    scorer=self.name,
+                    score=0.5,
+                    passed=False,
+                    critical_failure=bool(spec.critical),
+                    message=f"expected calls spanned turns {sorted(turns)}",
+                )
         if order == "strict":
             if used_indexes != sorted(used_indexes):
                 return ScoreResult(

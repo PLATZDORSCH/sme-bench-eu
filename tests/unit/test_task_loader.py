@@ -39,7 +39,7 @@ def test_load_full_benchmark() -> None:
     assert loaded.manifest.id == "sme-full"
     assert not any(i.severity == "error" for i in loaded.issues)
     assert len(loaded.member_suites) == len(FULL_SUITE_IDS)
-    # 244 previous + 32 agentic + 8 crowded tool variants = 284
+    # 300 previous − 28 retired domain cases + 12 harder tool cases = 284
     assert len(loaded.tasks) == 284
     assert len({t.id for t in loaded.tasks}) == 284
 

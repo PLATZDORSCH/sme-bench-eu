@@ -1,9 +1,9 @@
 schema_version: '1.0'
 id: sme-tools-v0.1
 name: SME Tools
-version: 0.14.1
+version: 0.16.0
 description: 'Tool-use pack: ERP, booking, CRM, tickets, refunds, negatives, hallucinations, crowded-namespace
-  variants'
+  variants, plus wide signatures, nested and array arguments'
 languages:
 - de-DE
 - en-GB

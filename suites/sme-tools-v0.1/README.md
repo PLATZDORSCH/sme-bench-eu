@@ -4,11 +4,11 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite ID** | `sme-tools-v0.1` |
-| **Cases** | 32 (16 DE/EN pairs) |
+| **Cases** | 52 (26 DE/EN pairs) |
 | **Languages** | `de-DE`, `en-GB` |
-| **Role** | Tool-use pack; part of **SME Full** from content 0.13.0, crowded variants in 0.14.0 |
+| **Role** | Tool-use pack; part of **SME Full** from content 0.13.0, crowded variants in 0.14.0, schema-heavy calls in 0.15.0 |
 
-ERP stock, booking, CRM, tickets, refund policy, negatives, hallucinations, plus four crowded-namespace pairs.
+ERP stock, booking, CRM, tickets, refund policy, negatives, hallucinations, four crowded-namespace pairs, plus wide signatures, nested objects, line-item arrays, enum literals and optional-field omission.
 
 ## Task types
 
@@ -30,6 +30,16 @@ ERP stock, booking, CRM, tickets, refund policy, negatives, hallucinations, plus
 | tools-booking-001-crowded | toolset_crowded |
 | tools-crm-001-crowded | toolset_crowded |
 | tools-refund-001-crowded | toolset_crowded |
+| tools-wide-customer-001 | wide_signature |
+| tools-wide-offer-001 | wide_signature |
+| tools-nested-address-001 | nested_argument |
+| tools-array-order-001 | array_argument |
+| tools-array-timesheet-001 | array_argument |
+| tools-enum-ticket-001 | enum_literal |
+| tools-enum-date-001 | enum_literal |
+| tools-omit-update-001 | optional_omission |
+| tools-date-arith-001 | date_arithmetic |
+| tools-unit-convert-001 | unit_conversion |
 
 ## Usage
 

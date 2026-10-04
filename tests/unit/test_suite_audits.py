@@ -34,11 +34,11 @@ def test_full_benchmark_baseline_count_and_audits() -> None:
     assert len(loaded.member_suites) == len(FULL_SUITE_IDS)
     assert len(loaded.tasks) == 284
     assert len({t.id for t in loaded.tasks}) == 284
-    assert loaded.manifest.version == "0.14.2"
+    assert loaded.manifest.version == "0.16.1"
     candidates = [
         task for task in loaded.tasks if {"noise-variant", "edge-variant"}.intersection(task.tags)
     ]
-    assert len(candidates) == 32
+    assert len(candidates) == 16
     assert all(task.review_status == "approved" for task in candidates)
     assert all(
         {"pair-reviewed", "golden-reviewed", "reference-calibrated"} <= set(task.tags)
@@ -63,6 +63,10 @@ def test_full_benchmark_baseline_count_and_audits() -> None:
     assert "0.14.0" in releases["released"]
     assert "0.14.1" in releases["released"]
     assert "0.14.2" in releases["released"]
+    assert "0.15.0" in releases["released"]
+    assert "0.15.2" in releases["released"]
+    assert "0.16.0" in releases["released"]
+    assert "0.16.1" in releases["released"]
     assert "0.4.1" not in releases["draft"]
 
     calibration = json.loads(

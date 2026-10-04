@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite-ID** | `sme-trades-v0.1` |
-| **Fälle** | 14 (7 DE/EN-Paare) |
+| **Fälle** | 12 (6 DE/EN-Paare) |
 | **Sprachen** | `de-DE`, `en-GB` |
 | **Rolle** | Test-Suite Handwerk/Bau; Teil von **SME Full** |
 

@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | released (`review_status: approved`) |
 | **Suite-ID** | `sme-hospitality-v0.1` |
-| **Fälle** | 16 (8 DE/EN-Paare) |
+| **Fälle** | 10 (5 DE/EN-Paare) |
 | **Sprachen** | `de-DE`, `en-GB` |
 | **Rolle** | Test-Suite Gastro/Hotel; Teil von **SME Full** |
 

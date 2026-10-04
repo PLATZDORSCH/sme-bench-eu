@@ -35,7 +35,7 @@ Ordner nur bei größerem Test-Suite-Redesign umbenennen.
 
 ## 3. Scoring-Spezifikation — `scoring_spec_version`
 
-Fingerprint, wie Scores für eine Inhaltslinie berechnet werden (Gewichte, Must-Pass-Gates, Matcher-Semantik, Input-Normalisierung). Steht in der Run-Metadata als `scoring_spec_version` (aktuell: **0.8.1**).
+Fingerprint, wie Scores für eine Inhaltslinie berechnet werden (Gewichte, Must-Pass-Gates, Matcher-Semantik, Input-Normalisierung). Steht in der Run-Metadata als `scoring_spec_version` (aktuell: **0.10.0**).
 
 | Änderung | Aktion |
 | --- | --- |
@@ -44,7 +44,7 @@ Fingerprint, wie Scores für eine Inhaltslinie berechnet werden (Gewichte, Must-
 
 Ein **Scorer-Defekt** — eine korrekte Antwort wird als falsch bewertet — wird auf der Scoring-Spec-Linie behoben und per Regrade rückwirkend angewendet, weil die Antwort unter der beabsichtigten Semantik immer richtig war. Eine **Lücke in der Aufgabenspezifikation** — bewertet wird gegen eine Anforderung, die im Prompt nie stand — wird nach vorne auf der Content-Linie mit einem Rerun behoben; ein Modell lässt sich nicht rückwirkend an einem Prompt messen, den es nie gesehen hat.
 
-Kompatibilitäts-Manifeste unter [`suites/compatibility/`](../suites/compatibility/) halten fest, welche Tasks regrade-sicher sind und welche ein frisches Inference-Delta brauchen, z. B. [`regrade-0.14.2-baseline.json`](../suites/compatibility/regrade-0.14.2-baseline.json).
+Kompatibilitäts-Manifeste unter [`suites/compatibility/`](../suites/compatibility/) halten fest, welche Tasks regrade-sicher sind und welche ein frisches Inference-Delta brauchen, z. B. [`regrade-0.16.1-baseline.json`](../suites/compatibility/regrade-0.16.1-baseline.json).
 
 ### Regrade versus Rerun
 
@@ -52,7 +52,7 @@ Kompatibilitäts-Manifeste unter [`suites/compatibility/`](../suites/compatibili
 | --- | --- |
 | Gleiche Modell-Inputs; nur Scoring/Spec geändert | `sme-bench regrade SOURCE --output TARGET` |
 | 3-Repeat-Quelle als 2-Repeat-Lauf behalten | `sme-bench regrade SOURCE --repeats 2 --output TARGET` |
-| Teilmenge der Task-Inputs geändert | `sme-bench run … --task-ids …`, danach `sme-bench merge-run --base … --delta … -o …` |
+| Teilmenge der Task-Inputs geändert | `sme-bench run … --task-ids …`, danach `sme-bench merge-run BASE --delta … -o …` |
 | Prüfen, welcher Pfad für welche Tasks gilt | `sme-bench compat-report SOURCE` |
 | Input-Fingerprints für Manifeste exportieren | `sme-bench fingerprints --suite …` |
 

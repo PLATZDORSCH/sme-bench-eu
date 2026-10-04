@@ -15,9 +15,10 @@ tags:
 - policy
 messages:
 - role: system
-  content: Compute the fee from the policy only. Return JSON {"answer":"<amount>","citations":["ID"]}.
-    citations without brackets. Exactly three supporting IDs. Write all text values in English; keep JSON
-    keys unchanged.
+  content: 'Compute the fee from the policy only. Return JSON {"answer":"<amount>","citations":["ID"]}.
+    citations without brackets. Exactly three IDs: the precedence rule that the addendum beats the GTC;
+    the precedence rule that excludes the email promise; the cancellation clause that actually applies.
+    Write all text values in English; keep JSON keys unchanged.'
 - role: user
   fixture: fixtures/en-exp-policy.txt
 generation:
@@ -89,5 +90,5 @@ scorers:
     - citations
 pass_threshold: 0.85
 rationale:
-  difficulty: "Answer must stay inside the supplied policy or catalogue facts."
-  verification: "contains/forbidden_terms reject unsupported claims."
+  difficulty: Answer must stay inside the supplied policy or catalogue facts.
+  verification: contains/forbidden_terms reject unsupported claims.

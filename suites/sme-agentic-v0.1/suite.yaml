@@ -1,7 +1,7 @@
 schema_version: '1.0'
 id: sme-agentic-v0.1
 name: SME Agentic
-version: 0.14.1
+version: 0.16.0
 description: 'Live mock-tool loops: chains, recovery, exactly-once, authorization, pagination'
 languages:
 - de-DE

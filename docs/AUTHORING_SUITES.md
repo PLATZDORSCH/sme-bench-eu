@@ -266,7 +266,7 @@ Each entry:
 | `exact_match` | Whole-string match | optional `expected`, `case_insensitive`, `normalize_whitespace` |
 | `regex` | Pattern checks | `patterns`, optional `case_insensitive` |
 | `language` | Answer is in the case language (`weight: 0`, `must_pass: true`) | optional `expected`, `fields` / `exclude_fields`, `margin` |
-| `tool_call` | Named tool invoked with expected arguments | `name`, `arguments_fields`, optional `index`, `exactly_one` |
+| `tool_call` | Named tool invoked with expected arguments | `name`, `arguments_fields`, optional `absent_fields`, `index`, `exactly_one` |
 | `no_tool_call` | Must not invoke any tool (over-triggering) | typically `critical: true` |
 | `trace_calls` | Live-loop tool sequence | `order: strict \| dependency`, optional `dependencies` |
 | `trace_exactly_once` | One successful side-effect call | `name`, `success_only` |
@@ -365,6 +365,26 @@ scorers:
 ```
 
 Over-triggering cases keep the same `tools` list but use `tool_choice: auto` and `no_tool_call` (`critical: true`).
+
+### Nested and array tool arguments
+
+`arguments_fields` accepts dotted paths (`customer.address.city`). `absent_fields` fails if those paths are set to a non-empty value (missing, `null`, and `""` count as absent).
+
+For line-item arrays, store expected as `{tool_calls: [{name, arguments}]}` so `set_equality` can read `field: tool_calls.0.arguments.lines` with `keys: [sku, qty]` and `ignore_order: true`. Grade the scalar header with `tool_call` (weight 0.3) and the array with `set_equality` (weight 0.7).
+
+```yaml
+expected:
+  name: update_customer
+  arguments: {id: ACC-774, phone: "+49407654321"}
+scorers:
+  - type: tool_call
+    weight: 1.0
+    params:
+      name: update_customer
+      arguments_fields: [id, phone]
+      absent_fields: [email, note, newsletter]
+      exactly_one: true
+```
 
 ### Live mock-tool loop (`tool_env`)
 

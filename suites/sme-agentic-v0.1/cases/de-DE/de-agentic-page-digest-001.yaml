@@ -79,7 +79,8 @@ title: Seiten lesen, Digest am Ende
 language: de-DE
 messages:
 - role: system
-  content: Antworte auf Deutsch. Lies alle Seiten und nenne erst am Ende INV-1 bis INV-3.
+  content: Antworte auf Deutsch. Lies alle Seiten vollständig. Nenne erst danach jede Rechnungs-ID einzeln
+    in einem Satz, der mit „Digest:“ beginnt.
 - role: user
   content: Fasse alle Rechnungs-IDs in einem Satz zusammen.
 oracle_output: 'Digest: INV-1, INV-2, INV-3.'

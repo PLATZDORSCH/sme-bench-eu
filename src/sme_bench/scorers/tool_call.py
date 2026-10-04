@@ -19,6 +19,28 @@ def _calls(parsed_output: Any) -> list[dict[str, Any]]:
     return [item for item in raw if isinstance(item, dict)]
 
 
+def _expected_args(expected: dict[str, Any], index: int) -> dict[str, Any]:
+    """Resolve argument dict from ``{arguments}`` or ``{tool_calls: [{arguments}]}``."""
+    direct = expected.get("arguments")
+    if isinstance(direct, dict):
+        return direct
+    calls = expected.get("tool_calls")
+    if isinstance(calls, list) and 0 <= index < len(calls) and isinstance(calls[index], dict):
+        args = calls[index].get("arguments")
+        if isinstance(args, dict):
+            return args
+    return expected
+
+
+def _is_absent(arguments: dict[str, Any], path: str) -> bool:
+    """True when the path is missing, null, or an empty string."""
+    try:
+        value = get_by_path(arguments, path)
+    except (KeyError, IndexError, TypeError, ValueError):
+        return True
+    return value is None or value == ""
+
+
 @register
 class ToolCallScorer:
     name = "tool_call"
@@ -36,8 +58,9 @@ class ToolCallScorer:
         index = int(spec.params.get("index") or 0)
         exactly_one = bool(spec.params.get("exactly_one", False))
         fields: list[str] = list(spec.params.get("arguments_fields") or [])
+        absent_fields: list[str] = list(spec.params.get("absent_fields") or [])
         expected = task.expected if isinstance(task.expected, dict) else {}
-        expected_args = expected.get("arguments") if isinstance(expected.get("arguments"), dict) else expected
+        expected_args = _expected_args(expected, index)
 
         if exactly_one and len(calls) != 1:
             return ScoreResult(
@@ -65,14 +88,16 @@ class ToolCallScorer:
                 critical_failure=bool(spec.critical),
                 message=f"tool name {actual_name!r} != {expected_name!r}",
             )
-        arguments = call.get("arguments") if isinstance(call.get("arguments"), dict) else {}
-        if not fields and isinstance(expected_args, dict):
+        raw_args = call.get("arguments")
+        arguments: dict[str, Any] = raw_args if isinstance(raw_args, dict) else {}
+        if not fields and not absent_fields and isinstance(expected_args, dict):
             fields = list(expected_args.keys())
-        if not fields:
+        if not fields and not absent_fields:
             return ScoreResult(scorer=self.name, score=1.0, passed=True)
 
         matched: list[str] = []
         mismatched: list[str] = []
+        present_when_absent: list[str] = []
         normalize = spec.params.get("normalize")
         case_insensitive = bool(spec.params.get("case_insensitive", False))
         match_mode = str(spec.params.get("match", "exact"))
@@ -100,14 +125,26 @@ class ToolCallScorer:
                 matched.append(path)
             else:
                 mismatched.append(path)
-        score = (len(matched) / len(fields)) if fields else 0.0
-        ok = not mismatched
+        absent_ok: list[str] = []
+        for path in absent_fields:
+            if _is_absent(arguments, path):
+                absent_ok.append(path)
+            else:
+                present_when_absent.append(path)
+        denom = len(fields) + len(absent_fields)
+        score = ((len(matched) + len(absent_ok)) / denom) if denom else 0.0
+        ok = not mismatched and not present_when_absent
+        parts: list[str] = []
+        if mismatched:
+            parts.append(f"mismatched arguments: {mismatched}")
+        if present_when_absent:
+            parts.append(f"unexpected fields: {present_when_absent}")
         return ScoreResult(
             scorer=self.name,
             score=score,
             passed=ok,
             critical_failure=bool(spec.critical and not ok),
-            message=None if ok else f"mismatched arguments: {mismatched}",
+            message=None if ok else "; ".join(parts),
         )
 
 

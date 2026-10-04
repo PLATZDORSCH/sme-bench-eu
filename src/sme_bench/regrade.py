@@ -430,11 +430,17 @@ def merge_partial_runs(
     target_dir: Path,
     loaded: LoadedSuite,
     write_reports: bool = True,
+    allow_endpoint_mismatch: bool = False,
 ) -> tuple[Path, dict[str, Any]]:
     """Merge compatible attempt sets into a run covering the current task ID set.
 
     Requires matching model/seed/repeats/generation settings. Target attempts must
     cover every current task id with matching input fingerprints when present.
+
+    ``allow_endpoint_mismatch`` lets ``model`` and ``base_url`` differ when
+    ``served_model_name`` still agrees — the same weights served under a new
+    alias or port (e.g. a re-forwarded local llama.cpp). The merged metadata
+    records ``endpoint_mismatch_allowed`` so the relaxation stays visible.
     """
     base_dir = base_dir.resolve()
     target_dir = target_dir.resolve()
@@ -460,6 +466,13 @@ def merge_partial_runs(
         mismatches = {
             k: (base_sig.get(k), sig.get(k)) for k in base_sig if base_sig.get(k) != sig.get(k)
         }
+        if (
+            allow_endpoint_mismatch
+            and "served_model_name" not in mismatches
+            and base_sig.get("served_model_name")
+        ):
+            mismatches.pop("model", None)
+            mismatches.pop("base_url", None)
         if mismatches:
             raise ValueError(f"Inference settings mismatch for {src}: {mismatches}")
         src_fps = _source_input_fingerprints(meta)
@@ -540,6 +553,8 @@ def merge_partial_runs(
             "status": "merged",
         }
     )
+    if allow_endpoint_mismatch:
+        new_meta["endpoint_mismatch_allowed"] = True
     if loaded.member_suites:
         new_meta["member_suites"] = loaded.member_suites
     (target_dir / "metadata.json").write_text(

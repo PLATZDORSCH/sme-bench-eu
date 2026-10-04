@@ -121,6 +121,7 @@ _SCORER_PARAMS: dict[str, set[str]] = {
     "tool_call": {
         "name",
         "arguments_fields",
+        "absent_fields",
         "index",
         "exactly_one",
         "normalize",
@@ -131,7 +132,7 @@ _SCORER_PARAMS: dict[str, set[str]] = {
     },
     "no_tool_call": set(),
     "tool_name_valid": set(),
-    "trace_calls": {"calls", "order", "dependencies"},
+    "trace_calls": {"calls", "order", "dependencies", "same_turn", "forbidden"},
     "trace_exactly_once": {"name", "success_only"},
     "trace_no_fabrication": {"forbidden"},
     "trace_phase": {"name", "min_phase"},
@@ -181,8 +182,8 @@ def validate_scorer_spec(
         "regex": ("patterns",),
         "json_schema": ("coerce_scalar_fields",),
         "language": ("fields", "exclude_fields"),
-        "tool_call": ("arguments_fields",),
-        "trace_calls": ("calls", "dependencies"),
+        "tool_call": ("arguments_fields", "absent_fields"),
+        "trace_calls": ("calls", "dependencies", "forbidden"),
         "trace_no_fabrication": ("forbidden",),
     }
     dict_params: dict[str, tuple[str, ...]] = {
@@ -208,7 +209,7 @@ def validate_scorer_spec(
         "regex": ("patterns",),
         "json_schema": ("coerce_scalar_fields",),
         "language": ("fields", "exclude_fields"),
-        "tool_call": ("arguments_fields",),
+        "tool_call": ("arguments_fields", "absent_fields"),
     }
     for key in string_list_params.get(spec.type, ()):
         value = spec.params.get(key)

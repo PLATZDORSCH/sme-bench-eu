@@ -13,24 +13,6 @@ from sme_bench.task_loader import load_full_benchmark
 EDGE_GOLDENS = {
     "de-tr-grounded-003": ("Verschleiß und falsche Nutzung", "H-2", "14 Tage", "H-1"),
     "en-tr-grounded-003": ("wear and incorrect use", "H-2", "14 days", "H-1"),
-    "de-ec-grounded-003": (
-        "Hygienartikel und getragene Schuhe mit Nutzungsspuren",
-        "R-3",
-        "14",
-        "R-2",
-    ),
-    "en-ec-grounded-003": (
-        "hygiene products and worn shoes with signs of use",
-        "R-3",
-        "14",
-        "R-2",
-    ),
-    "de-fi-grounded-003": ("7%", "V-2", "19%", "V-1"),
-    "en-fi-grounded-003": ("7%", "V-2", "19%", "V-1"),
-    "de-ho-grounded-003": ("25 EUR pro Person", "H-2", "12:00", "H-1"),
-    "en-ho-grounded-003": ("EUR 25 per person", "H-2", "12:00", "H-1"),
-    "de-lo-grounded-003": ("nächster Werktag", "L-2", "2-4", "L-1"),
-    "en-lo-grounded-003": ("next business day", "L-2", "2-4", "L-1"),
 }
 
 
@@ -75,7 +57,7 @@ def test_all_candidate_variants_have_positive_golden() -> None:
         for task in loaded.tasks
         if {"noise-variant", "edge-variant"}.intersection(task.tags)
     ]
-    assert len(candidates) == 32
+    assert len(candidates) == 16
     for task in candidates:
         output = _candidate_golden_output(task)
         _, _, _, passed, _, _, _ = evaluate_attempt(task, output)
