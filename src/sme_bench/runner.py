@@ -467,9 +467,9 @@ async def run_benchmark(config: RunConfig, suite: LoadedSuite) -> Path:
                             }
                         )
 
-                req = last_req
-                if req is None:
+                if last_req is None:
                     raise RuntimeError("tool loop produced no request")
+                req = last_req
 
                 tokens_estimated = req.prompt_tokens is None or req.completion_tokens is None
                 if tokens_estimated:

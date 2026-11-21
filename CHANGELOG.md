@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.15.0
+
 ### Reporting: simpler headline metrics (aggregation version 2)
 
 Attempt-level scoring, scorers, thresholds and suites are unchanged; the scoring spec stays at 0.10.0 and no regrade or re-run is needed. Refresh existing runs with `sme-bench report <run> --format all`.
