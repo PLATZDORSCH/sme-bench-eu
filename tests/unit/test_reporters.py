@@ -127,10 +127,10 @@ def test_case_catalog_and_failures_report(tmp_path: Path) -> None:
     assert "**Modellausgabe:**" in success_text
 
 
-def test_failures_report_labels_mixed_pass_hard_fail_as_unreliable(
+def test_failures_report_labels_mixed_pass_hard_fail_as_unstable(
     tmp_path: Path,
 ) -> None:
-    """1/3 pass + 2 hard fails → unreliable, not blanket fehlgeschlagen."""
+    """1/3 pass + 2 hard fails → unstable, not blanket fehlgeschlagen."""
     task = make_task(id="de-invoice-extraction-001", title="Rechnung")
 
     def make(repeat: int, *, passed: bool, score: float) -> AttemptResult:
@@ -163,18 +163,19 @@ def test_failures_report_labels_mixed_pass_hard_fail_as_unreliable(
         lang="de",
     )
     text = path.read_text(encoding="utf-8")
-    assert "## Unzuverlässig" in text
-    assert "**unzuverlässig**" in text
-    assert "Fälle unzuverlässig" in text
+    assert "## Instabil" in text
+    assert "**instabil**" in text
+    assert "instabil (Wiederholungen uneinig): **1**" in text
     # Case must not appear under the hard-fail section.
     fail_section = text.split("## Fehlgeschlagen", 1)
     if len(fail_section) > 1:
         after_fail = fail_section[1].split("## ", 1)[0]
         assert "de-invoice-extraction-001" not in after_fail
-    assert "### `de-invoice-extraction-001`" in text.split("## Unzuverlässig", 1)[1]
+    assert "### `de-invoice-extraction-001`" in text.split("## Instabil", 1)[1]
 
 
-def test_failures_report_labels_two_of_three_as_mostly_successful(tmp_path: Path) -> None:
+def test_failures_report_ignores_infrastructure_errors(tmp_path: Path) -> None:
+    """A pass plus a timeout is a solved case, as in the comparison table."""
     task = make_task(id="de-invoice-extraction-001", title="Rechnung")
     attempts = [
         AttemptResult(
@@ -185,11 +186,12 @@ def test_failures_report_labels_two_of_three_as_mostly_successful(tmp_path: Path
             difficulty="normal",
             risk="medium",
             repeat_index=repeat,
-            passed=repeat < 2,
-            effective_score=1.0 if repeat < 2 else 0.0,
-            output_text='{"ok": true}' if repeat < 2 else "",
+            passed=repeat == 0,
+            infrastructure_error=repeat == 1,
+            effective_score=1.0 if repeat == 0 else 0.0,
+            output_text='{"ok": true}' if repeat == 0 else "",
         )
-        for repeat in range(3)
+        for repeat in range(2)
     ]
     path = tmp_path / "failures.de.md"
     write_failures_markdown(
@@ -201,9 +203,8 @@ def test_failures_report_labels_two_of_three_as_mostly_successful(tmp_path: Path
         lang="de",
     )
     text = path.read_text(encoding="utf-8")
-    assert "## Überwiegend erfolgreich" in text
-    assert "**überwiegend erfolgreich**" in text
-    assert "die meisten Repeats, aber nicht alle" in text
+    assert "Gelöste Fälle (jede gewertete Wiederholung bestanden): **1/1**" in text
+    assert "## Instabil" not in text
 
 
 def test_failures_report_dedupes_duplicate_repeats(tmp_path: Path) -> None:
@@ -252,9 +253,9 @@ def test_failures_report_dedupes_duplicate_repeats(tmp_path: Path) -> None:
 
 def test_print_summary_includes_tps() -> None:
     summary = {
-        "sme_core_score": 90.0,
-        "sme_rank_score": 88.0,
+        "headline": {"pass_rate_ci": [0.84, 0.92]},
         "overall": {
+            "pass_rate": 0.88,
             "attempt_pass_rate": 0.8,
             "attempt_partial_rate": 0.1,
             "reliable_pass_rate": 0.75,
@@ -278,8 +279,9 @@ def test_print_summary_includes_tps() -> None:
     print_summary(summary, model="test-model", suite_label="Test Suite", console=console)
     text = buffer.getvalue()
     assert "Output tokens/s" in text
-    assert "SME Readiness Score" in text
+    assert "Passed" in text
     assert "88.0" in text
+    assert "84.0–92.0" in text
     assert "42.5 tok/s" in text
     assert "40.0" in text
 
@@ -288,9 +290,9 @@ def test_write_summary_markdown_includes_tps(tmp_path: Path) -> None:
     summary = {
         "suite_id": "test",
         "suite_version": "0.1",
-        "sme_core_score": 90.0,
-        "sme_rank_score": 88.0,
+        "headline": {"pass_rate_ci": [0.84, 0.92]},
         "overall": {
+            "pass_rate": 0.88,
             "attempt_pass_rate": 0.8,
             "attempt_partial_rate": 0.1,
             "reliable_pass_rate": 0.75,
@@ -314,16 +316,19 @@ def test_write_summary_markdown_includes_tps(tmp_path: Path) -> None:
     path = tmp_path / "summary.de.md"
     write_summary_markdown(path, summary, model="test-model", lang="de")
     text = path.read_text(encoding="utf-8")
-    assert "**SME Readiness Score: 88.0 / 100**" in text
-    assert "SME Core Score: 90.0 / 100" in text
-    assert "SME Core Score: **90.0 / 100**" not in text
-    assert "Output tokens/s (Ø): 55.0 tok/s" in text
+    assert text.startswith("# SME-Bench Report: test-model")
+    assert "| Bestanden | **88.0%** |" in text
+    assert "| 95-%-Intervall | 84.0% bis 92.0% |" in text
+    assert "SME Readiness Score" not in text
+    assert "SME Core Score" not in text
+    assert "| Ausgabe-Token pro Sekunde (Ø) | 55.0 |" in text
     assert "| Tok/s |" in text
 
     path_en = tmp_path / "summary.en.md"
     write_summary_markdown(path_en, summary, model="test-model", lang="en")
     text_en = path_en.read_text(encoding="utf-8")
-    assert "Output tokens/s (avg): 55.0 tok/s" in text_en
+    assert "| Output tokens per second (avg) | 55.0 |" in text_en
+    assert "| 95% interval | 84.0% to 92.0% |" in text_en
     assert "## By language" in text_en
 
 

@@ -12,7 +12,7 @@ from sme_bench.reporters.i18n import FAILURES, REPORT_LANGS, SUCCESS, Lang, repo
 from sme_bench.reporters.task_docs import task_brief
 from sme_bench.statistics import dedupe_attempts
 
-OutcomeKind = Literal["pass", "mostly", "partial", "unreliable", "fail", "critical"]
+OutcomeKind = Literal["pass", "partial", "unstable", "fail", "critical"]
 
 
 def _truncate(text: str, limit: int = 4000) -> str:
@@ -68,45 +68,47 @@ def _passed_scorers(attempt: AttemptResult) -> list[str]:
 
 
 def _task_aggregate(attempts: list[AttemptResult]) -> dict[str, Any]:
-    passed = sum(1 for a in attempts if a.passed)
-    partial = sum(1 for a in attempts if a.partial)
-    critical = sum(1 for a in attempts if a.critical_failure)
+    """Per-case counts over graded attempts, matching the headline metrics.
+
+    Infrastructure errors and excluded attempts are not the model's answer,
+    so they neither pass nor fail a case.
+    """
+    graded = [a for a in attempts if not a.infrastructure_error and not a.excluded_reason]
+    passed = sum(1 for a in graded if a.passed)
+    partial = sum(1 for a in graded if a.partial)
+    critical = sum(1 for a in graded if a.critical_failure)
     infra = sum(1 for a in attempts if a.infrastructure_error)
-    hard_fail = sum(
-        1 for a in attempts if not a.passed and not a.partial and not a.infrastructure_error
-    )
-    scores = [a.effective_score for a in attempts]
-    n = len(attempts)
+    hard_fail = sum(1 for a in graded if not a.passed and not a.partial)
+    scores = [a.effective_score for a in graded]
+    n = len(graded)
     return {
-        "attempts": n,
+        "attempts": len(attempts),
+        "graded": n,
         "passed": passed,
         "partial": partial,
         "critical": critical,
         "infra": infra,
         "hard_fail": hard_fail,
-        "reliable_pass": passed == n and n > 0,
-        "reliable_partial": passed + partial == n and n > 0 and passed != n,
+        "all_passed": passed == n and n > 0,
+        "all_partial": partial == n and n > 0,
         "mean_score": sum(scores) / n if scores else 0.0,
     }
 
 
 def _task_outcome(agg: dict[str, Any]) -> OutcomeKind:
-    """Classify a case across repeats for failure/success reports.
+    """Classify a case across its graded repeats.
 
-    Outcome labels follow the full-pass repeat buckets used in the summary:
-    all repeats pass (reliable), ≥2/3 mostly successful, some-but-not-all
-    unreliable, and zero either partial (all repeats partial) or failed.
-    Critical outcomes retain precedence.
+    Same definitions as the comparison table: a case is solved when every graded
+    repeat passed, unstable when the repeats disagree. Critical outcomes take
+    precedence over everything except a full pass.
     """
-    if agg["reliable_pass"]:
+    if agg["all_passed"]:
         return "pass"
     if agg["critical"] > 0:
         return "critical"
-    if agg["passed"] / agg["attempts"] >= 2 / 3:
-        return "mostly"
     if agg["passed"] > 0:
-        return "unreliable"
-    if agg["reliable_partial"]:
+        return "unstable"
+    if agg["all_partial"]:
         return "partial"
     return "fail"
 
@@ -211,9 +213,7 @@ def _model_output_block(attempt: AttemptResult, *, lang: Lang) -> list[str]:
                 "",
                 "```json",
                 _truncate(
-                    _fmt_json(
-                        [call.model_dump(exclude_none=True) for call in attempt.tool_calls]
-                    )
+                    _fmt_json([call.model_dump(exclude_none=True) for call in attempt.tool_calls])
                 ),
                 "```",
                 "",
@@ -233,8 +233,7 @@ def _group_attempts(
     grouped: dict[OutcomeKind, list[tuple[str, dict[str, Any], list[AttemptResult]]]] = {
         "critical": [],
         "fail": [],
-        "mostly": [],
-        "unreliable": [],
+        "unstable": [],
         "partial": [],
         "pass": [],
     }
@@ -259,20 +258,18 @@ def write_failures_markdown(
     tasks_by_id = tasks_by_id or {}
     grouped = _group_attempts(attempts)
     total_tasks = sum(len(v) for v in grouped.values())
-    reliable_pass = len(grouped["pass"])
-    reliable_partial = len(grouped["partial"])
-    total_critical_attempts = sum(1 for a in attempts if a.critical_failure)
+    solved = len(grouped["pass"])
 
     lines = [
         t["title"].format(model=model),
         "",
         t["suite"].format(suite_id=suite_id, suite_version=suite_version).rstrip(),
-        t["full_pass"].format(n=reliable_pass, total=total_tasks),
-        t["mostly"].format(n=len(grouped["mostly"]), total=total_tasks),
-        t["partial"].format(n=reliable_partial, total=total_tasks),
-        t["unreliable"].format(n=len(grouped["unreliable"]), total=total_tasks),
-        t["hard_fail"].format(n=len(grouped["fail"]), total=total_tasks),
-        t["critical_attempts"].format(n=total_critical_attempts),
+        t["full_pass"].format(n=solved, total=total_tasks),
+        t["unsolved"].format(n=total_tasks - solved, total=total_tasks),
+        t["critical_cases"].format(n=len(grouped["critical"])),
+        t["hard_fail"].format(n=len(grouped["fail"])),
+        t["unstable"].format(n=len(grouped["unstable"])),
+        t["partial"].format(n=len(grouped["partial"])),
         "",
         t["intro"],
         "",
@@ -280,13 +277,7 @@ def write_failures_markdown(
         "",
     ]
 
-    if (
-        not grouped["critical"]
-        and not grouped["fail"]
-        and not grouped["mostly"]
-        and not grouped["unreliable"]
-        and not grouped["partial"]
-    ):
+    if total_tasks - solved == 0:
         lines.extend([t["all_passed"], ""])
         path.write_text("\n".join(lines), encoding="utf-8")
         return
@@ -307,17 +298,9 @@ def write_failures_markdown(
             )
             lines.append("")
 
-    if grouped["unreliable"]:
-        lines.extend([t["section_unreliable"], "", t["unreliable_blurb"], ""])
-        for task_id, agg, task_attempts in sorted(grouped["unreliable"], key=lambda x: x[0]):
-            lines.extend(
-                _outcome_block(task_id, agg, task_attempts, tasks_by_id, mode="failure", lang=lang)
-            )
-            lines.append("")
-
-    if grouped["mostly"]:
-        lines.extend([t["section_mostly"], "", t["mostly_blurb"], ""])
-        for task_id, agg, task_attempts in sorted(grouped["mostly"], key=lambda x: x[0]):
+    if grouped["unstable"]:
+        lines.extend([t["section_unstable"], "", t["unstable_blurb"], ""])
+        for task_id, agg, task_attempts in sorted(grouped["unstable"], key=lambda x: x[0]):
             lines.extend(
                 _outcome_block(task_id, agg, task_attempts, tasks_by_id, mode="failure", lang=lang)
             )
@@ -349,13 +332,13 @@ def write_success_markdown(
     tasks_by_id = tasks_by_id or {}
     grouped = _group_attempts(attempts)
     total_tasks = sum(len(v) for v in grouped.values())
-    reliable_pass = len(grouped["pass"])
+    solved = len(grouped["pass"])
 
     lines = [
         t["title"].format(model=model),
         "",
         t["suite"].format(suite_id=suite_id, suite_version=suite_version).rstrip(),
-        t["full_pass"].format(n=reliable_pass, total=total_tasks),
+        t["full_pass"].format(n=solved, total=total_tasks),
         "",
         t["intro"].format(lang=lang),
         "",
@@ -426,9 +409,8 @@ def _outcome_block(
     outcome = _task_outcome(agg)
     outcome_label = {
         "pass": t["outcome_pass"],
-        "mostly": t["outcome_mostly"],
         "partial": t["outcome_partial"],
-        "unreliable": t["outcome_unreliable"],
+        "unstable": t["outcome_unstable"],
         "fail": t["outcome_fail"],
         "critical": t["outcome_critical"],
     }[outcome]

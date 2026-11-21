@@ -9,6 +9,7 @@ dist/
 *.egg-info/
 .eggs/
 *.egg
+runs_saved_no_publish/
 
 # Virtual environments
 .venv/

@@ -8,16 +8,14 @@ import pytest
 
 from sme_bench.models import AttemptResult, RequestResult
 from sme_bench.statistics import (
-    CRITICAL_RATE_PENALTY_K,
-    PARTIAL_RATE_PENALTY_K,
     TIER_INCONCLUSIVE,
     TIER_NOT_RECOMMENDED,
     TIER_READY,
     TIER_SUPERVISED,
     aggregate,
     language_parity,
+    pass_rate_interval,
     readiness_tier,
-    sme_rank_score,
 )
 
 
@@ -79,9 +77,6 @@ def test_language_parity_and_aggregate_reliable_pass() -> None:
     assert summary["overall"]["mostly_pass_rate"] == pytest.approx(0.0)
     assert summary["overall"]["unreliable_pass_rate"] == pytest.approx(0.5)
     assert summary["overall"]["failed_task_rate"] == pytest.approx(0.0)
-    assert "sme_core_score" in summary
-    assert "sme_rank_score" in summary
-    assert "readiness" in summary
     assert summary["readiness"]["tier"] in {
         TIER_READY,
         TIER_SUPERVISED,
@@ -89,12 +84,14 @@ def test_language_parity_and_aggregate_reliable_pass() -> None:
         TIER_INCONCLUSIVE,
     }
     overall = summary["overall"]
-    assert summary["sme_rank_score"] == pytest.approx(
-        summary["sme_core_score"]
-        * overall["attempt_pass_rate"]
-        * (1 - CRITICAL_RATE_PENALTY_K * overall["critical_failure_rate"])
-        * (1 - PARTIAL_RATE_PENALTY_K * overall["attempt_partial_rate"])
-    )
+    assert overall["pass_rate"] == pytest.approx(0.75)
+    assert overall["unsolved_cases"] == 1
+    assert overall["unstable_cases"] == 1
+    assert overall["critical_cases"] == 0
+    assert summary["headline"]["pass_rate"] == overall["pass_rate"]
+    assert summary["headline"]["tier"] == summary["readiness"]["tier"]
+    assert "sme_rank_score" not in summary
+    assert "sme_core_score" in summary["legacy"]
 
 
 def test_repeat_pass_buckets_distinguish_three_two_one_and_zero_passes() -> None:
@@ -129,141 +126,121 @@ def test_repeat_pass_buckets_distinguish_three_two_one_and_zero_passes() -> None
     assert overall["attempt_pass_rate"] == pytest.approx(0.5)
 
 
-def test_sme_rank_score_penalty() -> None:
-    assert sme_rank_score(
-        96.5,
-        repeat_pass_rate=1.0,
-        critical_failure_rate=0.0,
-        attempt_partial_rate=0.0,
-    ) == pytest.approx(96.5)
-    assert sme_rank_score(
-        96.5,
-        repeat_pass_rate=0.853,
-        critical_failure_rate=0.0085,
-        attempt_partial_rate=0.068,
-    ) == pytest.approx(
-        96.5 * 0.853 * (1 - CRITICAL_RATE_PENALTY_K * 0.0085) * (1 - PARTIAL_RATE_PENALTY_K * 0.068)
+def _attempt(task_id: str, repeat_index: int = 0, **kwargs: object) -> AttemptResult:
+    passed = bool(kwargs.pop("passed", True))
+    return AttemptResult(
+        task_id=task_id,
+        language="de-DE",
+        category="c",
+        task_type="t",
+        difficulty="easy",
+        risk="low",
+        repeat_index=repeat_index,
+        passed=passed,
+        effective_score=1.0 if passed else 0.0,
+        **kwargs,  # type: ignore[arg-type]
     )
-    assert sme_rank_score(
-        90.0,
-        repeat_pass_rate=1.0,
-        critical_failure_rate=0.2,
-        attempt_partial_rate=0.0,
-    ) == pytest.approx(0.0)
-    assert sme_rank_score(
-        90.0,
-        repeat_pass_rate=0.5,
-        critical_failure_rate=0.0,
-        attempt_partial_rate=0.0,
-    ) == pytest.approx(45.0)
 
 
-def test_readiness_tier_thresholds_and_caps() -> None:
-    ready = readiness_tier(
-        {
-            "completion_rate": 1.0,
-            "critical_failure_rate": 0.0,
-            "language_compliance_rate": 1.0,
-        },
-        95.0,
-    )
-    assert ready["tier"] == TIER_READY
-    assert "score_ready" in ready["reasons"]
-
-    supervised = readiness_tier(
-        {
-            "completion_rate": 1.0,
-            "critical_failure_rate": 0.0,
-            "language_compliance_rate": 1.0,
-        },
-        85.0,
-    )
-    assert supervised["tier"] == TIER_SUPERVISED
-    assert "score_supervised" in supervised["reasons"]
-
-    not_recommended = readiness_tier(
-        {
-            "completion_rate": 1.0,
-            "critical_failure_rate": 0.0,
-            "language_compliance_rate": 1.0,
-        },
-        84.9,
-    )
-    assert not_recommended["tier"] == TIER_NOT_RECOMMENDED
-    assert "score_not_recommended" in not_recommended["reasons"]
+def _overall(**kwargs: object) -> dict[str, object]:
+    base: dict[str, object] = {
+        "completion_rate": 1.0,
+        "pass_rate": 1.0,
+        "critical_cases": 0,
+        "language_compliance_rate": 1.0,
+    }
+    base.update(kwargs)
+    return base
 
 
-def test_readiness_tier_critical_cap() -> None:
-    result = readiness_tier(
-        {
-            "completion_rate": 1.0,
-            "critical_failure_rate": 0.01,
-            "language_compliance_rate": 1.0,
-        },
-        99.0,
-    )
-    assert result["tier"] == TIER_NOT_RECOMMENDED
-    assert result["reasons"] == ["critical_failures"]
+def test_readiness_tier_thresholds() -> None:
+    ready = readiness_tier(_overall(pass_rate=0.95))
+    assert ready == {"tier": TIER_READY, "reasons": ["pass_ready"]}
+
+    supervised = readiness_tier(_overall(pass_rate=0.85))
+    assert supervised == {"tier": TIER_SUPERVISED, "reasons": ["pass_supervised"]}
+
+    not_recommended = readiness_tier(_overall(pass_rate=0.849))
+    assert not_recommended == {"tier": TIER_NOT_RECOMMENDED, "reasons": ["pass_not_recommended"]}
+
+
+def test_readiness_tier_critical_caps_at_supervised() -> None:
+    result = readiness_tier(_overall(pass_rate=0.99, critical_cases=1))
+    assert result == {"tier": TIER_SUPERVISED, "reasons": ["critical_failures"]}
+    # A critical case alone never forces not_recommended.
+    result = readiness_tier(_overall(pass_rate=0.86, critical_cases=5))
+    assert result["tier"] == TIER_SUPERVISED
+    assert result["reasons"] == ["critical_failures", "pass_supervised"]
 
 
 def test_readiness_tier_language_cap() -> None:
-    result = readiness_tier(
-        {
-            "completion_rate": 1.0,
-            "critical_failure_rate": 0.0,
-            "language_compliance_rate": 0.99,
-        },
-        97.0,
-    )
-    assert result["tier"] == TIER_SUPERVISED
-    assert "language_break" in result["reasons"]
+    result = readiness_tier(_overall(pass_rate=0.97, language_compliance_rate=0.99))
+    assert result == {"tier": TIER_SUPERVISED, "reasons": ["language_break"]}
 
 
 def test_readiness_tier_inconclusive_on_low_completion() -> None:
-    result = readiness_tier(
-        {
-            "completion_rate": 0.94,
-            "critical_failure_rate": 0.0,
-            "language_compliance_rate": 1.0,
-        },
-        99.0,
-    )
-    assert result["tier"] == TIER_INCONCLUSIVE
-    assert result["reasons"] == ["low_completion"]
+    result = readiness_tier(_overall(completion_rate=0.94))
+    assert result == {"tier": TIER_INCONCLUSIVE, "reasons": ["low_completion"]}
 
 
-def test_aggregate_rank_score_with_critical_failures() -> None:
+def test_infrastructure_errors_are_not_counted_as_failures() -> None:
+    attempts = [_attempt(f"t{i}", r) for i in range(30) for r in range(2)]
+    attempts.append(_attempt("t30", 0))
+    attempts.append(_attempt("t30", 1, passed=False, infrastructure_error=True))
+    summary = aggregate(attempts)
+    overall = summary["overall"]
+    assert overall["attempt_pass_rate"] < 1.0
+    assert overall["pass_rate"] == pytest.approx(1.0)
+    assert overall["unsolved_cases"] == 0
+    assert overall["graded_attempts"] == 61
+    assert summary["headline"]["coverage"] == pytest.approx(61 / 62)
+    assert summary["readiness"]["tier"] == TIER_READY
+
+
+def test_case_counts() -> None:
     attempts = [
-        AttemptResult(
-            task_id="t1",
-            language="de-DE",
-            category="c",
-            task_type="t",
-            difficulty="easy",
-            risk="critical",
-            repeat_index=0,
-            passed=False,
-            critical_failure=True,
-            effective_score=0.0,
-        ),
-        AttemptResult(
-            task_id="t2",
-            language="de-DE",
-            category="c",
-            task_type="t",
-            difficulty="easy",
-            risk="low",
-            repeat_index=0,
-            passed=True,
-            effective_score=1.0,
-        ),
+        _attempt("solved", 0),
+        _attempt("solved", 1),
+        _attempt("unstable", 0),
+        _attempt("unstable", 1, passed=False),
+        _attempt("failed", 0, passed=False),
+        _attempt("failed", 1, passed=False, critical_failure=True),
+    ]
+    overall = aggregate(attempts)["overall"]
+    assert overall["pass_rate"] == pytest.approx(0.5)
+    assert overall["unsolved_cases"] == 2
+    assert overall["unstable_cases"] == 1
+    assert overall["critical_cases"] == 1
+
+
+def test_pass_rate_interval_is_deterministic_and_brackets_the_rate() -> None:
+    attempts = [
+        _attempt(f"t{i}", r, passed=i % 5 != 0, pair_id=f"p{i // 2}")
+        for i in range(40)
+        for r in range(2)
+    ]
+    first = pass_rate_interval(attempts)
+    assert first == pass_rate_interval(list(reversed(attempts)))
+    assert first is not None
+    low, high = first
+    assert 0.0 <= low < 0.8 < high <= 1.0
+    assert pass_rate_interval([]) is None
+    assert pass_rate_interval([_attempt("a"), _attempt("b")]) == [1.0, 1.0]
+
+
+def test_aggregate_with_critical_failure() -> None:
+    attempts = [
+        _attempt("t1", passed=False, critical_failure=True),
+        _attempt("t2"),
     ]
     summary = aggregate(attempts, category_weights={"c": 1.0})
     assert summary["overall"]["critical_failure_rate"] == pytest.approx(0.5)
-    assert summary["sme_core_score"] == pytest.approx(50.0)
-    assert summary["sme_rank_score"] == pytest.approx(0.0)
-    assert summary["readiness"]["tier"] == TIER_NOT_RECOMMENDED
-    assert "critical_failures" in summary["readiness"]["reasons"]
+    assert summary["overall"]["critical_cases"] == 1
+    assert summary["legacy"]["sme_core_score"] == pytest.approx(50.0)
+    assert summary["readiness"] == {
+        "tier": TIER_NOT_RECOMMENDED,
+        "reasons": ["pass_not_recommended"],
+    }
     # reliable_pass_rate = 0 (only one of two tasks fully reliable)
     assert summary["overall"]["reliable_pass_rate"] == pytest.approx(0.5)
 

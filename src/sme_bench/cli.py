@@ -642,6 +642,14 @@ def saturation_cmd(
     )
 
 
+_TIER_LABELS = {
+    "ready": "suitable",
+    "supervised": "partly suitable",
+    "not_recommended": "not suitable",
+    "inconclusive": "inconclusive",
+}
+
+
 @app.command("compare")
 def compare_cmd(
     run_dirs: list[Path] = typer.Argument(..., help="Two or more run directories"),
@@ -680,45 +688,70 @@ def compare_cmd(
             console.print(f"  {m.get('run_id')}: {m.get('suite_hash')}")
         raise typer.Exit(code=1)
 
-    # Primary comparison line: Readiness Score (JSON key sme_rank_score).
-    rank_bits = [
-        f"[bold]{m.get('model', m.get('run_id'))}: {s.get('sme_rank_score', 0):.1f}[/bold]"
-        for m, s in zip(metas, summaries, strict=True)
-    ]
-    console.print("SME-Bench Modellvergleich · [bold]SME Readiness Score[/bold]")
-    console.print("  " + "  ·  ".join(rank_bits))
-    console.print()
+    order = sorted(
+        range(len(summaries)),
+        key=lambda i: (
+            -float(summaries[i].get("overall", {}).get("pass_rate") or 0.0),
+            int(summaries[i].get("overall", {}).get("critical_cases") or 0),
+            -float(summaries[i].get("overall", {}).get("mean_effective_score") or 0.0),
+        ),
+    )
+    metas = [metas[i] for i in order]
+    summaries = [summaries[i] for i in order]
 
     table = Table(title="SME-Bench Compare")
     table.add_column("Metric")
     for m in metas:
         table.add_column(str(m.get("model", m.get("run_id"))))
-    rows = [
-        ("SME Readiness Score", "sme_rank_score", False, True),
-        ("Readiness tier", "readiness_tier", False, False),
-        ("SME Core Score", "sme_core_score", False, False),
-        ("Attempt Pass Rate", "attempt_pass_rate", True, False),
-        ("Attempt Partial Rate", "attempt_partial_rate", True, False),
-        ("Reliable Pass Rate", "reliable_pass_rate", True, False),
-        ("Mostly Pass Rate", "mostly_pass_rate", True, False),
-        ("Unreliable Pass Rate", "unreliable_pass_rate", True, False),
-        ("Critical Failures", "critical_failure_rate", True, False),
-        ("Language Compliance", "language_compliance_rate", True, False),
+
+    def _passed(s: dict[str, Any]) -> str:
+        rate = s.get("overall", {}).get("pass_rate")
+        if rate is None:
+            return "— (re-run `sme-bench report`)"
+        ci = (s.get("headline") or {}).get("pass_rate_ci")
+        ci_s = f" ({ci[0] * 100:.1f}–{ci[1] * 100:.1f})" if ci else ""
+        return f"[bold]{rate * 100:.1f}%[/bold]{ci_s}"
+
+    def _count(key: str, total_key: str | None = None) -> Any:
+        def render(s: dict[str, Any]) -> str:
+            overall = s.get("overall", {})
+            if overall.get(key) is None:
+                return "—"
+            if total_key is None:
+                return str(overall[key])
+            return f"{overall[key]} / {overall.get(total_key, 0)}"
+
+        return render
+
+    def _rate(key: str) -> Any:
+        def render(s: dict[str, Any]) -> str:
+            raw = s.get("overall", {}).get(key)
+            return "—" if raw is None else f"{raw * 100:.1f}%"
+
+        return render
+
+    rows: list[tuple[str, Any]] = [
+        ("[bold]Passed (95 % interval)[/bold]", _passed),
+        (
+            "Suitability",
+            lambda s: _TIER_LABELS.get(str((s.get("readiness") or {}).get("tier") or ""), "—"),
+        ),
+        ("Unsolved cases", _count("unsolved_cases", "unique_tasks")),
+        ("Critical cases", _count("critical_cases")),
+        ("Unstable cases", _count("unstable_cases")),
+        ("Coverage (graded attempts)", _count("graded_attempts", "attempts")),
+        (
+            "Mean partial-credit score",
+            lambda s: (
+                "—"
+                if s.get("overall", {}).get("mean_effective_score") is None
+                else f"{s['overall']['mean_effective_score']:.3f}"
+            ),
+        ),
+        ("Language Compliance", _rate("language_compliance_rate")),
     ]
-    for label, key, is_rate, bold in rows:
-        values = []
-        for s in summaries:
-            if key == "readiness_tier":
-                val = str((s.get("readiness") or {}).get("tier") or "—")
-            elif key in {"sme_core_score", "sme_rank_score"}:
-                val = f"{s.get(key, 0):.1f}"
-            elif (raw := s.get("overall", {}).get(key)) is None:
-                val = "—"
-            else:
-                val = f"{raw * 100:.1f}%" if is_rate else f"{raw:.3f}"
-            values.append(f"[bold]{val}[/bold]" if bold else val)
-        row_label = f"[bold]{label}[/bold]" if bold else label
-        table.add_row(row_label, *values)
+    for label, render in rows:
+        table.add_row(label, *[render(s) for s in summaries])
     console.print(table)
 
 

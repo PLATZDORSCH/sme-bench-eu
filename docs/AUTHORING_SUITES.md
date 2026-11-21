@@ -290,7 +290,7 @@ Each entry:
 | Grade | Default | Meaning |
 | --- | --- | --- |
 | Pass | ≥ 0.85 | fully correct attempt |
-| Partial | 0.65–0.84 | mostly correct |
+| Partial | 0.65–0.84 | mostly correct; also ≥ 0.85 with a failed `must_pass` scorer |
 | Fail | < 0.65 | hard fail |
 | Critical | critical scorer failed | attempt effective score 0 |
 

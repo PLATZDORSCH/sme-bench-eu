@@ -12,7 +12,7 @@ It measures separately:
 - performance (TTFR, TTFT, latency, tokens/s)
 - optionally cost efficiency (token cost)
 
-There is **no single opaque overall score**. The transparent score always appears together with pass rate, critical failure rate, language comparison, and performance metrics.
+There is **no composite score**. The headline number is the share of passed attempts; it always appears together with its 95 % interval, the number of unsolved and critical cases, the language comparison, and performance metrics.
 
 ## Installation
 
@@ -192,27 +192,25 @@ server endpoint `--concurrency 4` is the usual speed-up. llama.cpp needs
 
 SME-Bench is a **readiness test**, not a ranking contest. Cases represent work a model must handle in an SME office. High scores mean the model is fit for that work; 100 % on a task type stays on purpose as a regression guard. Harder differentiation belongs in a separate expert pack, not in the standard pack.
 
-| Readiness tier | When |
+| Suitability | When |
 | --- | --- |
-| **ready** | SME Readiness Score ≥ 95, no critical failures, language compliance 100 % (when measured) |
-| **supervised** | Score 85–95, or a language break (capped here even if the score is higher) |
-| **not recommended** | Score below 85, or any critical failure |
-| **inconclusive** | Completion rate below 95 % — the run is not fully comparable |
+| **suitable** | Passed ≥ 95 %, no case with a critical failure, language compliance 100 % (when measured) |
+| **partly suitable** | Passed ≥ 85 %; a critical case or a language break caps a run here even above 95 % |
+| **not suitable** | Passed below 85 % |
+| **inconclusive** | Coverage below 95 % — the run is not fully comparable |
 
-The JSON key remains `sme_rank_score` so existing runs stay readable.
+The table is sorted by **Passed**. There is no composite score: every column is a share or a count you can check against the per-run report.
 
 ## Metrics
 
-- **Attempt Pass Rate:** passed attempts / all attempts (≥85 %, fully correct)
-- **Attempt Partial Rate:** partially passed attempts (65–84 %, mostly correct)
-- **Reliable Pass Rate:** cases that passed in *every* repeat / all cases
-- **Mostly Pass Rate:** cases that passed most repeats, but not all / all cases
-- **Unreliable Pass Rate:** cases that passed some but not all repeats / all cases
-- **Failed Task Rate:** cases with no full passes / all cases
-- **Critical Failure:** a critical scorer failed → effective score `0` for that attempt
-- **SME Core Score:** mean of category-weighted effective scores × 100 (domain quality, no rate penalty)
-- **SME Readiness Score** (JSON key `sme_rank_score`): `SME Core × Attempt Pass × max(0, 1 − 5 × critical_rate) × max(0, 1 − 0.5 × partial_rate)` — primary readiness metric; successful repeats receive proportional credit
-- **Readiness tier:** operational interpretation of the score (`ready` / `supervised` / `not recommended` / `inconclusive`)
+- **Passed:** share of graded attempts that passed (score ≥ 0.85, no critical failure, no failed must-pass check), averaged per case. Infrastructure errors and excluded capability probes are not graded and do not count against the model
+- **95 % interval:** bootstrap interval of Passed, resampling DE/EN case pairs (2000 draws, fixed seed). Overlapping intervals mean the gap between two models is not reliable
+- **Unsolved cases:** cases that did not pass in every repeat
+- **Critical cases:** cases with at least one critical failure (a critical scorer failed → effective score `0` for that attempt)
+- **Unstable cases:** cases where the repeats disagreed. With `temperature: 0` and 2 repeats this is a weak signal, not a reliability measurement
+- **Coverage:** graded attempts / planned attempts
+- **Suitability:** `suitable` / `partly suitable` / `not suitable` / `inconclusive`, see above. Internal keys in `summary.json`: `ready` / `supervised` / `not_recommended` / `inconclusive`
+- **Attempt Partial Rate** and **mean partial-credit score:** report-only detail (partial = 65–84 %, or ≥ 85 % with a failed must-pass check)
 - **Language gap:** pass/score difference `en-GB − de-DE` plus pair consistency
 - **Language compliance:** share of attempts answered in the case language (`—` for runs graded before content 0.9.0)
 - **Format-only failure rate:** content scorers passed but format/language scorers failed
@@ -225,7 +223,7 @@ Scoring is deterministic and never uses an LLM judge. Before matching, every sco
 
 ### Language compliance
 
-A German case answered in English is unusable in practice, so every case states its answer language in the prompt and carries a `language` scorer with `weight: 0` and `must_pass: true`. A language break therefore leaves the SME Core Score untouched but blocks the attempt from passing, which lowers Attempt Pass Rate and SME Readiness Score.
+A German case answered in English is unusable in practice, so every case states its answer language in the prompt and carries a `language` scorer with `weight: 0` and `must_pass: true`. A language break therefore leaves the partial-credit score untouched but blocks the attempt from passing, which lowers Passed and caps suitability at partly suitable.
 
 The check counts function words that are unambiguous for one language and fails only when the wrong language leads by two markers. It deliberately abstains when the evidence is thin, because German business answers legitimately carry English loanwords and structured values. Consequence worth knowing: a short English phrase without function words (`update inventory`) is not detected. That threshold is validated against every case's own expected answer — a stricter setting would fail cases against their own reference. JSON keys are never scanned, and cases whose `reason` field quotes a refused English payload exclude that field, the same way `forbidden_terms` already does.
 
@@ -278,7 +276,7 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-financial-v0.1 --output runs/financial
 ```
 
-Included in the Full run: `sme-core-v0.1`, `sme-trades-v0.1`, `sme-ecommerce-v0.1`, `sme-financial-v0.1`, `sme-hospitality-v0.1`, `sme-logistics-v0.1`, `sme-chains-v0.1`, `sme-advanced-v0.1`, `sme-expert-v0.1`, `sme-tools-v0.1`, `sme-dialog-v0.1`, `sme-longctx-v0.1`.
+Included in the Full run: `sme-core-v0.1`, `sme-trades-v0.1`, `sme-ecommerce-v0.1`, `sme-financial-v0.1`, `sme-hospitality-v0.1`, `sme-logistics-v0.1`, `sme-chains-v0.1`, `sme-advanced-v0.1`, `sme-expert-v0.1`, `sme-tools-v0.1`, `sme-dialog-v0.1`, `sme-longctx-v0.1`, `sme-agentic-v0.1`.
 
 Custom example (not in Full): [`suites/demo-v0.1`](suites/demo-v0.1) — run with `--suite suites/demo-v0.1`.
 

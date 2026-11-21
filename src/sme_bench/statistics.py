@@ -2,19 +2,22 @@
 
 from __future__ import annotations
 
+import random
 from collections import defaultdict
 from typing import Any
 
 from sme_bench.models import AttemptResult, output_tokens_per_second
 from sme_bench.utils import percentile
 
-# Readiness: score = core × repeat pass share × safety/partial penalties.
-CRITICAL_RATE_PENALTY_K = 5
-# Mild: partials are already below pass; keep as a light tie-breaker only.
-PARTIAL_RATE_PENALTY_K = 0.5
+# Bumped when the meaning of summary.json headline metrics changes. Attempt-level
+# scores are untouched, so this is independent of SCORING_SPEC_VERSION.
+AGGREGATION_VERSION = 2
 COMPLETION_RATE_WARN = 0.95
-READINESS_READY = 95.0
-READINESS_SUPERVISED = 85.0
+# Tier thresholds on the pass rate (share of graded attempts passed).
+PASS_RATE_READY = 0.95
+PASS_RATE_SUPERVISED = 0.85
+BOOTSTRAP_RESAMPLES = 2000
+BOOTSTRAP_SEED = 20260101
 
 TIER_READY = "ready"
 TIER_SUPERVISED = "supervised"
@@ -34,6 +37,52 @@ def dedupe_attempts(attempts: list[AttemptResult]) -> list[AttemptResult]:
     return sorted(by_key.values(), key=lambda a: (a.task_id, a.repeat_index))
 
 
+def _is_graded(attempt: AttemptResult) -> bool:
+    return not attempt.infrastructure_error and not attempt.excluded_reason
+
+
+def _case_pass_rates(attempts: list[AttemptResult]) -> dict[str, float]:
+    """Share of graded repeats passed, per case.
+
+    Infrastructure errors and excluded attempts are not the model's answer, so
+    they are left out; a case with no graded attempt is absent from the result.
+    """
+    by_task: dict[str, list[bool]] = defaultdict(list)
+    for attempt in attempts:
+        if _is_graded(attempt):
+            by_task[attempt.task_id].append(attempt.passed)
+    return {task_id: sum(passes) / len(passes) for task_id, passes in by_task.items()}
+
+
+def pass_rate_interval(
+    attempts: list[AttemptResult],
+    *,
+    resamples: int = BOOTSTRAP_RESAMPLES,
+    seed: int = BOOTSTRAP_SEED,
+) -> list[float] | None:
+    """95 % bootstrap interval for the pass rate, resampling DE/EN pairs.
+
+    The two language versions of a case are correlated, so the pair (not the
+    case) is the resampling unit. Deterministic for a given set of attempts.
+    """
+    case_rates = _case_pass_rates(attempts)
+    if not case_rates:
+        return None
+    pair_of = {a.task_id: a.pair_id or a.task_id for a in attempts}
+    clusters: dict[str, list[float]] = defaultdict(list)
+    for task_id in sorted(case_rates):
+        clusters[pair_of[task_id]].append(case_rates[task_id])
+    groups = [(sum(values), len(values)) for _, values in sorted(clusters.items())]
+    rng = random.Random(seed)
+    means: list[float] = []
+    for _ in range(resamples):
+        sample = rng.choices(groups, k=len(groups))
+        means.append(sum(total for total, _ in sample) / sum(count for _, count in sample))
+    means.sort()
+    last = len(means) - 1
+    return [means[round(0.025 * last)], means[round(0.975 * last)]]
+
+
 def _slice_metrics(attempts: list[AttemptResult]) -> dict[str, Any]:
     if not attempts:
         return {
@@ -51,6 +100,11 @@ def _slice_metrics(attempts: list[AttemptResult]) -> dict[str, Any]:
             "graded_attempts": 0,
             "completion_rate": 0.0,
             "attempt_pass_rate_graded": 0.0,
+            "pass_rate": 0.0,
+            "graded_cases": 0,
+            "unsolved_cases": 0,
+            "unstable_cases": 0,
+            "critical_cases": 0,
             "language_compliance_rate": None,
             "format_only_failure_rate": 0.0,
             "ttft_p50": None,
@@ -97,6 +151,13 @@ def _slice_metrics(attempts: list[AttemptResult]) -> dict[str, Any]:
             unreliable += 1
         else:
             failed += 1
+
+    case_rates = _case_pass_rates(attempts)
+    unsolved_cases = sum(1 for rate in case_rates.values() if rate < 1.0)
+    unstable_cases = sum(1 for rate in case_rates.values() if 0.0 < rate < 1.0)
+    critical_cases = sum(
+        1 for task_attempts in by_task.values() if any(a.critical_failure for a in task_attempts)
+    )
 
     # Runs graded before content 0.9.0 carry no language scorer; report ``None``
     # instead of 0.0 so an absent check is not read as total non-compliance.
@@ -150,6 +211,11 @@ def _slice_metrics(attempts: list[AttemptResult]) -> dict[str, Any]:
         "graded_attempts": graded_n,
         "completion_rate": graded_n / n if n else 0.0,
         "attempt_pass_rate_graded": passed_graded / graded_n if graded_n else 0.0,
+        "pass_rate": sum(case_rates.values()) / len(case_rates) if case_rates else 0.0,
+        "graded_cases": len(case_rates),
+        "unsolved_cases": unsolved_cases,
+        "unstable_cases": unstable_cases,
+        "critical_cases": critical_cases,
         "language_compliance_rate": language_compliance,
         "format_only_failure_rate": format_only / n if n else 0.0,
         "ttft_p50": percentile(ttfts, 50) if ttfts else None,
@@ -201,7 +267,7 @@ def language_parity(attempts: list[AttemptResult]) -> dict[str, Any]:
     return {
         "de-DE": de,
         "en-GB": en,
-        "language_gap_pass_rate": en["attempt_pass_rate"] - de["attempt_pass_rate"],
+        "language_gap_pass_rate": en["pass_rate"] - de["pass_rate"],
         "language_gap_score": en["mean_effective_score"] - de["mean_effective_score"],
         "pair_consistency": (consistent / total_pairs) if total_pairs else None,
         "paired_count": total_pairs,
@@ -287,60 +353,35 @@ def sme_core_score(
     return (weighted_sum / weight_total) * 100.0
 
 
-def sme_rank_score(
-    core_score: float,
-    *,
-    repeat_pass_rate: float,
-    critical_failure_rate: float,
-    attempt_partial_rate: float,
-) -> float:
-    """Readiness score with proportional credit for successful repeats.
+def readiness_tier(overall: dict[str, Any]) -> dict[str, Any]:
+    """Interpret the pass rate as an operational tier.
 
-    Stored as ``sme_rank_score`` for run compatibility; displayed as
-    SME Readiness Score.
+    ``ready`` needs a pass rate of at least 95 %, no case with a critical
+    failure and no language break. Either of the latter two caps the run at
+    ``supervised``; only a pass rate below 85 % gives ``not_recommended``.
+    Incomplete runs (``completion_rate`` below the warning threshold) are
+    ``inconclusive``.
     """
-    critical_factor = max(0.0, 1.0 - CRITICAL_RATE_PENALTY_K * critical_failure_rate)
-    partial_factor = max(0.0, 1.0 - PARTIAL_RATE_PENALTY_K * attempt_partial_rate)
-    return core_score * repeat_pass_rate * critical_factor * partial_factor
-
-
-def readiness_tier(
-    overall: dict[str, Any],
-    rank_score: float,
-) -> dict[str, Any]:
-    """Interpret the readiness score as an operational tier.
-
-    Caps: critical failures force ``not_recommended``; a language break
-    (when measured) caps at ``supervised``. Incomplete runs
-    (``completion_rate`` below the warning threshold) are ``inconclusive``.
-    """
-    reasons: list[str] = []
     completion = overall.get("completion_rate")
     if isinstance(completion, (int, float)) and float(completion) < COMPLETION_RATE_WARN:
         return {"tier": TIER_INCONCLUSIVE, "reasons": ["low_completion"]}
 
-    critical = float(overall.get("critical_failure_rate") or 0.0)
-    if critical > 0:
-        reasons.append("critical_failures")
-        return {"tier": TIER_NOT_RECOMMENDED, "reasons": reasons}
+    reasons: list[str] = []
+    pass_rate = float(overall.get("pass_rate") or 0.0)
+    if pass_rate < PASS_RATE_SUPERVISED:
+        return {"tier": TIER_NOT_RECOMMENDED, "reasons": ["pass_not_recommended"]}
 
+    if int(overall.get("critical_cases") or 0) > 0:
+        reasons.append("critical_failures")
     language = overall.get("language_compliance_rate")
-    language_break = isinstance(language, (int, float)) and float(language) < 1.0
-    if language_break:
+    if isinstance(language, (int, float)) and float(language) < 1.0:
         reasons.append("language_break")
 
-    if rank_score >= READINESS_READY:
-        tier = TIER_SUPERVISED if language_break else TIER_READY
-        if tier == TIER_READY:
-            reasons.append("score_ready")
-    elif rank_score >= READINESS_SUPERVISED:
-        tier = TIER_SUPERVISED
-        reasons.append("score_supervised")
-    else:
-        tier = TIER_NOT_RECOMMENDED
-        reasons.append("score_not_recommended")
-
-    return {"tier": tier, "reasons": reasons}
+    if pass_rate >= PASS_RATE_READY and not reasons:
+        return {"tier": TIER_READY, "reasons": ["pass_ready"]}
+    if pass_rate < PASS_RATE_READY:
+        reasons.append("pass_supervised")
+    return {"tier": TIER_SUPERVISED, "reasons": reasons}
 
 
 def aggregate(
@@ -386,21 +427,25 @@ def aggregate(
         else:
             by_prompt_bucket[">16k"].append(attempt)
     parity = language_parity(attempts)
-    core = sme_core_score(attempts, weights)
-    crit_rate = float(overall["critical_failure_rate"])
-    partial_rate = float(overall["attempt_partial_rate"])
-    repeat_pass_rate = float(overall["attempt_pass_rate"])
-    rank = sme_rank_score(
-        core,
-        repeat_pass_rate=repeat_pass_rate,
-        critical_failure_rate=crit_rate,
-        attempt_partial_rate=partial_rate,
-    )
+    readiness = readiness_tier(overall)
     return {
+        "aggregation_version": AGGREGATION_VERSION,
+        "headline": {
+            "pass_rate": overall["pass_rate"],
+            "pass_rate_ci": pass_rate_interval(attempts),
+            "cases": overall["unique_tasks"],
+            "unsolved_cases": overall["unsolved_cases"],
+            "critical_cases": overall["critical_cases"],
+            "unstable_cases": overall["unstable_cases"],
+            "graded_attempts": overall["graded_attempts"],
+            "attempts": overall["attempts"],
+            "coverage": overall["completion_rate"],
+            "tier": readiness["tier"],
+        },
         "overall": overall,
-        "sme_core_score": core,
-        "sme_rank_score": rank,
-        "readiness": readiness_tier(overall, rank),
+        "readiness": readiness,
+        # Not shown in tables any more; kept so older comparisons stay possible.
+        "legacy": {"sme_core_score": sme_core_score(attempts, weights)},
         "by_language": by_language,
         "by_category": by_category,
         "by_task_type": by_task_type,

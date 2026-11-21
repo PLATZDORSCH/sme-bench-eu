@@ -20,16 +20,17 @@ def _num(value: float | None, digits: int = 3) -> str:
     return f"{value:.{digits}f}"
 
 
-def _readiness_lines(summary: dict[str, Any], t: dict[str, str]) -> list[str]:
-    readiness = summary.get("readiness") or {}
-    tier_key = str(readiness.get("tier") or "")
-    label = t.get(f"tier_{tier_key}", tier_key or "—")
-    lines = [t["readiness_tier"].format(tier=label)]
-    reasons = readiness.get("reasons") or []
-    if reasons:
-        labels = [t.get(f"reason_{reason}", reason) for reason in reasons]
-        lines.append(t["readiness_reason"].format(reasons=", ".join(labels)))
-    return lines
+def _points(value: float | None) -> str:
+    """A difference of two rates, in percentage points."""
+    return "—" if value is None else f"{value * 100:+.1f} pp"
+
+
+def _signed(value: float | None, digits: int) -> str:
+    return "—" if value is None else f"{value:+.{digits}f}"
+
+
+def _seconds(value: float | None) -> str:
+    return "—" if value is None else f"{value:.3f} s"
 
 
 def write_summary_markdown(
@@ -41,6 +42,62 @@ def write_summary_markdown(
 ) -> None:
     t = SUMMARY[lang]
     overall = summary.get("overall", {})
+    ci = (summary.get("headline") or {}).get("pass_rate_ci")
+    readiness = summary.get("readiness") or {}
+    tier_key = str(readiness.get("tier") or "")
+    reasons = [t.get(f"reason_{reason}", reason) for reason in readiness.get("reasons") or []]
+
+    rows: list[tuple[str, str]] = [
+        (t["pass_rate"], f"**{_pct(overall.get('pass_rate'))}**"),
+        (
+            t["interval"],
+            t["interval_value"].format(low=_pct(ci[0]), high=_pct(ci[1])) if ci else "—",
+        ),
+        (t["readiness_tier"], t.get(f"tier_{tier_key}", tier_key or "—")),
+    ]
+    if reasons:
+        rows.append((t["readiness_reason"], ", ".join(reasons)))
+    rows.extend(
+        [
+            (
+                t["unsolved"],
+                t["of_total"].format(
+                    count=overall.get("unsolved_cases", 0), total=overall.get("unique_tasks", 0)
+                ),
+            ),
+            (t["critical_cases"], str(overall.get("critical_cases", 0))),
+            (t["unstable"], str(overall.get("unstable_cases", 0))),
+            (
+                t["coverage"],
+                t["of_total"].format(
+                    count=overall.get("graded_attempts", 0), total=overall.get("attempts", 0)
+                ),
+            ),
+            (t["mean_score"], _num(overall.get("mean_effective_score"), 3)),
+            (t["attempt_partial"], _pct(overall.get("attempt_partial_rate"))),
+            (t["infra_rate"], _pct(overall.get("infrastructure_error_rate"))),
+            (t["language_rate"], _pct(overall.get("language_compliance_rate"))),
+            (t["format_only"], _pct(overall.get("format_only_failure_rate"))),
+            (t["tps"], _num(overall.get("mean_generation_tps"), 1)),
+            (t["ttft_cold"], _seconds(overall.get("ttft_cold_p50"))),
+            (t["ttfa"], _seconds(overall.get("ttfa_p50"))),
+        ]
+    )
+    if summary.get("baseline_latency_s") is not None:
+        rows.append((t["baseline"], _seconds(summary.get("baseline_latency_s"))))
+    runtime = summary.get("runtime") or {}
+    if any(runtime.get(key) for key in ("engine", "hardware", "quantization")):
+        rows.append(
+            (
+                t["runtime"],
+                t["runtime_value"].format(
+                    engine=runtime.get("engine") or "—",
+                    hardware=runtime.get("hardware") or "—",
+                    quantization=runtime.get("quantization") or "—",
+                ),
+            )
+        )
+
     lines = [
         t["title"].format(model=model),
         "",
@@ -50,39 +107,9 @@ def write_summary_markdown(
         ),
     ]
     if summary.get("regraded_from"):
-        lines.append(f"- Regraded from: `{summary['regraded_from']}` (inference preserved)")
-    lines.extend(
-        [
-            t["rank_score"].format(score=float(summary.get("sme_rank_score", 0))),
-            *_readiness_lines(summary, t),
-            t["core_score"].format(score=float(summary.get("sme_core_score", 0))),
-            t["attempt_pass"].format(value=_pct(overall.get("attempt_pass_rate"))),
-            t["attempt_partial"].format(value=_pct(overall.get("attempt_partial_rate"))),
-            t["reliable_pass"].format(value=_pct(overall.get("reliable_pass_rate"))),
-            t["mostly_pass"].format(value=_pct(overall.get("mostly_pass_rate"))),
-            t["unreliable_pass"].format(value=_pct(overall.get("unreliable_pass_rate"))),
-            t["critical_rate"].format(value=_pct(overall.get("critical_failure_rate"))),
-            t["infra_rate"].format(value=_pct(overall.get("infrastructure_error_rate"))),
-            t["completion_rate"].format(value=_pct(overall.get("completion_rate"))),
-            t["graded_pass"].format(value=_pct(overall.get("attempt_pass_rate_graded"))),
-            t["language_rate"].format(value=_pct(overall.get("language_compliance_rate"))),
-            t["tps"].format(value=_num(overall.get("mean_generation_tps"), 1)),
-            t["format_only"].format(value=_pct(overall.get("format_only_failure_rate"))),
-            t["ttft_cold"].format(value=_num(overall.get("ttft_cold_p50"), 3)),
-            t["ttfa"].format(value=_num(overall.get("ttfa_p50"), 3)),
-        ]
-    )
-    if summary.get("baseline_latency_s") is not None:
-        lines.append(t["baseline"].format(value=_num(summary.get("baseline_latency_s"), 3)))
-    runtime = summary.get("runtime") or {}
-    if any(runtime.get(key) for key in ("engine", "hardware", "quantization")):
-        lines.append(
-            t["runtime"].format(
-                engine=runtime.get("engine") or "—",
-                hardware=runtime.get("hardware") or "—",
-                quantization=runtime.get("quantization") or "—",
-            )
-        )
+        lines.extend(["", f"Regraded from: `{summary['regraded_from']}` (inference preserved)"])
+    lines.extend(["", t["metrics_header"], "| --- | ---: |"])
+    lines.extend(f"| {label} | {value} |" for label, value in rows)
     lines.extend(
         [
             "",
@@ -94,17 +121,19 @@ def write_summary_markdown(
     )
     for lang_key, m in (summary.get("by_language") or {}).items():
         lines.append(
-            f"| {lang_key} | {_pct(m.get('attempt_pass_rate'))} | {_pct(m.get('reliable_pass_rate'))} | "
-            f"{_num(m.get('mean_effective_score'))} | {_pct(m.get('critical_failure_rate'))} | "
+            f"| {lang_key} | {_pct(m.get('pass_rate'))} | {m.get('unsolved_cases', 0)} / {m.get('unique_tasks', 0)} | "
+            f"{_num(m.get('mean_effective_score'))} | {m.get('critical_cases', 0)} | "
             f"{_num(m.get('latency_p95'), 2)} s | {_num(m.get('mean_generation_tps'), 1)} |"
         )
 
     buckets = summary.get("by_prompt_bucket") or {}
     if buckets:
-        lines.extend(["", t["by_prompt"], "", t["prompt_header"], "| --- | ---: | ---: | ---: | ---: |"])
+        lines.extend(
+            ["", t["by_prompt"], "", t["prompt_header"], "| --- | ---: | ---: | ---: | ---: |"]
+        )
         for bucket, m in buckets.items():
             lines.append(
-                f"| {bucket} | {_pct(m.get('attempt_pass_rate'))} | {_pct(m.get('reliable_pass_rate'))} | "
+                f"| {bucket} | {_pct(m.get('pass_rate'))} | {m.get('unsolved_cases', 0)} / {m.get('unique_tasks', 0)} | "
                 f"{_num(m.get('mean_effective_score'))} | {_num(m.get('mean_generation_tps'), 1)} |"
             )
 
@@ -113,8 +142,8 @@ def write_summary_markdown(
     lines.append("| --- | ---: | ---: | ---: | ---: |")
     for cat, m in (summary.get("by_category") or {}).items():
         lines.append(
-            f"| {cat} | {_pct(m.get('attempt_pass_rate'))} | {_pct(m.get('reliable_pass_rate'))} | "
-            f"{_num(m.get('mean_effective_score'))} | {_pct(m.get('critical_failure_rate'))} |"
+            f"| {cat} | {_pct(m.get('pass_rate'))} | {m.get('unsolved_cases', 0)} / {m.get('unique_tasks', 0)} | "
+            f"{_num(m.get('mean_effective_score'))} | {m.get('critical_cases', 0)} |"
         )
 
     parity = summary.get("language_parity") or {}
@@ -123,8 +152,8 @@ def write_summary_markdown(
             "",
             t["parity"],
             "",
-            t["parity_pass"].format(value=_num(parity.get("language_gap_pass_rate"), 4)),
-            t["parity_score"].format(value=_num(parity.get("language_gap_score"), 4)),
+            t["parity_pass"].format(value=_points(parity.get("language_gap_pass_rate"))),
+            t["parity_score"].format(value=_signed(parity.get("language_gap_score"), 3)),
             t["parity_pair"].format(value=_pct(parity.get("pair_consistency"))),
             "",
         ]

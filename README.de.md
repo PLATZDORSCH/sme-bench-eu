@@ -12,7 +12,7 @@ Gemessen wird getrennt:
 - Performance (TTFR, TTFT, Latenz, Tokens/s)
 - optional Kosteneffizienz (Tokenkosten)
 
-Es gibt **keinen undurchsichtigen Gesamtscore**. Der transparente Score erscheint immer zusammen mit Pass Rate, Critical-Failure-Rate, Sprachvergleich und Performance-Kennzahlen.
+Es gibt **keinen zusammengesetzten Score**. Die Hauptkennzahl ist der Anteil bestandener Versuche; sie steht immer zusammen mit ihrem 95-%-Intervall, der Zahl nicht gelöster und kritischer Fälle, dem Sprachvergleich und den Performance-Kennzahlen.
 
 ## Installation
 
@@ -189,27 +189,25 @@ Concurrency und Scheduling: siehe **[docs/RUNNING.md](docs/RUNNING.md)**. An ein
 
 SME-Bench ist ein **Eignungstest**, kein Ranking. Die Cases bilden Arbeit ab, die ein Modell im KMU-Alltag beherrschen muss. Hohe Scores heißen: das Modell ist für diese Arbeit einsetzbar. 100 % auf einem Aufgabentyp bleiben bewusst als Regressionsschutz. Härtere Differenzierung gehört in ein separates Expert-Pack, nicht ins Standardpaket.
 
-| Eignungsstufe | Wann |
+| Eignung | Wann |
 | --- | --- |
-| **einsatzbereit** | SME Readiness Score ≥ 95, keine kritischen Fehler, Sprachtreue 100 % (wenn gemessen) |
-| **mit Aufsicht** | Score 85–95, oder ein Sprachbruch (dann höchstens diese Stufe, auch bei höherem Score) |
-| **nicht empfohlen** | Score unter 85, oder mindestens ein kritischer Fehler |
-| **nicht aussagekräftig** | Completion Rate unter 95 % — der Lauf ist nicht voll vergleichbar |
+| **geeignet** | Bestanden ≥ 95 %, kein Fall mit kritischem Fehler, Sprachtreue 100 % (wenn gemessen) |
+| **bedingt geeignet** | Bestanden ≥ 85 %; ein kritischer Fall oder ein Sprachbruch deckelt auf diese Stufe, auch über 95 % |
+| **nicht geeignet** | Bestanden unter 85 % |
+| **nicht aussagekräftig** | Abdeckung unter 95 % — der Lauf ist nicht voll vergleichbar |
 
-Der JSON-Key bleibt `sme_rank_score`, damit bestehende Runs lesbar bleiben.
+Die Tabelle ist nach **Bestanden** sortiert. Es gibt keinen zusammengesetzten Score: Jede Spalte ist ein Anteil oder eine Anzahl, die sich im Report des Laufs nachzählen lässt.
 
 ## Kennzahlen
 
-- **Attempt Pass Rate:** bestandene Attempts / alle Attempts (≥85 %, vollständig korrekt)
-- **Attempt Partial Rate:** teilweise bestandene Attempts (65–84 %, größtenteils korrekt)
-- **Reliable Pass Rate:** Cases, die in *jeder* Wiederholung bestanden / alle Cases
-- **Mostly Pass Rate:** Cases, die die meisten Repeats bestanden, aber nicht alle / alle Cases
-- **Unreliable Pass Rate:** Cases, die einige, aber nicht alle Repeats bestanden / alle Cases
-- **Failed Task Rate:** Cases ohne vollen Pass / alle Cases
-- **Critical Failure:** kritischer Scorer fehlgeschlagen → effektiver Score `0` für den Attempt
-- **SME Core Score:** Mittel der kategoriegewichteten effektiven Scores × 100 (Domänenqualität, ohne Raten-Penalty)
-- **SME Readiness Score** (JSON-Key `sme_rank_score`): `SME Core × Attempt Pass × max(0, 1 − 5 × critical_rate) × max(0, 1 − 0.5 × partial_rate)` — primäre Eignungskennzahl; erfolgreiche Wiederholungen werden anteilig berücksichtigt
-- **Eignungsstufe:** betriebliche Interpretation des Scores (`einsatzbereit` / `mit Aufsicht` / `nicht empfohlen` / `nicht aussagekräftig`)
+- **Bestanden:** Anteil der gewerteten Attempts, die bestanden haben (Score ≥ 0,85, kein kritischer Fehler, kein verfehlter Must-Pass-Check), pro Case gemittelt. Infrastrukturfehler und ausgeschlossene Capability-Probes werden nicht gewertet und zählen nicht gegen das Modell
+- **95-%-Intervall:** Bootstrap-Intervall von Bestanden über DE/EN-Fallpaare (2000 Ziehungen, fester Seed). Überlappende Intervalle heißen: Der Abstand zweier Modelle ist nicht belastbar
+- **Nicht gelöste Fälle:** Cases, die nicht in jeder Wiederholung bestanden wurden
+- **Kritische Fälle:** Cases mit mindestens einem kritischen Fehler (kritischer Scorer fehlgeschlagen → effektiver Score `0` für den Attempt)
+- **Instabile Fälle:** Cases, bei denen die Wiederholungen uneinig waren. Bei `temperature: 0` und 2 Repeats ist das ein schwaches Signal, keine Zuverlässigkeitsmessung
+- **Abdeckung:** gewertete Attempts / geplante Attempts
+- **Eignung:** `geeignet` / `bedingt geeignet` / `nicht geeignet` / `nicht aussagekräftig`, siehe oben. Interne Schlüssel in `summary.json`: `ready` / `supervised` / `not_recommended` / `inconclusive`
+- **Attempt Partial Rate** und **mittlerer Teilpunkte-Score:** nur im Report (Partial = 65–84 %, oder ≥ 85 % mit verfehltem Must-Pass-Check)
 - **Language gap:** Pass-/Score-Differenz `en-GB − de-DE` plus Paarkonsistenz
 - **Sprachtreue:** Anteil der Attempts, die in der Fallsprache geantwortet haben (`—` bei Runs vor Content 0.9.0)
 - **Nur-Format-Fehler:** Inhaltsscorer bestanden, Format-/Sprachscorer nicht
@@ -222,7 +220,7 @@ Das Scoring ist deterministisch und nutzt keinen LLM-Judge. Vor dem Vergleich fa
 
 ### Sprachtreue
 
-Ein deutscher Fall, der auf Englisch beantwortet wird, ist in der Praxis unbrauchbar. Deshalb nennt jeder Case seine Antwortsprache im Prompt und trägt einen `language`-Scorer mit `weight: 0` und `must_pass: true`. Ein Sprachbruch lässt den SME Core Score damit unberührt, verhindert aber das Bestehen des Attempts und senkt so Attempt Pass Rate und SME Readiness Score.
+Ein deutscher Fall, der auf Englisch beantwortet wird, ist in der Praxis unbrauchbar. Deshalb nennt jeder Case seine Antwortsprache im Prompt und trägt einen `language`-Scorer mit `weight: 0` und `must_pass: true`. Ein Sprachbruch lässt den Teilpunkte-Score damit unberührt, verhindert aber das Bestehen des Attempts, senkt so Bestanden und begrenzt die Eignung auf „bedingt geeignet“.
 
 Die Prüfung zählt Funktionswörter, die für genau eine Sprache eindeutig sind, und schlägt erst an, wenn die falsche Sprache um zwei Marker führt. Sie hält sich bei dünner Evidenz absichtlich zurück, weil deutsche Geschäftsantworten legitim englische Lehnwörter und strukturierte Werte enthalten. Bekannte Konsequenz: eine kurze englische Phrase ohne Funktionswörter (`update inventory`) wird nicht erkannt. Dieser Schwellwert ist gegen die Musterantwort jedes einzelnen Cases validiert — eine strengere Einstellung würde Cases an ihrer eigenen Referenz scheitern lassen. JSON-Schlüssel werden nie geprüft, und Cases, deren `reason`-Feld einen abgewiesenen englischen Payload zitiert, schließen dieses Feld aus, genau wie `forbidden_terms` es bereits tut.
 
@@ -275,7 +273,7 @@ uv run sme-bench run --base-url "$BASE_URL" --model "$MODEL" \
   --suite suites/sme-financial-v0.1 --output runs/financial
 ```
 
-Im Full-Lauf enthalten: `sme-core-v0.1`, `sme-trades-v0.1`, `sme-ecommerce-v0.1`, `sme-financial-v0.1`, `sme-hospitality-v0.1`, `sme-logistics-v0.1`, `sme-chains-v0.1`, `sme-advanced-v0.1`, `sme-expert-v0.1`, `sme-tools-v0.1`, `sme-dialog-v0.1`, `sme-longctx-v0.1`.
+Im Full-Lauf enthalten: `sme-core-v0.1`, `sme-trades-v0.1`, `sme-ecommerce-v0.1`, `sme-financial-v0.1`, `sme-hospitality-v0.1`, `sme-logistics-v0.1`, `sme-chains-v0.1`, `sme-advanced-v0.1`, `sme-expert-v0.1`, `sme-tools-v0.1`, `sme-dialog-v0.1`, `sme-longctx-v0.1`, `sme-agentic-v0.1`.
 
 Custom-Beispiel (nicht in Full): [`suites/demo-v0.1`](suites/demo-v0.1) — mit `--suite suites/demo-v0.1` starten.
 

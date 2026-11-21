@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### Reporting: simpler headline metrics (aggregation version 2)
+
+Attempt-level scoring, scorers, thresholds and suites are unchanged; the scoring spec stays at 0.10.0 and no regrade or re-run is needed. Refresh existing runs with `sme-bench report <run> --format all`.
+
+- The table is sorted by **Passed** (share of graded attempts passed, averaged per case) with a 95 % bootstrap interval over DE/EN pairs
+- New count columns: unsolved, critical and unstable cases, plus coverage (graded / planned attempts)
+- Removed the SME Readiness Score (`sme_rank_score`): it multiplied Core by the pass rate and two penalty factors, counted success twice and had no interpretable unit. SME Core Score is no longer displayed and moves to `legacy.sme_core_score` in `summary.json`
+- Removed the Reliable, Mostly, Unreliable, Partial and Format columns from the comparison (Mostly was always 0 with 2 repeats)
+- Infrastructure errors and excluded attempts no longer count as model failures in the headline metric
+- Tiers now use Passed: ready ≥ 95 % with no critical case and no language break, supervised ≥ 85 %, otherwise not recommended. A critical case caps at supervised instead of forcing not recommended
+- Tier labels renamed for display: suitable / partly suitable / not suitable (DE: geeignet / bedingt geeignet / nicht geeignet). The `summary.json` keys stay `ready` / `supervised` / `not_recommended`
+- `summary.json` gains `aggregation_version`, `headline` and per-slice `pass_rate`, `unsolved_cases`, `unstable_cases`, `critical_cases`
+
 ## 0.14.0
 
 ### Benchmark (SME Full content 0.16.1)

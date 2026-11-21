@@ -7,6 +7,8 @@ from typing import Any
 from rich.console import Console
 from rich.table import Table
 
+from sme_bench.reporters.i18n import SUMMARY
+
 
 def print_summary(
     summary: dict[str, Any],
@@ -18,30 +20,33 @@ def print_summary(
 ) -> None:
     out = console or Console()
     overall = summary.get("overall", {})
-    core = summary.get("sme_core_score", 0.0)
-    rank = summary.get("sme_rank_score", core)
     out.print(f"SME-Bench {version} · {suite_label} · {model}")
     out.print()
     readiness = summary.get("readiness") or {}
     tier = str(readiness.get("tier") or "")
     tier_labels = {
-        "ready": "ready",
-        "supervised": "supervised",
-        "not_recommended": "not recommended",
+        "ready": "suitable",
+        "supervised": "partly suitable",
+        "not_recommended": "not suitable",
         "inconclusive": "inconclusive",
     }
     reasons = readiness.get("reasons") or []
-    out.print(f"[bold]SME Readiness Score  {rank:.1f} / 100[/bold]")
+    ci = (summary.get("headline") or {}).get("pass_rate_ci")
+    ci_s = f"  (95 % {ci[0] * 100:.1f}–{ci[1] * 100:.1f})" if ci else ""
+    out.print(f"[bold]Passed               {overall.get('pass_rate', 0) * 100:.1f} %{ci_s}[/bold]")
     if tier:
-        reason_s = f" ({', '.join(reasons)})" if reasons else ""
-        out.print(f"Readiness tier       {tier_labels.get(tier, tier)}{reason_s}")
-    out.print(f"SME Core Score       {core:.1f} / 100")
-    out.print(f"Attempt Pass Rate    {overall.get('attempt_pass_rate', 0) * 100:.1f} %")
-    out.print(f"Attempt Partial Rate {overall.get('attempt_partial_rate', 0) * 100:.1f} %")
-    out.print(f"Reliable Pass Rate   {overall.get('reliable_pass_rate', 0) * 100:.1f} %")
-    out.print(f"Mostly Pass Rate     {overall.get('mostly_pass_rate', 0) * 100:.1f} %")
-    out.print(f"Unreliable Pass Rate {overall.get('unreliable_pass_rate', 0) * 100:.1f} %")
-    out.print(f"Critical Failures    {overall.get('critical_failure_rate', 0) * 100:.1f} %")
+        labels = [SUMMARY["en"].get(f"reason_{reason}", reason) for reason in reasons]
+        reason_s = f" ({', '.join(labels)})" if labels else ""
+        out.print(f"Suitability          {tier_labels.get(tier, tier)}{reason_s}")
+    out.print(
+        f"Unsolved cases       {overall.get('unsolved_cases', 0)} / {overall.get('unique_tasks', 0)}"
+    )
+    out.print(f"Critical cases       {overall.get('critical_cases', 0)}")
+    out.print(f"Unstable cases       {overall.get('unstable_cases', 0)}")
+    out.print(
+        f"Coverage             {overall.get('graded_attempts', 0)} / {overall.get('attempts', 0)}"
+    )
+    out.print(f"Partial attempts     {overall.get('attempt_partial_rate', 0) * 100:.1f} %")
     out.print(f"Infrastructure       {overall.get('infrastructure_error_rate', 0) * 100:.1f} %")
     lang_rate = overall.get("language_compliance_rate")
     lang_rate_s = f"{lang_rate * 100:.1f} %" if isinstance(lang_rate, (int, float)) else "—"
@@ -56,7 +61,7 @@ def print_summary(
         table = Table(show_header=True, header_style="bold")
         table.add_column("Language")
         table.add_column("Pass rate", justify="right")
-        table.add_column("Reliable", justify="right")
+        table.add_column("Unsolved", justify="right")
         table.add_column("Score", justify="right")
         table.add_column("Critical", justify="right")
         table.add_column("p95 latency", justify="right")
@@ -68,10 +73,10 @@ def print_summary(
             lang_tps_s = f"{lang_tps:.1f}" if isinstance(lang_tps, (int, float)) else "—"
             table.add_row(
                 lang,
-                f"{metrics.get('attempt_pass_rate', 0) * 100:.1f} %",
-                f"{metrics.get('reliable_pass_rate', 0) * 100:.1f} %",
+                f"{metrics.get('pass_rate', 0) * 100:.1f} %",
+                f"{metrics.get('unsolved_cases', 0)} / {metrics.get('unique_tasks', 0)}",
                 f"{metrics.get('mean_effective_score', 0) * 100:.1f}",
-                f"{metrics.get('critical_failure_rate', 0) * 100:.1f} %",
+                f"{metrics.get('critical_cases', 0)}",
                 lat_s,
                 lang_tps_s,
             )
